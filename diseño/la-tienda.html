@@ -1,0 +1,877 @@
+<title>La tienda de 48·72</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Bowlby+One&display=swap">
+
+<style>
+  :root{
+    --verde:#1E5245;
+    --verde-hondo:#143A31;
+    --papel:#F3EDE1;
+    --piedra:#9A9287;
+    --hoja:#E4E4E6;
+    --hoja-linea:#C6C6CB;
+    --hoja-tinta:#26262A;
+    --hoja-suave:#5C5C64;
+    --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
+    --cara:"Bowlby One",Impact,sans-serif;
+    /* medidas cerradas de la carta */
+    --tit:1.10rem;
+    --grosor:.4px;
+    --ing-cuerpo:.79rem;
+    --aire:1rem;
+    --ancho-c:1.05rem;
+    --alto-c:1.3rem;
+    /* medida cerrada del renglón del checkout */
+    --item:1.00rem;
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--verde);color:var(--papel)}
+  :focus-visible{outline:2.5px solid var(--verde);outline-offset:2px}
+  html{scrollbar-color:var(--verde) var(--hoja)}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:var(--hoja)}
+  ::-webkit-scrollbar-thumb{background:var(--verde);border:3px solid var(--hoja)}
+  body{
+    margin:0;background:var(--hoja);color:var(--hoja-tinta);
+    font-family:var(--ui);font-size:16px;line-height:1.55;
+    caret-color:var(--verde);-webkit-font-smoothing:antialiased;
+  }
+  .pliego{
+    max-width:1180px;margin:0 auto;
+    padding:clamp(1.4rem,4vw,2.6rem) clamp(1rem,3vw,2.2rem) 5rem;
+    display:flex;flex-direction:column;gap:1.4rem;
+  }
+
+  /* ============ encabezado del documento ============ */
+  .encabezado{display:flex;flex-direction:column;gap:.5rem;max-width:72ch}
+  .encabezado h1{margin:0;font-weight:800;font-size:clamp(1.6rem,1.2rem + 1.8vw,2.3rem);letter-spacing:-.028em;line-height:1.04}
+  .encabezado p{margin:0;color:var(--hoja-suave);font-size:1rem}
+  .encabezado b{color:var(--hoja-tinta);font-weight:600}
+
+  .pasos{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+  .pasos button{
+    display:flex;align-items:baseline;gap:.45rem;
+    font-family:var(--ui);font-size:.82rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.5px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.34rem .8rem;cursor:pointer;
+  }
+  .pasos button i{font-style:normal;font-weight:800;font-size:.72rem;opacity:.6}
+  .pasos button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .pasos button[aria-pressed="true"] i{opacity:.75}
+
+  /* ============ el taller ============ */
+  .taller{display:grid;grid-template-columns:auto minmax(320px,1fr);gap:2.2rem;align-items:start}
+  @media (max-width:900px){.taller{grid-template-columns:1fr}}
+
+  .telefono{
+    width:390px;max-width:100%;height:800px;position:sticky;top:1.2rem;
+    border:1.5px solid var(--hoja-linea);
+    overflow:hidden;display:flex;flex-direction:column;
+    background:var(--papel);color:var(--verde);
+  }
+  .pantalla{overflow-y:auto;overflow-x:hidden;flex:1;display:flex;flex-direction:column}
+  .pantalla[hidden]{display:none}
+  .pantalla::-webkit-scrollbar{width:8px}
+  .pantalla::-webkit-scrollbar-thumb{background:var(--verde)}
+
+  /* ---------- cabecera de la carta ---------- */
+  .tapa{
+    padding:1.25rem .95rem 1rem;flex:none;
+    display:flex;flex-direction:column;align-items:center;gap:.35rem;
+    border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+  }
+  .marca{
+    margin:0;font-family:var(--ui);font-weight:600;font-size:1.55rem;
+    letter-spacing:.24em;margin-right:-.24em;
+    font-variant-numeric:tabular-nums;color:var(--verde);line-height:1;
+  }
+  .lema{margin:0;font-size:.86rem;font-weight:600}
+  .solapas{display:flex;border-bottom:2px solid var(--verde);flex:none}
+  .solapas button{
+    flex:1;font-family:var(--ui);font-weight:800;font-size:.72rem;
+    letter-spacing:.08em;text-transform:uppercase;
+    background:transparent;color:var(--verde);border:0;padding:.72rem .3rem;cursor:pointer;
+    transition:background .16s ease,color .16s ease;
+  }
+  .solapas button + button{border-left:2px solid var(--verde)}
+  .solapas button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+
+  /* ---------- la carta ---------- */
+  ol.carta{list-style:none;margin:0;padding:0 0 5.2rem}
+  ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid rgba(30,82,69,.24)}
+  .renglon{display:flex;align-items:baseline;gap:.55rem}
+  .nombre{
+    font-family:var(--cara);font-size:var(--tit);line-height:1.12;
+    letter-spacing:-.02em;margin:0;-webkit-text-stroke:var(--grosor) currentColor;
+  }
+  .puntos{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.32rem);min-width:1.2rem}
+  .plata{
+    margin:0;font-family:var(--cara);font-size:calc(var(--tit) * .92);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+    -webkit-text-stroke:var(--grosor) currentColor;
+  }
+  .renglon .contador{align-self:center;margin-left:.15rem}
+
+  .abajo{display:flex;align-items:center;gap:.6rem;margin-top:.55rem}
+  .chips{display:flex;flex-direction:column;margin:0;flex:1;min-width:0}
+  .fila-ing{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:0;min-width:0}
+  .ing{
+    font-family:var(--ui);font-weight:600;color:var(--verde);
+    cursor:pointer;background:transparent;border:0;padding:.08rem .1rem;
+    font-size:var(--ing-cuerpo);line-height:1.3;flex:0 0 auto;white-space:nowrap;
+    display:inline-block;text-align:center;
+    transition:background .15s ease,opacity .15s ease;
+  }
+  .ing:hover{background:rgba(30,82,69,.1)}
+  .ing.fijo,.ing.fijo:disabled{cursor:default;color:var(--verde);opacity:1}
+  .ing.fijo:hover{background:transparent}
+  .ing[aria-pressed="false"]{opacity:.42;text-decoration:line-through;text-decoration-thickness:1.5px}
+  .sep{flex:0 0 auto;opacity:.5;padding:0 .3rem;font-size:var(--ing-cuerpo);font-weight:600;user-select:none}
+
+  .contador{
+    display:inline-flex;align-items:center;flex:none;
+    border:1.4px solid var(--verde);border-radius:999px;overflow:hidden;height:var(--alto-c);
+  }
+  .contador button{
+    width:var(--ancho-c);height:100%;border:0;background:transparent;color:var(--verde);
+    cursor:pointer;display:grid;place-items:center;
+    font-family:var(--ui);font-weight:800;font-size:.82rem;line-height:1;padding:0;
+    transition:background .14s ease;
+  }
+  .contador button:hover:not(:disabled){background:rgba(30,82,69,.13)}
+  .contador button:disabled{opacity:.3;cursor:not-allowed}
+  .contador .n{
+    min-width:var(--ancho-c);text-align:center;font-family:var(--ui);font-weight:800;
+    font-size:.76rem;font-variant-numeric:tabular-nums;line-height:1;
+  }
+  .contador.cero{border-color:rgba(30,82,69,.45)}
+  .contador.cero .n{opacity:.35}
+
+  li.agotada{color:var(--piedra)}
+  li.agotada .nombre,li.agotada .plata{text-decoration:line-through}
+  li.agotada .puntos{border-bottom-color:rgba(154,146,135,.5)}
+  li.agotada .ing,
+  li.agotada .ing.fijo,
+  li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
+  .sello{
+    flex:none;font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--piedra);border:1.3px solid var(--piedra);border-radius:999px;padding:.24rem .55rem;
+    white-space:nowrap;
+  }
+
+  /* ---------- empanadas: packs de un gusto ---------- */
+  .rotulo{
+    margin:2rem 0 0;padding:.6rem .95rem;
+    font-size:.64rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--verde);background:rgba(30,82,69,.09);
+  }
+  .tam{display:flex;border:2px solid var(--verde);margin:2rem .95rem 0}
+  .tam button{
+    flex:1;font-family:var(--ui);font-weight:800;font-size:.76rem;
+    letter-spacing:.05em;text-transform:uppercase;
+    background:transparent;color:var(--verde);border:0;padding:.62rem .3rem;cursor:pointer;
+    transition:background .15s ease,color .15s ease;
+  }
+  .tam button + button{border-left:2px solid var(--verde)}
+  .tam button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+
+  ol.gustos{list-style:none;margin:2rem 0 0;padding:0;border-top:1px solid rgba(30,82,69,.24)}
+  ol.gustos li{
+    display:flex;align-items:center;gap:.5rem;
+    padding:.72rem .95rem;border-bottom:1px solid rgba(30,82,69,.24);
+  }
+  ol.gustos .nom{
+    flex:1;margin:0;font-family:var(--cara);font-size:1.02rem;letter-spacing:-.02em;
+    -webkit-text-stroke:var(--grosor) currentColor;min-width:0;
+  }
+  ol.gustos .otro{
+    flex:none;font-size:.66rem;font-weight:700;letter-spacing:.04em;opacity:.65;white-space:nowrap;
+  }
+  ol.gustos li.agotada{color:var(--piedra)}
+  ol.gustos li.agotada .nom{text-decoration:line-through}
+
+  .puesto{list-style:none;margin:0;padding:0 0 6.5rem}
+  .puesto li{
+    display:flex;align-items:center;gap:.55rem;
+    padding:.6rem .95rem;border-bottom:1px solid rgba(30,82,69,.24);
+  }
+  .puesto .cant{font-family:var(--cara);font-size:.92rem;flex:none;min-width:1.6rem;font-variant-numeric:tabular-nums}
+  .puesto .que{flex:1;font-size:.9rem;font-weight:600;min-width:0}
+  .puesto .quitar{
+    flex:none;border:0;background:transparent;color:var(--verde);cursor:pointer;
+    font-family:var(--ui);font-weight:800;font-size:1.05rem;padding:0 .25rem;opacity:.55;
+  }
+  .puesto .quitar:hover{opacity:1}
+  .vacio{margin:0;padding:1rem .95rem 6.5rem;font-size:.85rem;font-weight:600;opacity:.6}
+
+  /* ---------- tienda cerrada ---------- */
+  .aviso-cierre{
+    flex:none;padding:.85rem .95rem;background:var(--verde);color:var(--papel);
+    border-bottom:2px solid var(--verde);
+  }
+  .aviso-cierre b{display:block;font-size:.95rem;font-weight:800}
+  .aviso-cierre span{display:block;margin-top:.15rem;font-size:.82rem;font-weight:600;opacity:.88}
+
+  body[data-tienda="gris"] #panel{color:var(--piedra)}
+  body[data-tienda="gris"] #panel .nombre,
+  body[data-tienda="gris"] #panel .plata,
+  body[data-tienda="gris"] #panel .nom{text-decoration:line-through}
+  body[data-tienda="gris"] #panel .puntos{border-bottom-color:rgba(154,146,135,.5)}
+  body[data-tienda="gris"] #panel .ing,
+  body[data-tienda="gris"] #panel .ing.fijo:disabled{color:var(--piedra)}
+
+  .cerrada-lleno{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:.9rem;padding:2.5rem 1.4rem;text-align:center;color:var(--verde);
+  }
+  .cerrada-lleno h3{
+    margin:0;font-family:var(--cara);font-size:2rem;line-height:1.04;
+    letter-spacing:-.03em;max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
+  }
+  .cerrada-lleno p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
+  .cerrada-lleno .marca{margin-top:1.2rem;font-size:1.15rem}
+
+  /* ---------- barra de pedido ---------- */
+  .pedido{
+    flex:none;background:var(--verde);color:var(--papel);
+    padding:.75rem .95rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    height:0;padding-top:0;padding-bottom:0;overflow:hidden;
+    transition:height .24s ease,padding .24s ease;
+  }
+  .pedido.visible{height:auto;padding-top:.75rem;padding-bottom:.75rem}
+  .pedido .cuenta{font-size:.86rem;font-weight:600;font-variant-numeric:tabular-nums}
+  .pedido .cuenta b{display:block;font-size:1.05rem;font-weight:800}
+  .pedido .ver{
+    font-family:var(--ui);font-weight:800;font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;
+    background:var(--papel);color:var(--verde);border:0;border-radius:999px;padding:.55rem .95rem;cursor:pointer;
+  }
+
+  /* ============ checkout ============ */
+  .barra-tope{
+    display:flex;align-items:center;gap:.6rem;flex:none;
+    padding:.8rem .9rem;border-bottom:2px solid var(--verde);
+  }
+  .barra-tope button{
+    display:flex;align-items:center;gap:.45rem;border:0;background:transparent;color:var(--verde);
+    font-family:var(--ui);font-weight:700;font-size:.74rem;letter-spacing:.12em;
+    text-transform:uppercase;cursor:pointer;padding:0;
+  }
+  .barra-tope svg{width:14px;height:14px}
+
+  .items{list-style:none;margin:0;padding:0;flex:none}
+  .items li{
+    display:flex;align-items:baseline;gap:.42rem;
+    padding:.72rem .9rem;border-bottom:1px solid rgba(30,82,69,.24);
+  }
+  .items li:last-child{border-bottom:0}
+  .cant{
+    font-family:var(--cara);font-size:calc(var(--item) * .94);flex:none;
+    min-width:1.15rem;font-variant-numeric:tabular-nums;
+  }
+  .item-nombre{
+    margin:0;flex:1;min-width:0;
+    font-family:var(--cara);font-size:var(--item);line-height:1.22;letter-spacing:-.022em;
+  }
+  .sin{
+    font-family:var(--ui);font-size:calc(var(--item) * .72);font-weight:600;letter-spacing:0;
+    border:1.2px solid rgba(30,82,69,.45);border-radius:999px;
+    padding:.06rem .4rem;margin-left:.3rem;white-space:nowrap;
+    display:inline-block;vertical-align:.06em;
+  }
+  .item-plata{
+    margin:0;font-family:var(--cara);font-size:calc(var(--item) * .94);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .total{
+    display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex:none;
+    padding:.95rem .9rem;
+    border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+  }
+  .total dt{font-size:.88rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .total dd{margin:0;font-family:var(--cara);font-size:1.72rem;font-variant-numeric:tabular-nums}
+  .total .guia{display:block;flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.4rem)}
+
+  .datos{padding:1.1rem .9rem 0;display:flex;flex-direction:column;gap:1.05rem;flex:none}
+  .campo{display:flex;flex-direction:column;gap:.34rem}
+  .campo label{font-size:.68rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+  .campo input{
+    font-family:var(--ui);font-size:1rem;font-weight:600;color:var(--verde);
+    background:transparent;border:0;border-bottom:2px solid var(--verde);
+    padding:.5rem .1rem;outline:0;
+  }
+  .campo input::placeholder{color:rgba(30,82,69,.42);font-weight:500}
+  .frase{margin:0;font-size:.82rem;font-weight:600;line-height:1.45;background:rgba(30,82,69,.09);padding:.6rem .7rem}
+
+  .accion{
+    padding:1.2rem .9rem 1.1rem;flex:none;margin-top:auto;
+    background:var(--papel);border-top:2px solid var(--verde);
+  }
+  .confirmar{
+    width:100%;height:3.05rem;border-radius:999px;cursor:pointer;
+    font-family:var(--ui);font-weight:800;font-size:.92rem;letter-spacing:.08em;
+    text-transform:uppercase;border:2px solid var(--verde);
+    background:var(--verde);color:var(--papel);
+    transition:background .16s ease,color .16s ease;
+  }
+  .confirmar:hover:not(:disabled){background:var(--verde-hondo);border-color:var(--verde-hondo)}
+  .confirmar:disabled{background:transparent;color:rgba(30,82,69,.42);border-color:rgba(30,82,69,.3);cursor:not-allowed}
+
+  /* ============ confirmación ============ */
+  .listo{
+    flex:1;background:var(--verde);color:var(--papel);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:1rem;padding:2rem 1.2rem;text-align:center;
+  }
+  .listo h3{
+    margin:0;font-family:var(--cara);font-size:2.15rem;line-height:1.02;
+    letter-spacing:-.03em;max-width:11ch;
+  }
+  .listo .num{
+    font-family:var(--ui);font-weight:800;font-size:1.05rem;letter-spacing:.14em;
+    font-variant-numeric:tabular-nums;
+  }
+  .listo p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:29ch}
+  .listo .marca{margin-top:1rem;color:var(--papel);font-size:1.1rem}
+
+  /* ============ la explicación ============ */
+  .lado{display:flex;flex-direction:column;gap:1.5rem}
+  .lado h2{
+    margin:0 0 .5rem;font-size:.72rem;font-weight:800;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--hoja-suave);
+  }
+  .lado h3{margin:0 0 .35rem;font-size:1.05rem;font-weight:800;letter-spacing:-.015em}
+  .lado p{margin:0 0 .7rem;font-size:.95rem;color:var(--hoja-suave);line-height:1.55}
+  .lado p:last-child{margin-bottom:0}
+  .lado b{color:var(--hoja-tinta);font-weight:600}
+  .bloque{border-left:2px solid var(--hoja-linea);padding-left:1rem}
+  .medidas{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.1rem 1.2rem;
+    margin:0;padding:0;
+  }
+  .medidas div{display:flex;justify-content:space-between;gap:.6rem;padding:.34rem 0;border-bottom:1px solid var(--hoja-linea)}
+  .medidas dt{font-size:.84rem;color:var(--hoja-suave)}
+  .medidas dd{margin:0;font-size:.84rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .abierta{
+    border:1.5px dashed var(--hoja-linea);padding:.8rem .9rem;
+    font-size:.88rem;color:var(--hoja-suave);line-height:1.5;
+  }
+  .abierta b{display:block;margin-bottom:.2rem;color:var(--hoja-tinta);font-weight:700}
+  .variantes{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.55rem}
+  .variantes button{
+    font-family:var(--ui);font-size:.78rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.5px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.26rem .66rem;cursor:pointer;
+  }
+  .variantes button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .ojo{
+    display:flex;align-items:center;gap:.45rem;font-size:.84rem;font-weight:700;
+    border:1.5px solid var(--hoja-linea);padding:.6rem .75rem;
+  }
+  .ojo::before{content:"";width:.6rem;height:.6rem;border-radius:50%;flex:none;background:#1E5245}
+  .ojo.mal{color:#C0392B}
+  .ojo.mal::before{background:#C0392B}
+
+  @media (prefers-reduced-motion:reduce){
+    .pedido,.ing,.contador button,.solapas button,.confirmar{transition:none}
+  }
+</style>
+
+<div class="pliego">
+
+  <header class="encabezado">
+    <h1>La tienda</h1>
+    <p>
+      Las tres pantallas que ve el cliente, en el orden en que las recorre.
+      Todo funciona: sumá pizzas, cambiá de solapa, tocá ingredientes, completá los datos y confirmá.
+      <b>El teléfono mide 390 × 800</b>, que es donde se aprietan las cosas.
+    </p>
+    <div class="pasos" id="pasos">
+      <button type="button" data-p="carta" aria-pressed="true"><i>1</i>La carta</button>
+      <button type="button" data-p="checkout" aria-pressed="false"><i>2</i>El checkout</button>
+      <button type="button" data-p="listo" aria-pressed="false"><i>3</i>La confirmación</button>
+    </div>
+  </header>
+
+  <div class="taller">
+
+    <div class="telefono">
+      <!-- 1 · la carta -->
+      <div class="pantalla" id="p-carta">
+        <div class="tapa">
+          <p class="marca">48·72</p>
+          <p class="lema">Pizzas &amp; más</p>
+        </div>
+        <div class="solapas" id="solapas">
+          <button type="button" data-s="pizzas" aria-pressed="true">Pizzas</button>
+          <button type="button" data-s="empanadas" aria-pressed="false">Empanadas</button>
+          <button type="button" data-s="focaccias" aria-pressed="false">Focaccias</button>
+        </div>
+        <div id="aviso"></div>
+        <div id="panel"></div>
+      </div>
+
+      <!-- 2 · el checkout -->
+      <div class="pantalla" id="p-checkout" hidden>
+        <div class="barra-tope">
+          <button type="button" data-volver="1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            La carta</button>
+        </div>
+        <ul class="items" id="items"></ul>
+        <dl class="total"><dt>Total</dt><i class="guia"></i><dd id="total">$0</dd></dl>
+        <div class="datos" id="datos"></div>
+        <div class="accion">
+          <button class="confirmar" id="confirmar" type="button" disabled>Realizar pedido</button>
+        </div>
+      </div>
+
+      <!-- 3 · la confirmación -->
+      <div class="pantalla" id="p-listo" hidden>
+        <div class="listo">
+          <h3>¡Pedido realizado!</h3>
+          <span class="num">Nro 0147</span>
+          <p id="listo-texto"></p>
+          <p class="marca">48·72</p>
+        </div>
+      </div>
+
+      <div class="pedido" id="pedido">
+        <div class="cuenta"><span id="cuenta-n">0 cosas</span><b id="cuenta-t">$0</b></div>
+        <button class="ver" type="button" id="ir-checkout">Ver pedido</button>
+      </div>
+    </div>
+
+    <div class="lado" id="lado"></div>
+  </div>
+</div>
+
+<script>
+  /* ==========================================================
+     OJO: la carta es inventada. Los nombres, los precios y los
+     ingredientes los puse yo para poder diseñar. Los de verdad
+     los carga el vendedor desde el panel.
+     ========================================================== */
+
+  // los fijos son los que hacen al producto: sin ellos deja de ser esa pizza
+  var FIJOS = {"Salsa de tomate":1, "Muzzarella":1, "Longaniza":1, "Jamón crudo":1};
+  function seSaca(x){ return !FIJOS[x]; }
+
+  var PIZZAS = [
+    {n:"Margarita",       p:9800,  i:["Salsa de tomate","Muzzarella","Albahaca","Oliva"]},
+    {n:"Marinara",        p:8900,  i:["Salsa de tomate","Ajo","Orégano","Oliva"]},
+    {n:"Fugazzeta",       p:11200, i:["Muzzarella","Cebolla","Orégano","Oliva"]},
+    {n:"Napolitana",      p:10800, i:["Salsa de tomate","Muzzarella","Tomate","Ajo"]},
+    {n:"Calabresa",       p:12400, i:["Salsa de tomate","Muzzarella","Longaniza","Morrón"], agotada:true},
+    {n:"Cuatro quesos",   p:12900, i:["Muzzarella","Provolone","Roquefort","Parmesano"]},
+    {n:"Rúcula y crudo",  p:13500, i:["Muzzarella","Rúcula","Jamón crudo","Parmesano"]}
+  ];
+  var FOCACCIAS = [
+    {n:"Romero y sal", p:6800, i:["Romero","Sal gruesa","Oliva","Semolín"]},
+    {n:"Cherry",       p:7900, i:["Tomate cherry","Albahaca","Oliva","Sal"]},
+    {n:"Cebolla",      p:7400, i:["Cebolla","Tomillo","Oliva","Sal"]},
+    {n:"Aceitunas",    p:8200, i:["Aceitunas","Orégano","Oliva","Sal"], agotada:true}
+  ];
+  var GUSTOS = [
+    {n:"Carne suave"}, {n:"Carne picante"}, {n:"Jamón y queso"}, {n:"Humita"},
+    {n:"Verdura"}, {n:"Pollo", agotada:true}, {n:"Caprese"}, {n:"Cebolla y queso"}
+  ];
+  var PACK = {6:7900, 12:15200};
+  var VUELTA = "Volvemos a tomar pedidos el martes.";
+
+  var paso = "carta";          // carta | checkout | listo
+  var solapa = "pizzas";
+  var cupo = 12;               // tamaño elegido en el segmentado
+  var tienda = "abierta";      // abierta | banda | gris | lleno
+  var formaDir = "simple";     // simple | modo | detalle   (sin decidir)
+  var entrega = "envio";
+  var carrito = {};            // clave -> {precio, cant, sin:[]}
+  var tipeado = {nom:"", dir:"", ref:"", wa:""};
+
+  function plata(n){ return "$" + n.toLocaleString("es-AR"); }
+  function esPack(k){ return / x(6|12)$/.test(k); }
+  function clavePack(g, c){ return g + " · x" + c; }
+  function cuantosPack(g, c){ var y = carrito[clavePack(g, c)]; return y ? y.cant : 0; }
+
+  /* ---------- 1 · la carta ---------- */
+  function contador(clave){
+    var q = carrito[clave] ? carrito[clave].cant : 0;
+    return '<span class="contador' + (q ? "" : " cero") + '">' +
+      '<button type="button" data-menos="' + clave + '"' + (q ? "" : " disabled") + ' aria-label="Sacar uno">−</button>' +
+      '<span class="n">' + q + '</span>' +
+      '<button type="button" data-mas="' + clave + '" aria-label="Sumar uno">+</button></span>';
+  }
+
+  function filaCarta(z){
+    var chips = z.i.map(function(x){
+      if(!seSaca(x)) return '<button class="ing fijo" type="button" disabled>' + x + '</button>';
+      return '<button class="ing" type="button" aria-pressed="true"' + (z.agotada ? ' disabled' : '') + '>' + x + '</button>';
+    }).join('<span class="sep">\u00b7</span>');
+    return '<li' + (z.agotada ? ' class="agotada"' : '') + '>' +
+      '<div class="renglon"><p class="nombre">' + z.n + '</p><i class="puntos"></i>' +
+      '<p class="plata">' + plata(z.p) + '</p>' +
+      (z.agotada ? '<span class="sello">Se acabó</span>' : contador(z.n)) + '</div>' +
+      '<div class="abajo"><div class="chips"><div class="fila-ing">' + chips + '</div></div></div></li>';
+  }
+
+  function pintarCarta(){
+    var el = document.getElementById("panel");
+    document.body.dataset.tienda = tienda;
+    document.getElementById("aviso").innerHTML = (tienda === "banda" || tienda === "gris")
+      ? '<div class="aviso-cierre"><b>Esta semana no tomamos pedidos</b><span>' + VUELTA + '</span></div>' : '';
+
+    if(tienda === "lleno"){
+      el.innerHTML = '<div class="cerrada-lleno"><h3>Cerrado por esta semana</h3>' +
+        '<p>' + VUELTA + ' Mientras tanto la masa descansa.</p>' +
+        '<p class="marca">48·72</p></div>';
+      barra(); return;
+    }
+
+    if(solapa === "empanadas"){
+      var otro = cupo === 12 ? 6 : 12;
+      var lista = '<ol class="gustos">' + GUSTOS.map(function(g){
+        if(g.agotada) return '<li class="agotada"><p class="nom">' + g.n + '</p><span class="sello">Se acabó</span></li>';
+        var q = cuantosPack(g.n, cupo), q2 = cuantosPack(g.n, otro);
+        return '<li><p class="nom">' + g.n + '</p>' +
+          (q2 ? '<span class="otro">' + q2 + ' en x' + otro + '</span>' : '') +
+          contador(clavePack(g.n, cupo)) + '</li>';
+      }).join("") + '</ol>';
+
+      var packs = Object.keys(carrito).filter(esPack);
+      el.innerHTML =
+        '<div class="tam">' +
+          '<button type="button" data-cupo="6" aria-pressed="' + (cupo === 6) + '">Packs x6 · ' + plata(PACK[6]) + '</button>' +
+          '<button type="button" data-cupo="12" aria-pressed="' + (cupo === 12) + '">Packs x12 · ' + plata(PACK[12]) + '</button>' +
+        '</div>' + lista +
+        '<p class="rotulo">En tu pedido</p>' +
+        (packs.length
+          ? '<ul class="puesto">' + packs.map(function(k){
+              return '<li><span class="cant">' + carrito[k].cant + '×</span>' +
+                '<span class="que">' + k + '</span>' +
+                '<button class="quitar" type="button" data-menos="' + k + '" aria-label="Sacar uno">×</button></li>';
+            }).join("") + '</ul>'
+          : '<p class="vacio">Todavía no elegiste ningún pack.</p>');
+    }else{
+      var fuente = solapa === "pizzas" ? PIZZAS : FOCACCIAS;
+      el.innerHTML = '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
+    }
+
+    if(tienda !== "abierta"){
+      el.querySelectorAll(".contador button, .tam button").forEach(function(b){ b.disabled = true; });
+    }
+    engancharCarta();
+    barra();
+  }
+
+  function precioDe(clave){
+    var z = PIZZAS.concat(FOCACCIAS).filter(function(x){ return x.n === clave; })[0];
+    if(z) return z.p;
+    var m = / x(6|12)$/.exec(clave);
+    return m ? PACK[+m[1]] : 0;
+  }
+  function mover(clave, d){
+    var actual = carrito[clave] ? carrito[clave].cant : 0;
+    var nueva = Math.max(0, actual + d);
+    if(!nueva) delete carrito[clave];
+    else carrito[clave] = {cant:nueva, precio:precioDe(clave)};
+    pintarCarta();
+  }
+
+  function engancharCarta(){
+    var p = document.getElementById("panel");
+    p.querySelectorAll(".ing:not(.fijo)").forEach(function(c){
+      c.addEventListener("click", function(){
+        c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      });
+    });
+    p.querySelectorAll("[data-mas]").forEach(function(b){
+      b.addEventListener("click", function(){ mover(b.dataset.mas, 1); });
+    });
+    p.querySelectorAll("[data-menos]").forEach(function(b){
+      b.addEventListener("click", function(){ mover(b.dataset.menos, -1); });
+    });
+    p.querySelectorAll("[data-cupo]").forEach(function(b){
+      b.addEventListener("click", function(){ cupo = +b.dataset.cupo; pintarCarta(); });
+    });
+  }
+
+  function familiaDe(clave){
+    if(esPack(clave)) return "pack";
+    return FOCACCIAS.some(function(x){ return x.n === clave; }) ? "focaccia" : "pizza";
+  }
+  function barra(){
+    var t = 0, c = {pizza:0, focaccia:0, pack:0};
+    Object.keys(carrito).forEach(function(k){
+      c[familiaDe(k)] += carrito[k].cant;
+      t += carrito[k].cant * carrito[k].precio;
+    });
+    var partes = [];
+    if(c.pizza)    partes.push(c.pizza + (c.pizza === 1 ? " pizza" : " pizzas"));
+    if(c.focaccia) partes.push(c.focaccia + (c.focaccia === 1 ? " focaccia" : " focaccias"));
+    if(c.pack)     partes.push(c.pack + (c.pack === 1 ? " pack" : " packs"));
+    var n = c.pizza + c.focaccia + c.pack;
+    document.getElementById("cuenta-n").textContent = partes.join(" · ") || "0 cosas";
+    document.getElementById("cuenta-t").textContent = plata(t);
+    document.getElementById("pedido").classList.toggle("visible",
+      n > 0 && tienda === "abierta" && paso === "carta");
+  }
+
+  /* ---------- 2 · el checkout ---------- */
+  function renglonesPedido(){
+    // agrupa por nombre Y por lo que se sacó: dos margaritas distintas son dos renglones
+    return Object.keys(carrito).map(function(k){
+      return {n:k, q:carrito[k].cant, p:carrito[k].precio, sin:carrito[k].sin || []};
+    });
+  }
+
+  function pintarCheckout(){
+    var filas = renglonesPedido();
+    document.getElementById("items").innerHTML = filas.length
+      ? filas.map(function(z){
+          var sin = z.sin.length ? '<span class="sin">sin ' + z.sin.join(", ") + '</span>' : '';
+          return '<li><span class="cant">' + z.q + '×</span>' +
+            '<p class="item-nombre">' + z.n + sin + '</p>' +
+            '<p class="item-plata">' + plata(z.q * z.p) + '</p></li>';
+        }).join("")
+      : '<li><p class="item-nombre" style="font-family:var(--ui);font-size:.9rem;font-weight:600;opacity:.6">Sumá algo en la carta primero.</p></li>';
+
+    document.getElementById("total").textContent =
+      plata(filas.reduce(function(a, z){ return a + z.q * z.p; }, 0));
+
+    pintarDatos();
+  }
+
+  function campo(id, et, ph, tipo){
+    return '<div class="campo"><label for="' + id + '">' + et + '</label>' +
+      '<input id="' + id + '" type="' + (tipo || "text") + '"' +
+      (tipo === "tel" ? ' inputmode="tel"' : '') +
+      ' placeholder="' + ph + '" autocomplete="off" value="' + (tipeado[id] || "") + '"></div>';
+  }
+
+  function pintarDatos(){
+    var h = campo("nom", "Tu nombre", "Cómo te anotamos");
+    if(formaDir === "modo"){
+      h += '<div class="tam" style="margin:0">' +
+        '<button type="button" data-en="envio" aria-pressed="' + (entrega === "envio") + '">Te la llevamos</button>' +
+        '<button type="button" data-en="retiro" aria-pressed="' + (entrega === "retiro") + '">La retiro</button></div>';
+      if(entrega === "envio") h += campo("dir", "Dirección", "Calle y número");
+    }else{
+      h += campo("dir", "Dirección", "Calle y número");
+      if(formaDir === "detalle") h += campo("ref", "Piso, timbre o referencia", "Opcional");
+    }
+    h += '<div class="campo"><label for="wa">Tu WhatsApp</label>' +
+      '<input id="wa" type="tel" inputmode="tel" placeholder="11 5555 5555" autocomplete="off" value="' + tipeado.wa + '">' +
+      '<p class="frase">Te escribimos por acá para coordinar la entrega.</p></div>';
+
+    document.getElementById("datos").innerHTML = h;
+
+    ["nom", "dir", "ref", "wa"].forEach(function(k){
+      var e = document.getElementById(k);
+      if(e) e.addEventListener("input", function(){ leer(); revisar(); });
+    });
+    document.querySelectorAll("[data-en]").forEach(function(b){
+      b.addEventListener("click", function(){ leer(); entrega = b.dataset.en; pintarDatos(); revisar(); });
+    });
+    revisar();
+  }
+
+  function leer(){
+    ["nom", "dir", "ref", "wa"].forEach(function(k){
+      var e = document.getElementById(k);
+      if(e) tipeado[k] = e.value;
+    });
+  }
+  function revisar(){
+    var pideDir = formaDir !== "modo" || entrega === "envio";
+    document.getElementById("confirmar").disabled =
+      tipeado.nom.trim().length < 2 ||
+      tipeado.wa.replace(/\D/g, "").length < 8 ||
+      (pideDir && tipeado.dir.trim().length < 5) ||
+      !Object.keys(carrito).length;
+  }
+
+  /* ---------- 3 · la confirmación ---------- */
+  function pintarListo(){
+    var n = tipeado.nom.trim().split(" ")[0];
+    document.getElementById("listo-texto").textContent =
+      (n ? "Gracias, " + n + ". " : "Gracias. ") + "Te escribimos por WhatsApp para coordinar la entrega.";
+  }
+
+  /* ---------- el recorrido ---------- */
+  function ir(p){
+    paso = p;
+    ["carta", "checkout", "listo"].forEach(function(x){
+      document.getElementById("p-" + x).hidden = x !== p;
+    });
+    document.querySelectorAll("#pasos [data-p]").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.p === p);
+    });
+    if(p === "checkout") pintarCheckout();
+    if(p === "listo") pintarListo();
+    barra();
+    pintarLado();
+  }
+
+  document.querySelectorAll("#pasos [data-p]").forEach(function(b){
+    b.addEventListener("click", function(){ ir(b.dataset.p); });
+  });
+  document.getElementById("ir-checkout").addEventListener("click", function(){ ir("checkout"); });
+  document.querySelector("[data-volver]").addEventListener("click", function(){ ir("carta"); });
+  document.getElementById("confirmar").addEventListener("click", function(){ ir("listo"); });
+  document.querySelectorAll("#solapas button").forEach(function(b){
+    b.addEventListener("click", function(){
+      solapa = b.dataset.s;
+      document.querySelectorAll("#solapas button").forEach(function(o){
+        o.setAttribute("aria-pressed", o.dataset.s === solapa);
+      });
+      pintarCarta();
+      pintarLado();
+    });
+  });
+
+  /* ---------- la explicación, una por pantalla ---------- */
+  function medidor(){
+    var rotos = [];
+    document.querySelectorAll("#panel .fila-ing").forEach(function(f, i){
+      var ings = f.querySelectorAll(".ing");
+      if(!ings.length) return;
+      var tops = {};
+      ings.forEach(function(e){ tops[Math.round(e.getBoundingClientRect().top)] = 1; });
+      if(Object.keys(tops).length > 1 || f.scrollWidth > f.clientWidth + 1){
+        rotos.push((solapa === "pizzas" ? PIZZAS : FOCACCIAS)[i].n);
+      }
+    });
+    if(solapa === "empanadas" || tienda === "lleno")
+      return '<div class="ojo">Sin renglones de ingredientes que medir</div>';
+    return rotos.length
+      ? '<div class="ojo mal">Se parten: ' + rotos.join(", ") + '</div>'
+      : '<div class="ojo">Los cuatro ingredientes entran en una fila</div>';
+  }
+
+  var TEXTOS = {
+    carta: function(){
+      return '<h2>1 · La carta</h2>' +
+      '<div class="bloque"><h3>Se entra directo acá</h3>' +
+      '<p>No hay pantalla de inicio. La cabecera lleva solo <b>48·72</b>, «Pizzas &amp; más» y las tres solapas: ' +
+      'mide 132 px y deja <b>las siete pizzas en la primera pantalla, sin scroll</b>. Se descartaron una portada, ' +
+      'un inicio que explicaba el número y otro que dibujaba la semana.</p></div>' +
+
+      '<div class="bloque"><h3>Cada pizza es un renglón, no un mosaico</h3>' +
+      '<p>Nombre, puntos suspensivos, precio y contador arriba; los cuatro ingredientes debajo, centrados, ' +
+      'en una sola fila. Los mosaicos con foto entraban de a tres por pantalla; así entran casi las siete.</p>' +
+      '<p>El contador va <b>junto al precio</b> y no al final: quedaba colgado cuando los ingredientes no llenaban el ancho.</p></div>' +
+
+      '<div class="bloque"><h3>Los ingredientes son la descripción</h3>' +
+      '<p>Se muestran los cuatro aunque no todos se puedan sacar, porque son lo que describe la pizza. ' +
+      'Los fijos —salsa, muzzarella, longaniza, jamón crudo— <b>simplemente no responden al toque</b>, sin marca previa. ' +
+      'Probá tocar la muzzarella de la Margarita y después la albahaca.</p>' +
+      '<p>0,79 rem es el techo medido: más grande y los cuatro no entran en una fila.</p></div>' +
+
+      '<div class="bloque"><h3>Las empanadas son otra cosa</h3>' +
+      '<p><b>Packs de 6 y de 12, de un solo gusto.</b> No hay unidades sueltas ni packs mezclados: se eliminó el armador ' +
+      'de la surtida, que era la pantalla más compleja del sistema. El motivo es de negocio — la compra típica son ' +
+      'varios packs de un gusto cada uno.</p>' +
+      '<p>El segmentado fija el tamaño y cada gusto tiene su contador. Si ya tenés packs del otro tamaño, ' +
+      'el renglón lo avisa al costado. Una docena de carne, una de jyq, seis de caprese y seis de humita ' +
+      'cuestan <b>cinco toques</b>, medido.</p></div>' +
+
+      '<div class="bloque"><h3>El agotado se tacha, no se esconde</h3>' +
+      '<p>La Calabresa y las Aceitunas están agotadas: nombre y precio tachados, todo en piedra, ' +
+      'y una pastilla «Se acabó» en lugar del contador. Si se escondiera, el cliente no sabría que existe.</p></div>' +
+
+      '<div class="bloque"><h3>La barra aparece al sumar algo</h3>' +
+      '<p>Desglosada —«3 pizzas · 2 packs»— con el total debajo en Archivo semi a 1,5 rem. ' +
+      'Bowlby empastaba los seis dígitos y no tiene números tabulares, así que el total saltaba de ancho.</p></div>' +
+
+      medidor() +
+
+      '<div class="abierta"><b>Sin decidir: cómo se ve cerrada</b>' +
+      'Tres maneras de frenar los pedidos sin bajar el sitio. El interruptor vive en el panel.' +
+      '<div class="variantes" id="v-tienda">' +
+        '<button type="button" data-t="abierta" aria-pressed="' + (tienda === "abierta") + '">Abierta</button>' +
+        '<button type="button" data-t="banda" aria-pressed="' + (tienda === "banda") + '">A · Banda</button>' +
+        '<button type="button" data-t="gris" aria-pressed="' + (tienda === "gris") + '">B · En gris</button>' +
+        '<button type="button" data-t="lleno" aria-pressed="' + (tienda === "lleno") + '">C · Pantalla entera</button>' +
+      '</div></div>' +
+
+      '<dl class="medidas">' +
+        '<div><dt>Cabecera</dt><dd>132 px</dd></div>' +
+        '<div><dt>Título</dt><dd>1,10 rem</dd></div>' +
+        '<div><dt>Engrosado</dt><dd>0,40 px</dd></div>' +
+        '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
+        '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
+        '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +
+      '</dl>';
+    },
+
+    checkout: function(){
+      return '<h2>2 · El checkout</h2>' +
+      '<div class="bloque"><h3>Una pantalla, sin scroll</h3>' +
+      '<p>Barra de arriba con <b>solo el volver, sin título</b> (42 px). El resumen, el total, los campos ' +
+      'y el botón entran en los 800 px del teléfono.</p></div>' +
+
+      '<div class="bloque"><h3>El resumen agrupa por nombre y por lo que se sacó</h3>' +
+      '<p>Una Margarita y una Margarita sin albahaca son <b>dos renglones</b>, nunca «2× Margarita»: ' +
+      'el vendedor tiene que poder leer qué lleva cada una. El «sin ...» va en pastilla, a la derecha del nombre.</p>' +
+      '<p>1,00 rem es el tope medido; más grande parte «Cuatro quesos sin roquefort» en dos líneas.</p></div>' +
+
+      '<div class="bloque"><h3>El total repite la guía punteada de la carta</h3>' +
+      '<p>Los mismos puntos que separan el nombre del precio en cada renglón. Es el detalle que ata ' +
+      'las dos pantallas sin repetir el encabezado.</p></div>' +
+
+      '<div class="bloque"><h3>Sin pago, sin nota, sin registro</h3>' +
+      '<p>Se descartaron el método de pago (efectivo, transferencia, MP, QR), el campo de nota y la línea ' +
+      '«no se paga nada acá». <b>No se cobra en el sitio</b>: el vendedor coordina por WhatsApp.</p>' +
+      '<p>El botón está apagado hasta que los campos obligatorios estén completos. El mensaje sobre fondo verde ' +
+      'al 9% va <b>debajo del WhatsApp</b>, que es el campo que explica.</p></div>' +
+
+      '<div class="abierta"><b>Sin decidir: cómo se pide la dirección</b>' +
+      'Faltaba dónde entregar. Las tres entran sin scroll — medido.' +
+      '<div class="variantes" id="v-dir">' +
+        '<button type="button" data-d="simple" aria-pressed="' + (formaDir === "simple") + '">Un renglón más</button>' +
+        '<button type="button" data-d="modo" aria-pressed="' + (formaDir === "modo") + '">Retiro o envío</button>' +
+        '<button type="button" data-d="detalle" aria-pressed="' + (formaDir === "detalle") + '">Con referencia</button>' +
+      '</div></div>' +
+
+      '<dl class="medidas">' +
+        '<div><dt>Barra de arriba</dt><dd>42 px</dd></div>' +
+        '<div><dt>Renglón</dt><dd>1,00 rem</dd></div>' +
+        '<div><dt>Total</dt><dd>1,72 rem</dd></div>' +
+        '<div><dt>Fondo del mensaje</dt><dd>verde 9%</dd></div>' +
+      '</dl>';
+    },
+
+    listo: function(){
+      return '<h2>3 · La confirmación</h2>' +
+      '<div class="bloque"><h3>El número, grande y solo</h3>' +
+      '<p>Es lo único que el cliente puede necesitar repetir. Va suelto, en Archivo con números tabulares, ' +
+      'debajo del título.</p></div>' +
+
+      '<div class="bloque"><h3>Dice qué pasa ahora, no «gracias por su compra»</h3>' +
+      '<p>«Te escribimos por WhatsApp para coordinar la entrega» es información: el cliente sabe que ' +
+      'la próxima acción no es suya. Se probaron seis cierres y ganó el que usa el nombre.</p></div>' +
+
+      '<div class="bloque"><h3>Sin botón de salida</h3>' +
+      '<p>Es la decisión menos obvia de las tres pantallas. Volver a la carta desde acá generaría ' +
+      '<b>un segundo pedido separado para la misma persona</b>, y el vendedor recibiría dos mensajes de Telegram ' +
+      'que tiene que juntar a mano. Si quiere pedir más, entra de nuevo.</p></div>' +
+
+      '<div class="bloque"><h3>Verde pleno, invertido</h3>' +
+      '<p>Es la única pantalla de la tienda con el fondo verde. Marca el final del recorrido sin ' +
+      'necesitar un cartel que lo diga.</p></div>';
+    }
+  };
+
+  function pintarLado(){
+    document.getElementById("lado").innerHTML = TEXTOS[paso]();
+    document.querySelectorAll("#v-tienda [data-t]").forEach(function(b){
+      b.addEventListener("click", function(){ tienda = b.dataset.t; pintarCarta(); pintarLado(); });
+    });
+    document.querySelectorAll("#v-dir [data-d]").forEach(function(b){
+      b.addEventListener("click", function(){ formaDir = b.dataset.d; pintarDatos(); pintarLado(); });
+    });
+  }
+
+  pintarCarta();
+  pintarLado();
+</script>

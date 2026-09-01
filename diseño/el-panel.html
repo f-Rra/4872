@@ -1,0 +1,2190 @@
+<title>El panel del vendedor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
+
+<style>
+  :root{
+    --fila:30px;
+    --verde:#1E5245;
+    --verde-hondo:#143A31;
+    --papel:#F3EDE1;
+    --piedra:#9A9287;
+    --hoja:#E4E4E6;
+    --hoja-linea:#C6C6CB;
+    --hoja-tinta:#26262A;
+    --hoja-suave:#5C5C64;
+    --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--verde);color:var(--papel)}
+  :focus-visible{outline:2.5px solid var(--verde);outline-offset:2px}
+  html{scrollbar-color:var(--verde) var(--hoja)}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:var(--hoja)}
+  ::-webkit-scrollbar-thumb{background:var(--verde);border:3px solid var(--hoja)}
+  body{
+    margin:0;background:var(--hoja);color:var(--hoja-tinta);
+    font-family:var(--ui);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  .pliego{
+    max-width:1340px;margin:0 auto;
+    padding:clamp(1.4rem,4vw,2.4rem) clamp(1rem,3vw,2rem) 3.5rem;
+    display:flex;flex-direction:column;gap:1.1rem;
+  }
+  .encabezado{display:flex;flex-direction:column;gap:.45rem;max-width:76ch}
+  .encabezado h1{margin:0;font-weight:800;font-size:clamp(1.5rem,1.2rem + 1.5vw,2.1rem);letter-spacing:-.025em;line-height:1.06}
+  .encabezado p{margin:0;color:var(--hoja-suave);font-size:1rem}
+  .encabezado b{color:var(--hoja-tinta);font-weight:600}
+
+  /* ============ marco ============ */
+  .marco{
+    position:relative;
+    border:1.5px solid var(--hoja-linea);background:var(--papel);color:var(--verde);
+    overflow:hidden;display:flex;height:700px;
+  }
+  .lateral{width:212px;flex:none;border-right:2px solid var(--verde);display:flex;flex-direction:column;overflow-y:auto}
+  .lateral .marca{
+    height:58px;flex:none;display:flex;align-items:flex-end;
+    padding:0 .9rem 1.06rem;border-bottom:2px solid var(--verde);margin:0;
+    font-weight:600;font-size:1.15rem;line-height:1;letter-spacing:.22em;font-variant-numeric:tabular-nums;
+  }
+  .lateral nav{display:flex;flex-direction:column}
+  .lateral nav svg{width:17px;height:17px;flex:none;stroke-width:1.9}
+  .lateral nav button{
+    display:flex;align-items:center;gap:.62rem;text-align:left;
+    font-family:var(--ui);font-weight:700;font-size:.88rem;
+    background:transparent;color:var(--verde);border:0;
+    padding:.68rem .9rem;cursor:pointer;border-bottom:1px solid rgba(30,82,69,.2);
+  }
+  .lateral nav button:hover{background:rgba(30,82,69,.08)}
+  .lateral nav button[aria-current="page"]{background:var(--verde);color:var(--papel)}
+  .lateral .globo{
+    margin-left:auto;font-size:.7rem;font-weight:800;font-variant-numeric:tabular-nums;
+    background:var(--verde);color:var(--papel);border-radius:999px;padding:.05rem .42rem;
+  }
+  .lateral nav button[aria-current="page"] .globo{background:var(--papel);color:var(--verde)}
+  .lateral .pie{
+    margin-top:auto;padding:.8rem .9rem;border-top:1px solid rgba(30,82,69,.2);
+    font-size:.72rem;font-weight:600;opacity:.75;line-height:1.4;
+  }
+
+  .obra{flex:1;display:flex;flex-direction:column;min-width:0}
+  .cabecera{
+    height:58px;flex:none;display:flex;align-items:center;gap:.8rem;
+    padding:0 1.1rem;border-bottom:2px solid var(--verde);
+  }
+  /* el titulo es mas grande que la marca de la barra lateral, asi que necesita
+     menos padding para caer en la misma linea de base: medido, .84rem contra 1.06rem */
+  .cab-titulo{display:flex;align-items:baseline;gap:.7rem;min-width:0;align-self:flex-end;padding-bottom:.84rem}
+  .cabecera h3{margin:0;font-weight:800;font-size:1.28rem;letter-spacing:-.02em;line-height:1}
+  .cabecera .sub{font-size:.82rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums;line-height:1}
+  .filtros{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:auto}
+  .filtros button{
+    font-family:var(--ui);font-size:.74rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.4px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.26rem .62rem;cursor:pointer;
+  }
+  .filtros button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+
+  .estado{
+    font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    border-radius:999px;padding:.2rem .52rem;white-space:nowrap;flex:none;
+  }
+  .e-nuevo{background:var(--verde);color:var(--papel)}
+  .e-prep{background:transparent;color:var(--verde);box-shadow:inset 0 0 0 1.5px var(--verde)}
+  .e-entregado{background:transparent;color:var(--piedra);box-shadow:inset 0 0 0 1.5px var(--piedra)}
+  .e-cancelado{background:transparent;color:var(--piedra);box-shadow:inset 0 0 0 1.5px var(--piedra);text-decoration:line-through}
+  .sin{
+    font-size:.72rem;font-weight:700;border:1.2px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.02rem .38rem;margin-left:.25rem;white-space:nowrap;
+  }
+
+  /* ---- pedidos: lista + detalle ---- */
+  .doble{flex:1;display:flex;min-height:0}
+  .columna{width:326px;flex:none;border-right:1.5px solid rgba(30,82,69,.28);overflow-y:auto}
+  .columna ul{list-style:none;margin:0;padding:0}
+  .columna li{border-bottom:1px solid rgba(30,82,69,.22)}
+  .columna button{
+    width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+    padding:.72rem .9rem;display:flex;align-items:center;gap:.8rem;
+    font-family:var(--ui);color:var(--verde);
+  }
+  .columna .izq{flex:1;min-width:0;display:flex;flex-direction:column;gap:.3rem}
+  .columna button:hover{background:rgba(30,82,69,.07)}
+  .columna li.elegido button{background:var(--verde);color:var(--papel)}
+  .columna li.elegido .estado{background:var(--papel);color:var(--verde);box-shadow:none}
+  .fila-1{display:flex;align-items:baseline;gap:.5rem;width:100%;min-width:0}
+  .fila-1 .num{font-weight:800;font-size:.86rem;font-variant-numeric:tabular-nums;opacity:.75}
+  .fila-1 .quien{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .columna .plata{flex:none;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+  .fila-2{display:flex;align-items:center;gap:.5rem;width:100%}
+  .fila-2 .hora{font-size:.75rem;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
+
+  .detalle{flex:1;overflow-y:auto;min-width:0;padding:1.1rem 1.2rem}
+  .det-tope{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.25rem}
+  .det-tope h4{margin:0;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;line-height:1}
+  .det-meta{font-size:.85rem;font-weight:600;opacity:.8;margin:0 0 1rem;font-variant-numeric:tabular-nums}
+  .det-items{list-style:none;margin:0 0 1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
+  .det-items li{display:flex;align-items:baseline;gap:.6rem;padding:.55rem 0;border-bottom:1px solid rgba(30,82,69,.22)}
+  .det-items .c{font-weight:800;font-size:.88rem;flex:none;min-width:1.7rem;font-variant-numeric:tabular-nums;opacity:.8}
+  .det-items .q{flex:1;font-size:.95rem;font-weight:600}
+  .det-items .p{font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums}
+  .det-total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:.7rem 0;border-bottom:2px solid var(--verde);margin-bottom:1.2rem;
+  }
+  .det-total dt{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .det-total dd{margin:0;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .acciones{display:flex;flex-direction:column;align-items:stretch;gap:.6rem}
+  .btn{
+    font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.05em;
+    border-radius:999px;padding:.7rem 1rem;cursor:pointer;width:100%;text-align:center;
+    background:var(--verde);color:var(--papel);border:1.6px solid var(--verde);
+  }
+  .btn:hover{background:var(--verde-hondo);border-color:var(--verde-hondo)}
+  .btn.flaco{background:transparent;color:var(--verde)}
+  .btn.flaco:hover{background:rgba(30,82,69,.1);border-color:var(--verde);color:var(--verde)}
+  .secundarias{display:flex;gap:1.1rem;justify-content:center}
+  .enlace{
+    background:transparent;border:0;padding:.2rem 0;cursor:pointer;
+    font-family:var(--ui);font-weight:700;font-size:.8rem;color:var(--piedra);
+    border-bottom:1.5px solid rgba(154,146,135,.55);
+  }
+  .enlace:hover{color:var(--verde);border-bottom-color:var(--verde)}
+  .enlace.verde{color:var(--verde);border-bottom-color:rgba(30,82,69,.5)}
+
+  /* ---- producción ---- */
+  .prod{flex:1;overflow-y:auto;min-width:0}
+  .titulares{display:flex;border-bottom:2px solid var(--verde)}
+  .titular{
+    flex:1;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.15rem;
+  }
+  .titular + .titular{border-left:1px solid rgba(30,82,69,.25)}
+  .titular dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .titular dd{margin:0;font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .titular .nota{font-size:.74rem;font-weight:600;opacity:.72}
+  .grupo-prod{padding:0 0 .4rem}
+  .grupo-prod > h5{
+    margin:0;padding:.6rem 1.1rem;font-size:.66rem;font-weight:800;
+    letter-spacing:.18em;text-transform:uppercase;background:rgba(30,82,69,.09);
+  }
+  .prod-lista{list-style:none;margin:0;padding:0}
+  .prod-lista li{
+    display:flex;align-items:flex-start;gap:.9rem;
+    padding:.7rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.22);
+  }
+  .prod-cant{
+    flex:none;min-width:2.6rem;font-size:1.15rem;font-weight:800;
+    font-variant-numeric:tabular-nums;line-height:1.2;
+  }
+  .prod-cuerpo{flex:1;min-width:0}
+  .prod-nom{margin:0;font-size:1rem;font-weight:700;line-height:1.25}
+  .prod-detalle{margin:.22rem 0 0;font-size:.82rem;font-weight:600;opacity:.8;line-height:1.4}
+  .prod-detalle .marca-sin{
+    display:inline-block;border:1.2px solid rgba(30,82,69,.45);border-radius:999px;
+    padding:.02rem .4rem;margin-right:.3rem;font-weight:700;
+  }
+  .prod-unidad{flex:none;font-size:.78rem;font-weight:700;opacity:.7;padding-top:.28rem;white-space:nowrap}
+
+  /* B · orden de amasado */
+  .amasado{padding:0}
+  .paso{border-bottom:1px solid rgba(30,82,69,.22)}
+  .paso > h5{
+    margin:0;padding:.6rem 1.1rem;font-size:.66rem;font-weight:800;
+    letter-spacing:.18em;text-transform:uppercase;background:rgba(30,82,69,.09);
+  }
+  .insumos{list-style:none;margin:0;padding:0}
+  .insumos li{
+    display:flex;align-items:baseline;gap:.9rem;
+    padding:.55rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.16);
+  }
+  .insumos .n{flex:none;min-width:2.4rem;font-size:1.02rem;font-weight:800;font-variant-numeric:tabular-nums}
+  .insumos .q{flex:1;font-size:.95rem;font-weight:700;min-width:0}
+  .insumos .cuenta{font-size:.78rem;font-weight:600;opacity:.72;font-variant-numeric:tabular-nums;text-align:right}
+  .insumos .cuenta em{font-style:normal;color:#B0503C;font-weight:700}
+  .masa-tope{display:flex;gap:0;border-bottom:2px solid var(--verde)}
+  .masa-tope div{flex:1;padding:.9rem 1.1rem}
+  .masa-tope div + div{border-left:1px solid rgba(30,82,69,.25)}
+  .masa-tope dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .masa-tope dd{margin:.1rem 0 0;font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+
+  /* C · pantalla de cocina */
+  .cocina{padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.7rem;align-content:start}
+  .celda{
+    border:2px solid var(--verde);padding:.8rem .9rem;display:flex;flex-direction:column;gap:.15rem;
+  }
+  .celda .big{font-size:3rem;font-weight:800;line-height:.95;font-variant-numeric:tabular-nums}
+  .celda .nom{font-size:1rem;font-weight:700;line-height:1.2}
+  .celda .ap{font-size:.78rem;font-weight:700;color:#B0503C;margin-top:.2rem}
+  .celda.emp{background:var(--verde);color:var(--papel);border-color:var(--verde)}
+  .celda.emp .ap{color:var(--papel);opacity:.85}
+  .celda .sub{font-size:.74rem;font-weight:600;opacity:.72}
+
+  /* D · por pedido */
+  .tarjetas{padding:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:.8rem;align-content:start}
+  .tarjeta{border:1.5px solid var(--verde);display:flex;flex-direction:column}
+  .tarjeta > header{
+    display:flex;align-items:center;gap:.5rem;
+    padding:.55rem .75rem;border-bottom:1.5px solid var(--verde);
+  }
+  .tarjeta header .n{font-weight:800;font-size:.86rem;font-variant-numeric:tabular-nums;opacity:.75}
+  .tarjeta header .q{flex:1;font-weight:700;font-size:.95rem}
+  .tarjeta ul{list-style:none;margin:0;padding:.4rem .75rem .6rem}
+  .tarjeta li{display:flex;align-items:flex-start;gap:.5rem;padding:.28rem 0;font-size:.88rem}
+  .tarjeta .tilde{
+    width:1rem;height:1rem;flex:none;margin-top:.15rem;border:1.5px solid var(--verde);
+    background:transparent;cursor:pointer;padding:0;
+  }
+  .tarjeta li.hecho{opacity:.45}
+  .tarjeta li.hecho .txt{text-decoration:line-through}
+  .tarjeta .tilde[aria-pressed="true"]{
+    background:var(--verde) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F3EDE1' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M4 12l6 6L20 5'/%3E%3C/svg%3E") center/76% no-repeat;
+  }
+  .tarjeta .txt{flex:1}
+  .tarjeta .cc{font-weight:800;font-variant-numeric:tabular-nums;flex:none;min-width:1.4rem}
+
+  /* ---------- inicio ---------- */
+  .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
+  .tarjetas-ini{flex:none}
+  .selini{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:auto}
+  .selini button{
+    font-family:var(--ui);font-size:.74rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.4px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.26rem .62rem;cursor:pointer;
+  }
+  .selini button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+
+  /* B · tablero */
+  .tarjetas-ini{margin:0;display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid var(--verde)}
+  .card{padding:1rem .95rem;display:flex;flex-direction:column;gap:.12rem;min-width:0}
+  .card + .card{border-left:1px solid rgba(30,82,69,.25)}
+  .card dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .card dd{margin:0;font-size:1.75rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .card .n{font-size:.74rem;font-weight:600;opacity:.72}
+  .hornear{display:flex;align-items:stretch;flex:1;min-height:0}
+  .hornear > .mitad-h{flex:1;padding:.95rem 1.1rem 1.2rem;min-width:0;overflow-y:auto}
+  .hornear > .mitad-h + .mitad-h{border-left:1.5px solid rgba(30,82,69,.28)}
+  .corrida{list-style:none;margin:0;padding:0}
+  .corrida li.cabeza{
+    align-items:flex-end;padding-bottom:.28rem;
+    border-bottom:1.4px solid rgba(30,82,69,.4);
+    font-size:.63rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.62;
+  }
+  .corrida .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .corrida .cu{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
+  .corrida .cu em{font-style:normal;font-size:.76rem;font-weight:600;opacity:.6}
+  .hornear h5{margin:0 0 .55rem;font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .comprar{list-style:none;margin:0;padding:0}
+  .comprar li,.corrida li{
+    display:flex;align-items:center;gap:.6rem;height:var(--fila);padding:0;
+    border-bottom:1px solid rgba(30,82,69,.18);font-size:.93rem;font-weight:600;
+  }
+  .comprar .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .comprar .cu{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
+  .nada-h{margin:.5rem 0 0;font-size:.84rem;font-weight:600;opacity:.6}
+  .hornear ul{list-style:none;margin:0;padding:0}
+  .hornear li{display:flex;gap:.55rem;align-items:baseline;font-size:.93rem;font-weight:600;padding:.14rem 0}
+  .hornear .c{font-weight:800;font-variant-numeric:tabular-nums;flex:none;min-width:1.7rem}
+  .hornear .u{font-size:.76rem;font-weight:600;opacity:.65;flex:none}
+
+  /* ---------- productos ---------- */
+  .fila-p{display:flex;align-items:baseline;gap:.55rem;width:100%;min-width:0}
+  .fila-p .nom{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fila-p .plata{margin-left:auto}
+  .fila-p .plata.packs-dos{font-size:.86rem;letter-spacing:-.01em}
+  .fila-p .plata i{font-style:normal;opacity:.4;padding:0 .16rem}
+  .fila-p .fam{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+  .agotado{
+    font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;flex:none;
+    border-radius:999px;padding:.14rem .48rem;box-shadow:inset 0 0 0 1.5px var(--piedra);color:var(--piedra);
+  }
+  .columna li.elegido .agotado{box-shadow:inset 0 0 0 1.5px var(--papel);color:var(--papel)}
+
+  /* columna con pie de alta */
+  .columna.con-pie{overflow:hidden;display:flex;flex-direction:column}
+  .columna.con-pie .rollo{flex:1;overflow-y:auto;min-height:0}
+  .alta{
+    flex:none;display:flex;align-items:center;gap:.55rem;width:100%;text-align:left;cursor:pointer;
+    font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.03em;color:var(--verde);
+    background:transparent;border:0;border-top:1.5px solid rgba(30,82,69,.32);padding:.75rem .9rem;
+  }
+  .alta:hover{background:rgba(30,82,69,.09)}
+  .alta svg{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+  .alta[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+
+  /* 1 · ficha */
+  .campo{display:flex;flex-direction:column;gap:.22rem;margin-bottom:.9rem}
+  .campo label{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+  .campo input{
+    font-family:var(--ui);font-size:1rem;font-weight:600;color:var(--verde);
+    background:transparent;border:0;border-bottom:1.5px solid rgba(30,82,69,.4);
+    padding:.28rem 0;font-variant-numeric:tabular-nums;
+  }
+  .campo input:focus{outline:0;border-bottom-color:var(--verde);border-bottom-width:2px}
+  .par{display:flex;gap:1.4rem}
+  .par.junto{gap:1.7rem}
+  .par.junto > .campo{flex:0 0 auto}
+  .campo.ancho input{width:17rem;max-width:100%}
+  .campo.corto input{width:7rem}
+  .par .campo{flex:1}
+  .ingr{display:flex;flex-wrap:wrap;gap:.32rem;padding-top:.15rem}
+  .ingr span{
+    font-size:.8rem;font-weight:600;border:1.3px solid rgba(30,82,69,.4);
+    border-radius:999px;padding:.14rem .55rem;white-space:nowrap;
+  }
+  .ingr span{display:inline-flex;align-items:center;gap:.3rem}
+  .ingr .quitar{
+    background:transparent;border:0;padding:0;cursor:pointer;color:var(--verde);
+    font-family:var(--ui);font-size:.95rem;line-height:1;opacity:.5;
+  }
+  .ingr .quitar:hover{opacity:1}
+  .ingr .mas-ing{
+    flex:none;width:1.55rem;height:1.55rem;border-radius:50%;cursor:pointer;
+    background:transparent;border:1.4px solid rgba(30,82,69,.5);color:var(--verde);
+    display:grid;place-items:center;padding:0;margin-left:.15rem;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .ingr .mas-ing svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round}
+  .ingr .mas-ing:hover{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .ingr .sumar{
+    font-family:var(--ui);font-size:.8rem;font-weight:600;color:var(--verde);
+    background:transparent;border:1.3px solid var(--verde);border-radius:999px;
+    padding:.12rem .6rem;width:9rem;margin-left:.15rem;
+  }
+  .ingr .sumar::placeholder{color:var(--verde);opacity:.45}
+  .ingr .sumar:focus{outline:0}
+  .candidatos{
+    list-style:none;margin:.45rem 0 0;padding:0;max-height:9.5rem;overflow-y:auto;
+    border:1.3px solid rgba(30,82,69,.3);
+  }
+  .candidatos li + li{border-top:1px solid rgba(30,82,69,.18)}
+  .candidatos button{
+    width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+    font-family:var(--ui);font-size:.85rem;font-weight:600;color:var(--verde);
+    padding:.34rem .6rem;
+  }
+  .candidatos button:hover,.candidatos li.marcado button{background:rgba(30,82,69,.1)}
+  .candidatos .nada{padding:.45rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
+  /* B \u00b7 rengl\u00f3n etiquetado */
+  .renglones{border-top:1.5px solid rgba(30,82,69,.3);margin-bottom:1.3rem}
+  .reng{display:flex;align-items:baseline;gap:1rem;padding:.62rem 0;border-bottom:1px solid rgba(30,82,69,.22)}
+  .reng > .et{
+    flex:none;width:7.6rem;font-size:.66rem;font-weight:800;
+    letter-spacing:.14em;text-transform:uppercase;opacity:.8;
+  }
+  .reng > .va{flex:1;min-width:0}
+  .reng input{
+    font-family:var(--ui);font-size:.98rem;font-weight:600;color:var(--verde);
+    background:transparent;border:0;border-bottom:1.4px dashed transparent;
+    padding:0 0 .1rem;width:100%;font-variant-numeric:tabular-nums;
+  }
+  .reng input:hover{border-bottom-color:rgba(30,82,69,.35)}
+  .reng input:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+
+  .nota-f.menos{margin-top:.45rem;font-size:.8rem}
+  .packs{display:flex;gap:1.5rem;padding-top:.1rem}
+  .packs .pk{display:flex;align-items:baseline;gap:.45rem}
+  .packs em{
+    font-style:normal;font-size:.76rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;opacity:.7;flex:none;
+  }
+  .packs input{
+    font-family:var(--ui);font-size:1rem;font-weight:600;color:var(--verde);
+    background:transparent;border:0;border-bottom:1.5px solid rgba(30,82,69,.4);
+    padding:.28rem 0;width:6rem;font-variant-numeric:tabular-nums;
+  }
+  .packs input:focus{outline:0;border-bottom-color:var(--verde);border-bottom-width:2px}
+  .campo .nota-f{margin-top:.35rem}
+  .chips{display:flex;flex-wrap:wrap;gap:.32rem;padding-top:.15rem}
+  .chips button{
+    font-family:var(--ui);font-size:.8rem;font-weight:600;color:var(--verde);
+    background:transparent;border:1.3px solid rgba(30,82,69,.4);
+    border-radius:999px;padding:.14rem .62rem;cursor:pointer;
+  }
+  .chips button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .nota-f{font-size:.84rem;font-weight:600;opacity:.75;margin:.1rem 0 0;line-height:1.45}
+
+  /* ---------- ingredientes ---------- */
+  .banda{
+    flex:none;display:flex;align-items:baseline;gap:.55rem;
+    padding:.62rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.25);
+    font-size:.88rem;font-weight:600;
+  }
+  .banda b{font-weight:800}
+  .banda.cerrada{background:var(--verde);color:var(--papel);border-bottom-color:var(--verde)}
+  .llave-tienda{margin-left:auto;display:flex;align-items:center;gap:.55rem}
+  .et-t{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+  .lateral .pie-alerta{background:var(--verde);color:var(--papel);opacity:1}
+  .banda .aparte{margin-left:auto;font-size:.78rem;font-weight:700;opacity:.7}
+  .rollo-ing{flex:1;overflow-y:auto;min-width:0}
+  .grilla{width:100%;border-collapse:collapse}
+  .grilla th{
+    text-align:left;font-size:.63rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:.5rem 1.1rem;border-bottom:1.5px solid var(--verde);
+    position:sticky;top:0;background:var(--papel);opacity:.85;
+  }
+  .grilla td{padding:.46rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.2);font-size:.92rem;font-weight:600}
+  .grilla tr:hover td{background:rgba(30,82,69,.05)}
+  .grilla .g-nom{font-weight:700}
+  .grilla .g-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+  .grilla .g-flojo{font-size:.8rem;font-weight:600;opacity:.62}
+  .grilla .g-fin{width:1%;white-space:nowrap;text-align:right}
+  .grilla tr.apagada .g-nom,.grilla tr.apagada .g-flojo{opacity:.5}
+  .grilla input{
+    font-family:var(--ui);font-size:.9rem;font-weight:700;color:var(--verde);text-align:right;
+    background:transparent;border:0;border-bottom:1.3px dashed rgba(30,82,69,.4);
+    width:2ch;min-width:1ch;padding:.06rem 0;font-variant-numeric:tabular-nums;
+  }
+  .grilla input:hover{border-bottom-color:rgba(30,82,69,.75)}
+  .grilla input:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+  .llave{
+    font-family:var(--ui);font-size:.65rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    border-radius:999px;padding:.2rem .55rem;cursor:pointer;
+    border:1.5px solid var(--verde);background:var(--verde);color:var(--papel);
+  }
+  .llave[aria-pressed="false"]{background:transparent;color:var(--piedra);border-color:var(--piedra)}
+  .llave.chica{flex:none;font-size:.6rem;padding:.14rem .48rem;min-width:4.4rem;text-align:center}
+  .semaforo{
+    font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    border-radius:999px;padding:.16rem .5rem;white-space:nowrap;
+  }
+  .s-ok{background:transparent;color:var(--verde);box-shadow:inset 0 0 0 1.4px rgba(30,82,69,.5)}
+  .s-poco{background:transparent;color:var(--verde);box-shadow:inset 0 0 0 1.6px var(--verde)}
+  .s-sin{background:var(--verde);color:var(--papel)}
+  .sinCargar{font-size:.8rem;font-weight:600;opacity:.5;font-style:italic}
+
+  .subbarra{
+    flex:none;display:flex;align-items:center;gap:.3rem;
+    padding:.42rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.25);
+  }
+  .subbarra .rot{
+    font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    opacity:.6;margin-right:auto;
+  }
+  .subbarra button{
+    font-family:var(--ui);font-size:.72rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.4px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.2rem .58rem;cursor:pointer;
+  }
+  .subbarra button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+
+  .pie-tabla{
+    flex:none;display:flex;align-items:center;gap:.7rem;
+    border-top:1.5px solid rgba(30,82,69,.32);padding:.62rem 1.1rem;
+  }
+  .pie-tabla .abrir{
+    display:flex;align-items:center;gap:.5rem;cursor:pointer;
+    font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.03em;color:var(--verde);
+    background:transparent;border:0;padding:0;
+  }
+  .pie-tabla .abrir:hover{text-decoration:underline}
+  .pie-tabla .abrir svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+  .pie-tabla .cuantos{margin-left:auto;font-size:.76rem;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums}
+  .pie-tabla .cuantos button{
+    font-family:var(--ui);font-size:.76rem;font-weight:800;color:var(--verde);
+    background:transparent;border:0;border-bottom:1.4px solid rgba(30,82,69,.5);
+    padding:0;margin-left:.5rem;cursor:pointer;
+  }
+
+  .grilla .g-nom{font-weight:700}
+  .grilla .bajo{display:block;font-size:.72rem;font-weight:600;opacity:.58;font-variant-numeric:tabular-nums}
+  .grilla .abre{
+    font-family:var(--ui);font-size:.92rem;font-weight:700;color:var(--verde);
+    background:transparent;border:0;padding:0;cursor:pointer;text-align:left;
+  }
+  .grilla .abre:hover{text-decoration:underline}
+
+  /* ficha de ingrediente */
+  .telon{
+    position:absolute;inset:0;background:rgba(20,58,49,.38);
+    display:flex;align-items:center;justify-content:center;padding:1.4rem;z-index:5;
+  }
+  .modal{
+    width:530px;max-width:100%;max-height:100%;overflow:hidden auto;
+    background:var(--papel);border:2px solid var(--verde);padding:1.15rem 1.25rem 1.25rem;
+  }
+  .modal h4{margin:0 0 .2rem;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;line-height:1.1}
+  .modal .sub-m{margin:0 0 1rem;font-size:.82rem;font-weight:600;opacity:.75}
+  .modal .campo > input{width:100%}
+  .modal .campo.corto > input{width:7rem}
+  .reparto{border-top:1.4px solid rgba(30,82,69,.3);margin-top:.2rem}
+  .reparto .fila{
+    display:flex;align-items:baseline;gap:.55rem;
+    padding:.38rem 0;border-bottom:1px solid rgba(30,82,69,.2);
+  }
+  .reparto .qn{flex:1;min-width:0;font-size:.88rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .reparto .rinde{
+    font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    opacity:.55;margin-left:.45rem;
+  }
+  .reparto .cajaNum{flex:none;min-width:5rem;text-align:right}
+  .reparto input{
+    font-family:var(--ui);font-size:.9rem;font-weight:700;color:var(--verde);text-align:right;
+    background:transparent;border:0;border-bottom:1.3px dashed rgba(30,82,69,.4);
+    width:2ch;min-width:1ch;padding:.02rem 0;font-variant-numeric:tabular-nums;
+  }
+  .reparto input:hover{border-bottom-color:rgba(30,82,69,.75)}
+  .reparto input:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+  .reparto .sale{
+    font-size:.78rem;font-weight:700;opacity:.72;flex:none;min-width:5.4rem;
+    text-align:right;font-variant-numeric:tabular-nums;
+  }
+  .reparto .total{border-bottom:0;border-top:1.4px solid var(--verde);padding-top:.5rem;margin-top:.1rem}
+  .reparto .total .qn{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .reparto .total .sale{font-size:1rem;font-weight:800;opacity:1}
+  .grilla .bajo.alerta{opacity:.85;font-weight:700}
+  .noBorra{font-size:.78rem;font-weight:600;opacity:.6}
+  .urge{font-weight:800}
+  .barra-ing{display:flex;align-items:center;gap:.7rem;width:100%}
+  .pista{position:relative;flex:1;min-width:70px;height:9px;background:rgba(30,82,69,.15);overflow:hidden}
+  .llena{position:absolute;top:0;bottom:0;left:0;background:var(--verde)}
+  .pasa{
+    position:absolute;top:0;bottom:0;right:0;width:26%;
+    background:repeating-linear-gradient(-45deg,var(--verde),var(--verde) 2px,var(--papel) 2px,var(--papel) 4.5px);
+    box-shadow:inset 0 0 0 1.2px var(--verde);
+  }
+  .dictamen{
+    flex:none;font-size:.8rem;font-weight:700;min-width:8.4rem;text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .semaforo{
+    font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    border-radius:999px;padding:.16rem .5rem;white-space:nowrap;
+  }
+  .s-ok{background:transparent;color:var(--piedra);box-shadow:inset 0 0 0 1.4px var(--piedra)}
+  .s-poco{background:transparent;color:var(--verde);box-shadow:inset 0 0 0 1.6px var(--verde)}
+  .s-sin{background:var(--verde);color:var(--papel)}
+  .asterisco{opacity:.5;padding-left:.1rem}
+  .usaEn{display:flex;flex-wrap:wrap;gap:.3rem;padding-top:.15rem}
+  .usaEn span{
+    font-size:.78rem;font-weight:600;border:1.3px solid rgba(30,82,69,.35);
+    border-radius:999px;padding:.1rem .5rem;white-space:nowrap;
+  }
+  .usaEn .nadie{border:0;padding:0;opacity:.6;font-style:italic}
+
+  /* ---------- costos ---------- */
+  .pct{
+    flex:none;font-weight:800;font-size:.95rem;font-variant-numeric:tabular-nums;margin-left:auto;
+  }
+  .pct.flojo{box-shadow:inset 0 -.42em 0 rgba(30,82,69,.18)}
+  .columna li.elegido .pct.flojo{box-shadow:inset 0 -.42em 0 rgba(243,237,225,.28)}
+  .desglose{list-style:none;margin:0 0 1.1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
+  .desglose li{
+    display:flex;align-items:baseline;gap:.7rem;padding:.4rem 0;
+    border-bottom:1px solid rgba(30,82,69,.2);font-size:.9rem;font-weight:600;
+  }
+  .desglose li.fija{background:rgba(30,82,69,.05)}
+  .desglose li.sangria{border-bottom-style:dotted}
+  .desglose li.sangria .qn{padding-left:1.1rem;font-weight:600;opacity:.78;font-size:.85rem}
+  .desglose li.sangria .cuanto,.desglose li.sangria .precio,.desglose li.sangria .sub{opacity:.7;font-size:.8rem}
+  .desglose li.sangria .sub{font-weight:700}
+  .desglose .precio{min-width:8.6rem}
+  .llave.hueca{background:transparent;color:var(--piedra);border-color:var(--piedra);cursor:default}
+  .desglose .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .desglose .cuanto{flex:none;min-width:4.6rem;text-align:right;font-size:.82rem;opacity:.7;font-variant-numeric:tabular-nums}
+  .desglose .precio{flex:none;min-width:6rem;text-align:right;font-size:.82rem;opacity:.7;font-variant-numeric:tabular-nums}
+  .desglose .sub{flex:none;min-width:4.4rem;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .desglose i{font-style:italic;opacity:.75}
+  .cuentas{display:flex;margin:0 0 1rem;border-top:1.5px solid rgba(30,82,69,.3);border-bottom:2px solid var(--verde)}
+  .cuentas > div{flex:1;padding:.7rem 0}
+  .cuentas > div + div{border-left:1px solid rgba(30,82,69,.22);padding-left:1rem}
+  .cuentas dt{font-size:.63rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+  .cuentas dd{margin:.1rem 0 0;font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .cuentas .fuerte dd{font-weight:800}
+  .cuentas em{font-style:normal;font-size:.82rem;font-weight:700;opacity:.65}
+  .conUn{display:flex;align-items:baseline;gap:.45rem}
+  .conUn em{font-style:normal;font-size:.78rem;font-weight:700;opacity:.65;white-space:nowrap}
+
+  .placeholder{padding:1.4rem 1.2rem;font-size:.92rem;opacity:.7}
+  .selprod{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:auto}
+  .selprod button{
+    font-family:var(--ui);font-size:.74rem;font-weight:700;
+    background:transparent;color:var(--verde);border:1.4px solid rgba(30,82,69,.45);
+    border-radius:999px;padding:.26rem .62rem;cursor:pointer;
+  }
+  .selprod button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+
+  .lado{display:flex;flex-direction:column;gap:1rem}
+  .lado h2{margin:0;font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--hoja-suave)}
+  .lado p{margin:0;font-size:.92rem;color:var(--hoja-suave);line-height:1.5;max-width:82ch}
+  .lado p b{color:var(--hoja-tinta);font-weight:600}
+  .lado h3{margin:0 0 .35rem;font-size:1.02rem;font-weight:800;letter-spacing:-.015em;color:var(--hoja-tinta)}
+  .bloque{border-left:2px solid var(--hoja-linea);padding-left:1rem;margin-bottom:1.4rem}
+  .bloque p{margin:0 0 .65rem}
+  .bloque p:last-child{margin-bottom:0}
+  .medidas{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.1rem 1.3rem;
+    margin:0 0 1.4rem;padding:0;
+  }
+  .medidas div{display:flex;justify-content:space-between;gap:.6rem;padding:.34rem 0;border-bottom:1px solid var(--hoja-linea)}
+  .medidas dt{font-size:.84rem;color:var(--hoja-suave)}
+  .medidas dd{margin:0;font-size:.84rem;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;color:var(--hoja-tinta)}
+  .reglas{
+    border:1.5px dashed var(--hoja-linea);padding:.85rem .95rem;
+    font-size:.86rem;color:var(--hoja-suave);line-height:1.5;
+  }
+  .reglas b{display:block;margin-bottom:.35rem;color:var(--hoja-tinta);font-weight:700;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase}
+  .reglas li{margin-bottom:.35rem}
+  .reglas ul{margin:0;padding-left:1.1rem}
+</style>
+
+<div class="pliego">
+
+  <header class="encabezado">
+    <h1>El panel del vendedor</h1>
+    <p>
+      Las seis pantallas, navegables por la barra lateral. Todo funciona y todo sale de la misma fuente:
+      <b>avanzá o cancelá un pedido y los números de las otras cinco se recalculan</b>.
+      Es solo de escritorio &mdash; el vendedor no lo usa desde el celular.
+    </p>
+  </header>
+
+  <div class="marco" id="marco"></div>
+  <div class="lado" id="lado"></div>
+</div>
+
+<script>
+  function ico(d){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+  }
+  var SECCIONES = [
+    {id:"inicio", n:"Inicio", i:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/>'},
+    {id:"pedidos", n:"Pedidos", i:'<path d="M5.5 3h13v18l-2.2-1.6L14 21l-2-1.6L10 21l-2.3-1.6L5.5 21Z"/><path d="M9 8h6M9 12h6"/>'},
+    {id:"produccion", n:"Producción", i:'<rect x="3" y="5" width="18" height="15" rx="1.5"/><path d="M3 10h18"/><path d="M7 7.5h.01M10 7.5h.01"/><path d="M8 14h8"/>'},
+    {id:"productos", n:"Productos", i:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><path d="M9.5 10h.01M14 11h.01M11.5 14.5h.01"/>'},
+    {id:"ingredientes", n:"Ingredientes", i:'<path d="M8 3h8l-1 3H9Z"/><path d="M9 6h6l1.5 4v9a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-9Z"/><path d="M8 13h8"/>'},
+    {id:"costos", n:"Costos", i:'<path d="M3.5 12.2 12.2 3.5H20.5v8.3l-8.7 8.7Z"/><circle cx="16.6" cy="7.4" r="1.5"/>'},
+  ];
+
+  var P = {pizza:{Margarita:9800,Marinara:8900,Fugazzeta:11200,Napolitana:10800,"Cuatro quesos":12900},
+           foc:{"Romero y sal":6800,"Cherry":7900},
+           pack:{6:7900,12:15200}};
+
+  var PEDIDOS = [
+    {n:"0147", quien:"Fede", tel:"11 5555 5555", hora:"hoy 21:04", estado:"nuevo", items:[
+      {t:"pizza", n:"Margarita", c:1, sin:[]},
+      {t:"pizza", n:"Margarita", c:1, sin:["albahaca"]},
+      {t:"pack", n:"Carne suave", pack:12, c:1},
+      {t:"pack", n:"Humita", pack:6, c:1}]},
+    {n:"0146", quien:"Ana", tel:"11 4444 1234", hora:"hoy 20:12", estado:"nuevo", items:[
+      {t:"pizza", n:"Margarita", c:2, sin:[]},
+      {t:"foc", n:"Romero y sal", c:1, sin:[]}]},
+    {n:"0145", quien:"Marcos", tel:"11 6789 0000", hora:"hoy 19:38", estado:"nuevo", items:[
+      {t:"pack", n:"Carne picante", pack:12, c:2},
+      {t:"pack", n:"Humita", pack:6, c:1}]},
+    {n:"0144", quien:"Lu", tel:"11 3333 7777", hora:"ayer 22:10", estado:"prep", items:[
+      {t:"pizza", n:"Fugazzeta", c:1, sin:[]},
+      {t:"pizza", n:"Cuatro quesos", c:1, sin:["roquefort"]},
+      {t:"pack", n:"Carne suave", pack:6, c:1}]},
+    {n:"0143", quien:"Sofi", tel:"11 2222 8888", hora:"ayer 20:45", estado:"prep", items:[
+      {t:"pizza", n:"Margarita", c:1, sin:["albahaca"]},
+      {t:"pack", n:"Jamón y queso", pack:12, c:1},
+      {t:"foc", n:"Cherry", c:2, sin:[]}]},
+    {n:"0142", quien:"Nico", tel:"11 9999 1111", hora:"ayer 19:02", estado:"entregado", items:[
+      {t:"pizza", n:"Marinara", c:1, sin:[]}]}
+  ];
+
+  var DIAS = [["lun","Lun"],["mar","Mar"],["mie","Mi\u00e9"],["jue","Jue"],
+              ["vie","Vie"],["sab","S\u00e1b"],["dom","Dom"]];
+  var DIA_LARGO = {lun:"lunes", mar:"martes", mie:"mi\u00e9rcoles", jue:"jueves",
+                   vie:"viernes", sab:"s\u00e1bado", dom:"domingo"};
+  // constantes del negocio; ninguna necesita una pantalla
+  var CONF = {dias:["sab"], fermenMin:48, fermenMax:72, porHornada:3, margenMin:55};
+  function diaAmasado(){
+    if(!CONF.dias.length) return {ini:"\u2014", fin:"\u2014", entrega:"\u2014"};
+    var i = 0;
+    DIAS.forEach(function(d, k){ if(CONF.dias.indexOf(d[0]) >= 0 && !i) i = k; });
+    DIAS.forEach(function(d, k){ if(CONF.dias.indexOf(d[0]) >= 0){ i = Math.min(i === 0 ? k : i, k); } });
+    var lejos = Math.ceil(CONF.fermenMax / 24), cerca = Math.ceil(CONF.fermenMin / 24);
+    return {
+      ini: DIA_LARGO[DIAS[(i - lejos + 7) % 7][0]],
+      fin: DIA_LARGO[DIAS[(i - cerca + 7) % 7][0]],
+      entrega: DIA_LARGO[DIAS[i][0]]
+    };
+  }
+
+  var ETIQ = {nuevo:"Nuevo", prep:"Preparando", entregado:"Entregado", cancelado:"Cancelado"};
+  var SIG = {nuevo:"prep", prep:"entregado"};
+  var ACC = {nuevo:"Empezar a preparar", prep:"Marcar entregado"};
+
+  var PRODUCTOS = [
+    {f:"pizza", n:"Margarita",           p:9800,  act:true},
+    {f:"pizza", n:"Marinara",            p:8900,  act:true},
+    {f:"pizza", n:"Fugazzeta",           p:11200, act:true},
+    {f:"pizza", n:"Napolitana",          p:10800, act:true},
+    {f:"pizza", n:"Cuatro quesos",       p:12900, act:true},
+    {f:"pizza", n:"Jam\u00f3n crudo y r\u00facula", p:13400, act:true},
+    {f:"pizza", n:"Calabresa",           p:11900, act:false},
+    {f:"foc",   n:"Romero y sal",        p:6800,  act:true},
+    {f:"foc",   n:"Cherry",              p:7900,  act:true},
+    {f:"emp",   n:"Carne suave",         act:true},
+    {f:"emp",   n:"Carne picante",       act:true},
+    {f:"emp",   n:"Jam\u00f3n y queso",      act:true},
+    {f:"emp",   n:"Humita",              act:true},
+    {f:"emp",   n:"Caprese",             act:true},
+    {f:"emp",   n:"Pollo",               act:false}
+  ];
+  var FAM = {pizza:"Pizzas", foc:"Focaccias", emp:"Empanadas"};
+  var FAMS = ["pizza", "foc", "emp"];
+
+  var RECETA = {
+    "Margarita":["Salsa de tomate","Muzzarella","Albahaca","Oliva"],
+    "Marinara":["Salsa de tomate","Ajo","Or\u00e9gano","Oliva"],
+    "Fugazzeta":["Muzzarella","Cebolla","Or\u00e9gano","Oliva"],
+    "Napolitana":["Salsa de tomate","Muzzarella","Tomate","Ajo"],
+    "Cuatro quesos":["Muzzarella","Provolone","Roquefort","Parmesano"],
+    "Romero y sal":["Romero","Sal gruesa","Oliva","Semolin"],
+    "Cherry":["Tomate cherry","Albahaca","Oliva","Sal"],
+    "Jam\u00f3n crudo y r\u00facula":["Muzzarella","Jam\u00f3n crudo","R\u00facula","Oliva"],
+    "Calabresa":["Salsa de tomate","Muzzarella","Longaniza","Or\u00e9gano"],
+    "Carne suave":["Carne","Cebolla","Huevo","Comino"],
+    "Carne picante":["Carne","Cebolla","Piment\u00f3n","Aj\u00ed molido"],
+    "Jam\u00f3n y queso":["Jam\u00f3n","Muzzarella","Or\u00e9gano"],
+    "Humita":["Choclo","Salsa blanca","Cebolla de verdeo","Nuez moscada"],
+    "Caprese":["Muzzarella","Tomate","Albahaca","Oliva"],
+    "Pollo":["Pollo","Cebolla","Morr\u00f3n","Perejil"]
+  };
+  var seccion = "inicio", filtro = "activos", elegido = "0147";
+  var ranura1 = "masa", ranura3 = "pedidos";
+  var famProd = "todo", prodElegido = "Margarita", sumando = false;
+  var tiendaAbierta = true;
+  var verTodos = false, ingElegido = undefined, uniNueva = null, prodCosto = "Margarita";
+  var vistaCostos2 = "producto";
+  var ranuras = ["nuevos", "comprar", "masa", "costo", "total"];
+  var BORRADOR = {f:"pizza", n:"", p:0, ing:[]}, TIPEADO = null;
+
+  function plata(n){ return "$" + n.toLocaleString("es-AR"); }
+  function precio(it){
+    if(it.t === "pizza") return P.pizza[it.n] * it.c;
+    if(it.t === "foc") return P.foc[it.n] * it.c;
+    return P.pack[it.pack] * it.c;
+  }
+  function etiquetaItem(it){
+    if(it.t === "pack") return "Pack de " + it.pack + " · " + it.n.toLowerCase();
+    return it.n + (it.sin && it.sin.length ? '<span class="sin">sin '+it.sin.join(", ")+'</span>' : '');
+  }
+  function total(p){ return p.items.reduce(function(a,it){ return a + precio(it); }, 0); }
+  function nuevos(){ return PEDIDOS.filter(function(p){ return p.estado === "nuevo"; }).length; }
+  function activos(){ return PEDIDOS.filter(function(p){ return p.estado === "nuevo" || p.estado === "prep"; }); }
+
+  function menu(){
+    return '<div class="lateral"><p class="marca">48·72</p><nav>' +
+      SECCIONES.map(function(s){
+        var g = s.id === "pedidos" ? '<span class="globo">'+nuevos()+'</span>' : '';
+        return '<button type="button" data-s="'+s.id+'"'+(s.id===seccion?' aria-current="page"':'')+'>'+ico(s.i)+s.n+g+'</button>';
+      }).join("") + '</nav>' +
+      '<p class="pie' + (tiendaAbierta ? '' : ' pie-alerta') + '">' +
+      (tiendaAbierta ? 'Tienda abierta' : '<b>Tienda cerrada</b>') + '<br>' +
+      'Telegram conectado · 21:06</p></div>';
+  }
+
+  /* ---------- pedidos ---------- */
+  function visibles(){
+    return PEDIDOS.filter(function(p){
+      if(filtro === "activos") return p.estado === "nuevo" || p.estado === "prep";
+      if(filtro === "todos") return true;
+      return p.estado === filtro;
+    });
+  }
+  function vistaPedidos(){
+    var vis = visibles();
+    if(vis.length && !vis.some(function(p){ return p.n === elegido; })) elegido = vis[0].n;
+    var p = PEDIDOS.filter(function(x){ return x.n === elegido; })[0];
+
+    var lista = '<div class="columna"><ul>' + vis.map(function(x){
+      return '<li'+(x.n===elegido?' class="elegido"':'')+'><button type="button" data-el="'+x.n+'">' +
+        '<span class="izq">' +
+          '<span class="fila-1"><span class="num">'+x.n+'</span><span class="quien">'+x.quien+'</span></span>' +
+          '<span class="fila-2"><span class="estado e-'+x.estado+'">'+ETIQ[x.estado]+'</span>' +
+          '<span class="hora">'+x.hora+'</span></span>' +
+        '</span><span class="plata">'+plata(total(x))+'</span></button></li>';
+    }).join("") + '</ul></div>';
+
+    var vivo = p && (p.estado === "nuevo" || p.estado === "prep");
+    var det = !p ? '<div class="detalle"><p class="placeholder">No hay pedidos con ese filtro.</p></div>' :
+      '<div class="detalle">' +
+        '<div class="det-tope"><h4>Pedido '+p.n+'</h4><span class="estado e-'+p.estado+'">'+ETIQ[p.estado]+'</span></div>' +
+        '<p class="det-meta">'+p.quien+' · '+p.tel+' · '+p.hora+'</p>' +
+        '<ul class="det-items">' + p.items.map(function(it){
+          return '<li><span class="c">'+it.c+'×</span><span class="q">'+etiquetaItem(it)+'</span>' +
+            '<span class="p">'+plata(precio(it))+'</span></li>';
+        }).join("") + '</ul>' +
+        '<dl class="det-total"><dt>Total</dt><dd>'+plata(total(p))+'</dd></dl>' +
+        '<div class="acciones">' +
+          (SIG[p.estado] ? '<button class="btn" type="button" data-av="'+p.n+'">'+ACC[p.estado]+'</button>' : '') +
+          '<span class="secundarias">' +
+            '<button class="enlace verde" type="button">Escribirle por WhatsApp</button>' +
+            (vivo ? '<button class="enlace" type="button" data-can="'+p.n+'">Cancelar pedido</button>' : '') +
+          '</span></div></div>';
+
+    return '<div class="cabecera"><span class="cab-titulo"><h3>Pedidos</h3>' +
+      '<span class="sub">'+nuevos()+' sin abrir · '+PEDIDOS.length+' en total</span></span>' +
+      '<div class="filtros">' + ['activos','nuevo','prep','entregado','todos'].map(function(f){
+        var n = {activos:"Activos", nuevo:"Nuevos", prep:"Preparando", entregado:"Entregados", todos:"Todos"}[f];
+        return '<button type="button" data-f="'+f+'" aria-pressed="'+(filtro===f)+'">'+n+'</button>';
+      }).join("") + '</div></div>' +
+      '<div class="doble">' + lista + det + '</div>';
+  }
+
+  /* ---------- producción ---------- */
+  function consolidar(){
+    var pizzas = {}, focs = {}, emp = {};
+    activos().forEach(function(p){
+      p.items.forEach(function(it){
+        if(it.t === "pizza"){
+          var g = pizzas[it.n] = pizzas[it.n] || {total:0, sin:{}};
+          g.total += it.c;
+          (it.sin || []).forEach(function(x){ g.sin[x] = (g.sin[x] || 0) + it.c; });
+        }else if(it.t === "foc"){
+          var f = focs[it.n] = focs[it.n] || {total:0, sin:{}};
+          f.total += it.c;
+          (it.sin || []).forEach(function(x){ f.sin[x] = (f.sin[x] || 0) + it.c; });
+        }else{
+          var e = emp[it.n] = emp[it.n] || {unidades:0, packs:{}};
+          e.unidades += it.pack * it.c;
+          e.packs[it.pack] = (e.packs[it.pack] || 0) + it.c;
+        }
+      });
+    });
+    return {pizzas:pizzas, focs:focs, emp:emp};
+  }
+
+  // toda la harina sale de la receta del bollo, no de un porcentaje
+  function harinaDelDia(){
+    var d = consolidar(), b = 0;
+    Object.keys(d.pizzas).forEach(function(k){ b += d.pizzas[k].total; });
+    Object.keys(d.focs).forEach(function(k){ b += d.focs[k].total; });
+    return b * cuantoLleva("Bollo de masa", "Harina 000");
+  }
+
+  function metricas(){
+    var d = consolidar();
+    var bollos = Object.keys(d.pizzas).reduce(function(a,k){ return a + d.pizzas[k].total; }, 0) +
+                 Object.keys(d.focs).reduce(function(a,k){ return a + d.focs[k].total; }, 0);
+    var totEmp = Object.keys(d.emp).reduce(function(a,k){ return a + d.emp[k].unidades; }, 0);
+    var cambios = 0;
+    activos().forEach(function(p){
+      p.items.forEach(function(it){ if(it.sin && it.sin.length) cambios += it.c; });
+    });
+    var caja = activos().reduce(function(a,p){ return a + total(p); }, 0);
+    var porHornada = CONF.porHornada;
+    return {
+      bollos:   {t:"Bollos de masa", v:bollos, n:"de " + BASES["Bollo de masa"].pesa + " g, uno por pieza"},
+      masa:     {t:"Producci\u00f3n", v:bollos + " bollos", n:bonito(harinaDelDia(), "g") + " de harina"},
+      harina:   {t:"Harina", v:bonito(harinaDelDia(), "g"),
+                 n:bonito(cuantoTanda("Bollo de masa", "Harina 000"), "g") + " rinde " + BASES["Bollo de masa"].rinde + " bollos"},
+      horno:    {t:"Piezas al horno", v:bollos + totEmp, n:"pizzas, focaccias y empanadas"},
+      hornadas: {t:"Hornadas", v:Math.ceil(bollos/porHornada), n:"de a " + porHornada + " piezas"},
+      amasar:   (function(){ var a = diaAmasado();
+                  return {t:"Amasar", v:a.ini.charAt(0).toUpperCase() + a.ini.slice(1),
+                          n:CONF.fermenMin + " a " + CONF.fermenMax + " h antes del " + a.entrega}; })(),
+      pedidos:  {t:"Pedidos a cubrir", v:activos().length, n:"el m\u00e1s viejo, de " + (activos().length ? activos()[activos().length-1].hora : "\u2014")},
+      caja:     {t:"Plata de la tanda", v:"$" + caja.toLocaleString("es-AR"), n:"sin entregar todav\u00eda"},
+      cambios:  {t:"Con cambios", v:cambios, n:"piezas con algo sacado"},
+      empanadas:{t:"Empanadas", v:totEmp, n:Object.keys(d.emp).length + " gustos"}
+    };
+  }
+
+  function titular(k){
+    var m = metricas()[k];
+    return '<div class="titular"><dt>' + m.t + '</dt><dd>' + m.v + '</dd>' +
+      '<span class="nota">' + m.n + '</span></div>';
+  }
+
+  function cuerpoLista(){
+    var d = consolidar();
+    var totPizzas = Object.keys(d.pizzas).reduce(function(a,k){ return a + d.pizzas[k].total; }, 0);
+    var totFocs = Object.keys(d.focs).reduce(function(a,k){ return a + d.focs[k].total; }, 0);
+    var totEmp = Object.keys(d.emp).reduce(function(a,k){ return a + d.emp[k].unidades; }, 0);
+    var bollos = totPizzas + totFocs;
+
+    function filaConSin(nom, g, unidad){
+      var sines = Object.keys(g.sin);
+      var det = sines.length
+        ? '<p class="prod-detalle">' + sines.map(function(x){
+            return '<span class="marca-sin">'+g.sin[x]+' sin '+x+'</span>';
+          }).join("") + '</p>'
+        : '';
+      return '<li><span class="prod-cant">'+g.total+'</span>' +
+        '<span class="prod-cuerpo"><p class="prod-nom">'+nom+'</p>'+det+'</span>' +
+        '<span class="prod-unidad">'+unidad+'</span></li>';
+    }
+
+    var secPizzas = Object.keys(d.pizzas).length
+      ? '<div class="grupo-prod"><h5>Pizzas · '+totPizzas+'</h5><ul class="prod-lista">' +
+        Object.keys(d.pizzas).map(function(k){ return filaConSin(k, d.pizzas[k], "bollos"); }).join("") + '</ul></div>'
+      : '';
+    var secFocs = Object.keys(d.focs).length
+      ? '<div class="grupo-prod"><h5>Focaccias · '+totFocs+'</h5><ul class="prod-lista">' +
+        Object.keys(d.focs).map(function(k){ return filaConSin(k, d.focs[k], "bollos"); }).join("") + '</ul></div>'
+      : '';
+    var secEmp = Object.keys(d.emp).length
+      ? '<div class="grupo-prod"><h5>Empanadas · '+totEmp+'</h5><ul class="prod-lista">' +
+        Object.keys(d.emp).map(function(k){
+          var e = d.emp[k];
+          var desglose = Object.keys(e.packs).sort(function(a,b){ return b-a; }).map(function(t){
+            return e.packs[t] + ' pack' + (e.packs[t] > 1 ? 's' : '') + ' de ' + t;
+          }).join(" · ");
+          return '<li><span class="prod-cant">'+e.unidades+'</span>' +
+            '<span class="prod-cuerpo"><p class="prod-nom">'+k+'</p>' +
+            '<p class="prod-detalle">'+desglose+'</p></span>' +
+            '<span class="prod-unidad">unidades</span></li>';
+        }).join("") + '</ul></div>'
+      : '';
+
+    return '<div class="prod">' +
+        '<dl class="titulares">' +
+          titular(ranura1) + titular("empanadas") + titular(ranura3) +
+        '</dl>' + secPizzas + secFocs + secEmp + '</div>';
+  }
+
+  function esperaHoras(h){
+    var p = h.split(" "), hm = (p[1] || "0:0").split(":");
+    var min = (p[0] === "ayer" ? 24 * 60 : 0) + (21 * 60 + 30) - (+hm[0] * 60 + +hm[1]);
+    return Math.max(1, Math.round(min / 60));
+  }
+  function entregados(){ return PEDIDOS.filter(function(p){ return p.estado === "entregado"; }); }
+  function faltaComprar(){
+    var n = 0, sinMed = 0;
+    INGR.forEach(function(x){
+      if(x.libre) return;
+      var k = cuentaIng(x.n);
+      if(!k.filas.length) return;
+      if(!k.con){ if(entraEnPedidos(x.n)) sinMed++; return; }
+      if(k.total - x.stock > 0) n++;
+    });
+    return {faltan:n, sinMedida:sinMed};
+  }
+  // que bultos habria que comprar y cuanto sale
+  function compraSugerida(){
+    var total = 0, bultos = 0, sinPrecio = 0, items = [];
+    INGR.forEach(function(x){
+      if(x.libre || !x.trae) return;
+      var k = cuentaIng(x.n);
+      if(!k.filas.length || !k.con) return;
+      var falta = k.total - x.stock;
+      if(falta <= 0) return;
+      var n = Math.ceil(falta / x.trae);
+      bultos += n; total += n * x.sale;
+      items.push({n:x.n, bultos:n, sale:n * x.sale});
+    });
+    return {total:total, bultos:bultos, sinPrecio:sinPrecio, items:items};
+  }
+
+  // toda cifra que el panel puede calcular hoy
+  var CIFRAS = {
+    nuevos:    {g:"Pedidos", t:"Pedidos nuevos", f:function(){ return [nuevos(), "sin abrir"]; }},
+    prep:      {g:"Pedidos", t:"En preparaci\u00f3n", f:function(){
+                 var n = PEDIDOS.filter(function(p){ return p.estado === "prep"; }).length;
+                 return [n, n === 1 ? "ya empezado" : "ya empezados"]; }},
+    abiertos:  {g:"Pedidos", t:"Sin entregar", f:function(){ return [activos().length, "abiertos en total"]; }},
+    entregados:{g:"Pedidos", t:"Entregados", f:function(){
+                 var e = entregados();
+                 return [e.length, e.length ? "el \u00faltimo, " + e[0].hora : "todav\u00eda ninguno"]; }},
+    viejo:     {g:"Pedidos", t:"El m\u00e1s viejo", f:function(){
+                 var a = activos();
+                 if(!a.length) return ["\u2014", "no hay pedidos abiertos"];
+                 var v = a[a.length - 1];
+                 return [esperaHoras(v.hora) + " h", "el " + v.n + ", de " + v.hora]; }},
+    clientes:  {g:"Pedidos", t:"Clientes", f:function(){
+                 var q = {};
+                 activos().forEach(function(p){ q[p.quien] = true; });
+                 return [Object.keys(q).length, "esperando"]; }},
+    cambios:   {g:"Pedidos", t:"Con cambios", f:function(){
+                 var m = metricas();
+                 return [m.cambios.v, "piezas con algo sacado"]; }},
+
+    masa:      {g:"Producci\u00f3n", t:"Producci\u00f3n", f:function(){
+                 var m = metricas(); return [m.masa.v, m.masa.n]; }},
+    bollos:    {g:"Producci\u00f3n", t:"Bollos", f:function(){
+                 var m = metricas(); return [m.bollos.v, m.bollos.n]; }},
+    harina:    {g:"Producci\u00f3n", t:"Harina", f:function(){
+                 var m = metricas(); return [m.harina.v, m.harina.n]; }},
+    piezas:    {g:"Producci\u00f3n", t:"Piezas", f:function(){
+                 var m = metricas(); return [m.horno.v, "pizzas, focaccias y empanadas"]; }},
+    hornadas:  {g:"Producci\u00f3n", t:"Hornadas", f:function(){
+                 var m = metricas(); return [m.hornadas.v, m.hornadas.n]; }},
+    empanadas: {g:"Producci\u00f3n", t:"Empanadas", f:function(){
+                 var m = metricas(); return [m.empanadas.v, m.empanadas.n]; }},
+    amasar:    {g:"Producci\u00f3n", t:"Amasar", f:function(){
+                 var m = metricas(); return [m.amasar.v, m.amasar.n]; }},
+
+    total:     {g:"Plata", t:"Total", f:function(){
+                 var m = metricas(); return [m.caja.v, "sin entregar todav\u00eda"]; }},
+    promedio:  {g:"Plata", t:"Promedio", f:function(){
+                 var a = activos();
+                 if(!a.length) return ["\u2014", "no hay pedidos abiertos"];
+                 var t = a.reduce(function(x, p){ return x + total(p); }, 0);
+                 return ["$" + Math.round(t / a.length).toLocaleString("es-AR"), "por pedido"]; }},
+    cobrado:   {g:"Plata", t:"Cobrado", f:function(){
+                 var e = entregados();
+                 var t = e.reduce(function(x, p){ return x + total(p); }, 0);
+                 return ["$" + t.toLocaleString("es-AR"), e.length + (e.length === 1 ? " pedido entregado" : " pedidos entregados")]; }},
+
+    costo:     {g:"Plata", t:"Costo", f:function(){
+                 var t = plataPedida();
+                 return [plata(t.costo), "hacer todo lo pedido"]; }},
+    deja:      {g:"Plata", t:"Deja", f:function(){
+                 var t = plataPedida();
+                 return [plata(t.venta - t.costo), t.venta ? Math.round((t.venta - t.costo) / t.venta * 100) + "% de margen" : "\u2014"]; }},
+    margen:    {g:"Plata", t:"Margen", f:function(){
+                 var t = plataPedida();
+                 return [(t.venta ? Math.round((t.venta - t.costo) / t.venta * 100) : 0) + "%", "de lo que hay pedido"]; }},
+    compra:    {g:"Plata", t:"La compra", f:function(){
+                 var c = compraSugerida();
+                 return [plata(c.total), c.bultos + (c.bultos === 1 ? " bulto" : " bultos") + " para reponer"]; }},
+    mesActual: {g:"Plata", t:"Cobrado este mes", f:function(){
+                 var e = entregados();
+                 return [plata(e.reduce(function(a, p){ return a + total(p); }, 0)),
+                         e.length + (e.length === 1 ? " pedido entregado" : " pedidos entregados")]; }},
+    peor:      {g:"Plata", t:"Peor margen", f:function(){
+                 var ds = PRODUCTOS.map(function(p){ return costoProducto(p.n); })
+                   .filter(function(d){ return d && !d.sinPrecio; })
+                   .sort(function(a, b){ return a.pct - b.pct; });
+                 if(!ds.length) return ["\u2014", "sin datos completos"];
+                 return [Math.round(ds[0].pct) + "%", ds[0].p.n]; }},
+
+    comprar:   {g:"Ingredientes", t:"Falta comprar", f:function(){
+                 var c = faltaComprar();
+                 return [c.faltan, c.faltan === 1 ? "ingrediente" : "ingredientes"]; }},
+    sinMedida: {g:"Ingredientes", t:"Sin medida", f:function(){
+                 var c = faltaComprar();
+                 return [c.sinMedida, "sin cargar cu\u00e1nto lleva"]; }},
+    agotados:  {g:"Ingredientes", t:"Agotados", f:function(){
+                 var n = PRODUCTOS.filter(function(p){ return !p.act; }).length;
+                 return [n, n === 1 ? "producto fuera de la carta" : "productos fuera de la carta"]; }}
+  };
+
+  function plataPedida(){
+    var ped = pedidasPorProducto(), costo = 0, venta = 0;
+    PRODUCTOS.forEach(function(p){
+      var d = costoProducto(p.n), n = ped[p.n] || 0;
+      if(!d || !n) return;
+      costo += d.costo * n; venta += d.venta * n;
+    });
+    return {costo:costo, venta:venta};
+  }
+
+  function opcionesCifra(elegida){
+    var grupos = [], vistos = {};
+    Object.keys(CIFRAS).forEach(function(k){
+      if(!vistos[CIFRAS[k].g]){ vistos[CIFRAS[k].g] = []; grupos.push(CIFRAS[k].g); }
+      vistos[CIFRAS[k].g].push(k);
+    });
+    return grupos.map(function(g){
+      return '<optgroup label="' + g + '">' + vistos[g].map(function(k){
+        return '<option value="' + k + '"' + (k === elegida ? " selected" : "") + '>' + CIFRAS[k].t + '</option>';
+      }).join("") + '</optgroup>';
+    }).join("");
+  }
+  function tarjetasHTML(){
+    return '<dl class="tarjetas-ini">' + ranuras.map(function(k){
+      var c = CIFRAS[k], v = c.f();
+      return '<div class="card"><dt>' + c.t + '</dt>' +
+        '<dd>' + v[0] + '</dd><span class="n">' + v[1] + '</span></div>';
+    }).join("") + '</dl>';
+  }
+
+  function abHornear(){
+    var d = consolidar();
+    var fams = [["Pizzas", d.pizzas, false], ["Focaccias", d.focs, false], ["Empanadas", d.emp, true]];
+    return '<div class="hornear"><div class="mitad-h"><h5>Hornear</h5><ul class="corrida">' +
+      fams.map(function(g){
+        var o = g[1];
+        return '<li class="cabeza">' + g[0] + '</li>' + Object.keys(o).map(function(k){
+          var c = g[2] ? o[k].unidades : o[k].total;
+          return '<li><span class="qn">' + k + '</span><span class="cu">' + c +
+            (g[2] ? ' <em>u.</em>' : '') + '</span></li>';
+        }).join("");
+      }).join("") + '</ul></div>' + paraComprar() + '</div>';
+  }
+
+  function paraComprar(){
+    var faltan = [], sinMedida = 0;
+    INGR.forEach(function(x){
+      var k = cuentaIng(x.n);
+      if(!k.filas.length || x.libre) return;
+      if(!k.con){ if(entraEnPedidos(x.n)) sinMedida++; return; }
+      var f = k.total - x.stock;
+      if(f > 0) faltan.push({n:x.n, f:f, u:x.u, flojo:k.sin});
+    });
+    faltan.sort(function(a, b){ return b.f - a.f; });
+    var cuerpo = faltan.length
+      ? '<ul class="comprar">' + faltan.map(function(r){
+          return '<li><span class="qn">' + r.n + '</span><span class="cu">' + bonito(r.f, r.u) +
+            (r.flojo ? '<span class="asterisco">*</span>' : '') + '</span></li>';
+        }).join("") + '</ul>'
+      : '<p class="nada-h">Alcanza con lo que hay.</p>';
+    return '<div class="mitad-h"><h5>Comprar</h5>' + cuerpo +
+      (sinMedida ? '<p class="nada-h">' + sinMedida + (sinMedida === 1 ? ' ingrediente sin medida cargada' : ' ingredientes sin medida cargada') + '.</p>' : '') +
+      '</div>';
+  }
+
+  function pesos(v){ return "$" + v.toLocaleString("es-AR"); }
+  function soloNum(v){ return parseInt(String(v).replace(/[^0-9]/g, ""), 10) || 0; }
+  function listaProd(){
+    return famProd === "todo" ? PRODUCTOS : PRODUCTOS.filter(function(x){ return x.f === famProd; });
+  }
+  function buscaProd(n){ return PRODUCTOS.filter(function(x){ return x.n === n; })[0]; }
+  function agotados(){ return listaProd().filter(function(x){ return !x.act; }).length; }
+  function resumenProd(){
+    var a = agotados();
+    return listaProd().length + ' \u00b7 ' + (a === 0 ? 'ninguno agotado' : a === 1 ? '1 agotado' : a + ' agotados');
+  }
+
+  function ingrHTML(lista){
+    return '<div class="ingr">' + lista.map(function(g, k){
+        return '<span>' + g + '<button class="quitar" type="button" data-qi="' + k + '" title="Quitar">\u00d7</button></span>';
+      }).join("") +
+      (sumando
+        ? '<input class="sumar" id="ing-nuevo" type="text" placeholder="Buscar\u2026" autocomplete="off">'
+        : '<button class="mas-ing" type="button" data-abrire="1" title="Sumar un ingrediente" aria-label="Sumar un ingrediente">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>') +
+      '</div>' + (sumando ? candidatosHTML(lista) : '');
+  }
+
+  // solo se puede sumar un ingrediente que ya exista: escribir libre es como
+  // entraron "Oregano" y "Or\u00e9gano" como dos ingredientes distintos
+  function candidatosHTML(yaPuestos){
+    var libres = INGR.map(function(x){ return x.n; })
+      .filter(function(n){ return yaPuestos.indexOf(n) < 0; })
+      .sort(function(a, b){ return a.localeCompare(b); });
+    return '<ul class="candidatos" id="candidatos">' + libres.map(function(n){
+        return '<li><button type="button" data-elegirIng="' + n + '">' + n + '</button></li>';
+      }).join("") +
+      '<li class="nada" hidden>No hay ninguno con ese nombre. ' +
+      'Los ingredientes se dan de alta en <b>Ingredientes</b>.</li></ul>';
+  }
+
+  function valores(el){
+    return {
+      n:   TIPEADO ? TIPEADO.n : el.n,
+      p:   TIPEADO ? TIPEADO.p : (el.p ? pesos(el.p) : ""),
+      p6:  TIPEADO && TIPEADO.p6  ? TIPEADO.p6  : pesos(P.pack[6]),
+      p12: TIPEADO && TIPEADO.p12 ? TIPEADO.p12 : pesos(P.pack[12])
+    };
+  }
+  function inNom(v, c){ return '<input id="f-nombre"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="C\u00f3mo se llama">'; }
+  function inPre(v, c){ return '<input id="f-precio"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="$">'; }
+  function inP6(v){  return '<input id="f-p6" value="' + v + '">'; }
+  function inP12(v){ return '<input id="f-p12" value="' + v + '">'; }
+  function chipsFam(el){
+    return '<div class="chips">' + FAMS.map(function(k){
+      return '<button type="button" data-fam="' + k + '" aria-pressed="' + (el.f === k) + '">' + FAM[k] + '</button>';
+    }).join("") + '</div>';
+  }
+  function accionesHTML(nuevo, el){
+    return nuevo
+      ? '<div class="acciones"><button class="btn" type="button" data-crear="1">Crear producto</button>' +
+        '<button class="btn flaco" type="button" data-cancelar="1">Cancelar</button></div>'
+      : '<div class="acciones"><button class="btn" type="button" data-guardar="1">Guardar cambios</button>' +
+        '<button class="btn flaco" type="button" data-tog="' + el.n + '">' +
+        (el.act ? "Marcar agotado" : "Volver a la carta") + '</button></div>';
+  }
+  function topeHTML(nuevo, el){
+    return nuevo
+      ? '<div class="det-tope"><h4>Producto nuevo</h4></div><p class="det-meta">Se agrega a la carta apenas lo crees.</p>'
+      : '<div class="det-tope"><h4>' + el.n + '</h4>' +
+        '<span class="estado ' + (el.act ? "e-nuevo" : "e-entregado") + '">' + (el.act ? "En la carta" : "Agotado") + '</span></div>' +
+        '<p class="det-meta">' + FAM[el.f] + '</p>';
+  }
+  var AVISO_PACK = 'Los dos precios valen para todos los gustos.';
+
+  // B \u00b7 rengl\u00f3n etiquetado
+  function fichaRenglones(nuevo, el, ing){
+    var v = valores(el);
+    function r(et, va){ return '<div class="reng"><span class="et">' + et + '</span><span class="va">' + va + '</span></div>'; }
+    var precios = el.f === "emp"
+      ? r("Pack x6", inP6(v.p6)) + r("Pack x12", inP12(v.p12))
+      : r("Precio", inPre(v.p));
+    return topeHTML(nuevo, el) +
+      '<div class="renglones">' +
+        r("Nombre", inNom(v.n)) +
+        r("Tipo", chipsFam(el)) +
+        precios +
+        r("Ingredientes", ingrHTML(ing)) +
+      '</div>' +
+      (el.f === "emp" ? '<p class="nota-f menos" style="margin:-.9rem 0 1.3rem">' + AVISO_PACK + '</p>' : '') +
+      accionesHTML(nuevo, el);
+  }
+
+  function prodFicha(){
+    var nuevo = prodElegido === null;
+    var el = nuevo ? BORRADOR : (buscaProd(prodElegido) || listaProd()[0] || PRODUCTOS[0]);
+    var ing = nuevo ? BORRADOR.ing : (RECETA[el.n] || []);
+
+    var col = '<div class="columna con-pie"><div class="rollo"><ul>' + listaProd().map(function(x){
+      return '<li class="' + (!nuevo && x.n === prodElegido ? "elegido" : "") + '">' +
+        '<button type="button" data-ep="' + x.n + '"><span class="izq">' +
+        '<span class="fila-p"><span class="nom">' + x.n + '</span>' +
+        (x.act ? '' : '<span class="agotado">Agotado</span>') + '</span>' +
+        '<span class="fila-p"><span class="fam">' + FAM[x.f] + '</span>' +
+        (x.p
+          ? '<span class="plata">' + pesos(x.p) + '</span>'
+          : '<span class="plata packs-dos">' + pesos(P.pack[6]) + '<i>/</i>' + pesos(P.pack[12]) + '</span>') +
+        '</span>' +
+        '</span></button></li>';
+    }).join("") + '</ul></div>' +
+    '<button class="alta" type="button" data-nuevo="1" aria-pressed="' + nuevo + '">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Producto nuevo</button></div>';
+
+    return '<div class="doble">' + col +
+      '<div class="detalle">' + fichaRenglones(nuevo, el, ing) + '</div></div>';
+  }
+
+  function leerFicha(){
+    var n = document.getElementById("f-nombre"), p = document.getElementById("f-precio");
+    var a = document.getElementById("f-p6"), b = document.getElementById("f-p12");
+    return {
+      n: n ? n.value.trim() : "", p: p ? soloNum(p.value) : 0,
+      p6: a ? soloNum(a.value) : 0, p12: b ? soloNum(b.value) : 0
+    };
+  }
+  // guarda lo tipeado antes de repintar, para no borrarlo a mitad de camino
+  function sincronizar(){
+    var n = document.getElementById("f-nombre");
+    if(!n) return;
+    var p = document.getElementById("f-precio");
+    var a = document.getElementById("f-p6"), b = document.getElementById("f-p12");
+    TIPEADO = {n: n.value, p: p ? p.value : "", p6: a ? a.value : "", p12: b ? b.value : ""};
+  }
+
+  var UNIDADES = ["g", "ml", "u"];
+  // cuanto lleva UNA pieza de cada producto, ingrediente por ingrediente
+  var CANT = {
+    "Margarita":      {"Salsa de tomate":80, "Muzzarella":120, "Albahaca":4, "Oliva":8},
+    "Marinara":       {"Salsa de tomate":90, "Ajo":6, "Or\u00e9gano":1, "Oliva":10},
+    "Fugazzeta":      {"Muzzarella":140, "Cebolla":200, "Or\u00e9gano":1, "Oliva":8},
+    "Napolitana":     {"Salsa de tomate":80, "Muzzarella":120, "Tomate":90, "Ajo":5},
+    "Cuatro quesos":  {"Muzzarella":90, "Provolone":40, "Roquefort":35, "Parmesano":25},
+    "Romero y sal":   {"Romero":2, "Sal gruesa":3, "Oliva":12, "Semolin":5},
+    "Cherry":         {"Tomate cherry":60, "Albahaca":3, "Oliva":10, "Sal":1},
+    "Carne suave":    {"Carne":35, "Cebolla":15, "Comino":1},
+    "Carne picante":  {"Carne":35, "Cebolla":15},
+    "Humita":         {"Choclo":30, "Salsa blanca":20}
+  };
+  // que puede pedirse "sin", producto por producto
+  var QUITABLE = {};
+  (function(){
+    var base = {"Salsa de tomate":1, "Muzzarella":1, "Carne":1, "Choclo":1,
+                "Jam\u00f3n":1, "Pollo":1, "Semolin":1, "Salsa blanca":1};
+    Object.keys(RECETA).forEach(function(p){
+      QUITABLE[p] = {};
+      RECETA[p].forEach(function(g){ QUITABLE[p][g] = !base[g]; });
+    });
+  })();
+  function seSaca(prod, ing){ return !BASES[prod] && !!(QUITABLE[prod] && QUITABLE[prod][ing]); }
+  function contarSacables(ing){
+    var n = 0;
+    (porIngrediente()[ing] || []).forEach(function(p){ if(seSaca(p, ing)) n++; });
+    return n;
+  }
+
+  // lo que lleva UNA unidad: en una base, la tanda dividida por lo que rinde
+  function cuantoLleva(prod, ing){
+    if(BASES[prod]) return (BASES[prod].r[ing] || 0) / (BASES[prod].rinde || 1);
+    return (CANT[prod] && CANT[prod][ing]) || 0;
+  }
+  function cuantoTanda(prod, ing){ return (BASES[prod] && BASES[prod].r[ing]) || 0; }
+  function ponerBase(prod, ing, v){
+    if(v) BASES[prod].r[ing] = v; else delete BASES[prod].r[ing];
+  }
+  function redondo(v){
+    var n = Math.round(v * 10) / 10;
+    return String(n).replace(".", ",");
+  }
+  function ponerCuanto(prod, ing, v){
+    if(BASES[prod]) return ponerBase(prod, ing, v);
+    CANT[prod] = CANT[prod] || {};
+    if(v) CANT[prod][ing] = v; else delete CANT[prod][ing];
+  }
+  // piezas pedidas de cada producto
+  function pedidasPorProducto(){
+    var d = consolidar(), m = {}, bollos = 0, tapas = 0;
+    Object.keys(d.pizzas).forEach(function(k){ m[k] = d.pizzas[k].total; bollos += m[k]; });
+    Object.keys(d.focs).forEach(function(k){ m[k] = d.focs[k].total; bollos += m[k]; });
+    Object.keys(d.emp).forEach(function(k){ m[k] = d.emp[k].unidades; tapas += m[k]; });
+    m["Bollo de masa"] = bollos;
+    m["Tapa de empanada"] = tapas;
+    return m;
+  }
+
+  // lo que hay que hacer o comprar antes de armar el producto
+  var BASES = {
+    // se carga como se amasa: una tanda entera, y cu\u00e1ntos bollos salen de ah\u00ed
+    "Bollo de masa":    {fam:["pizza", "foc"], rinde:6, pesa:280,
+                         r:{"Harina 000":1000, "Agua":700, "Masa madre":100, "Sal fina":30}},
+    "Tapa de empanada": {fam:["emp"], rinde:1, r:{"Tapas de empanada":1}}
+  };
+  function baseDe(fam){
+    var r = null;
+    Object.keys(BASES).forEach(function(k){ if(BASES[k].fam.indexOf(fam) >= 0) r = k; });
+    return r;
+  }
+  var INGR = [];
+  (function(){
+    // cada uno con el bulto en que se compra: cu\u00e1nto trae y cu\u00e1nto sale
+    var semilla = {
+      "Harina 000":        {u:"g",  stock:42000, trae:25000, sale:32000},
+      "Agua":              {u:"ml", stock:0,     trae:1000,  sale:0, libre:true},
+      "Sal fina":          {u:"g",  stock:2000,  trae:1000,  sale:1100},
+      "Masa madre":        {u:"g",  stock:400,   trae:200,   sale:64, libre:true},
+      "Tapas de empanada": {u:"u",  stock:120,   trae:60,    sale:9000},
+      "Muzzarella":        {u:"g",  stock:8500,  trae:3000,  sale:27600},
+      "Salsa de tomate":   {u:"g",  stock:14000, trae:4000,  sale:9600},
+      "Albahaca":          {u:"u",  stock:0,     trae:30,    sale:1200},
+      "Oliva":             {u:"ml", stock:3000,  trae:5000,  sale:57500},
+      "Cebolla":           {u:"g",  stock:11000, trae:10000, sale:13000},
+      "Carne":             {u:"g",  stock:4200,  trae:5000,  sale:49000},
+      "Choclo":            {u:"g",  stock:6000,  trae:3000,  sale:6300},
+      "Roquefort":         {u:"g",  stock:400,   trae:1000,  sale:16000},
+      "Provolone":         {u:"g",  stock:0,     trae:1000,  sale:14000},
+      "Sal gruesa":        {u:"g",  stock:9000,  trae:5000,  sale:4000},
+      "Or\u00e9gano":         {u:"g",  stock:600,   trae:500,   sale:6000},
+      "Tomate cherry":     {u:"g",  stock:2000,  trae:2000,  sale:7200},
+      "Parmesano":         {u:"g",  stock:0,     trae:1000,  sale:22000},
+      "Ajo":               {u:"g",  stock:900,   trae:1000,  sale:3000},
+      "Tomate":            {u:"g",  stock:3000,  trae:5000,  sale:9000},
+      "Romero":            {u:"g",  stock:150,   trae:200,   sale:1800},
+      "Semolin":           {u:"g",  stock:1800,  trae:5000,  sale:7500},
+      "Salsa blanca":      {u:"g",  stock:0,     trae:2000,  sale:6400},
+      "Comino":            {u:"g",  stock:200,   trae:250,   sale:4500},
+      "Sal":               {u:"g",  stock:4000,  trae:1000,  sale:900},
+      "Jam\u00f3n":           {u:"g",  stock:1200,  trae:2000,  sale:17000},
+      "Huevo":             {u:"u",  stock:24,    trae:30,    sale:7500},
+      "Jam\u00f3n crudo":     {u:"g",  stock:0,     trae:1000,  sale:26000},
+      "R\u00facula":          {u:"g",  stock:0,     trae:1000,  sale:4000},
+      "Longaniza":         {u:"g",  stock:0,     trae:1000,  sale:12000}
+    };
+    var vistos = {};
+    PRODUCTOS.forEach(function(p){
+      (RECETA[p.n] || []).forEach(function(g){ vistos[g] = true; });
+    });
+    Object.keys(BASES).forEach(function(b){
+      Object.keys(BASES[b].r).forEach(function(g){ vistos[g] = true; });
+    });
+    Object.keys(vistos).sort().forEach(function(g){
+      var d = semilla[g] || {};
+      INGR.push({n:g, u:d.u || "g", stock:d.stock || 0, trae:d.trae || 0, sale:d.sale || 0, libre:!!d.libre});
+    });
+  })();
+  // cuanto cuesta UNA unidad de medida del ingrediente (un gramo, un ml, una unidad)
+  function porMedida(x){ return x && x.trae ? x.sale / x.trae : 0; }
+  function precioBulto(x){
+    if(!x || !x.trae) return "";
+    return plata(x.sale) + " cada " + bonito(x.trae, x.u);
+  }
+  function buscaIng(n){ return INGR.filter(function(x){ return x.n === n; })[0]; }
+  function unidadLarga(u){ return u === "u" ? "unidades" : u; }
+  function porUnidad(u){ return u === "u" ? "unidad" : u === "ml" ? "litro" : "kilo"; }
+  function precioCorto(v, u){ return u === "u" ? plata(v) + " c/u" : plata(v) + (u === "ml" ? "/l" : "/kg"); }
+  function plata(v){ return "$" + Math.round(v).toLocaleString("es-AR"); }
+  // "42 kg" se lee; "42000 g" hay que contarlo. La base sigue siendo el gramo.
+  function leerMedida(txt, u){
+    var t = String(txt).toLowerCase().replace(/[.]/g, "").replace(/,/g, ".");
+    var n = parseFloat(t.replace(/[^0-9.]/g, "")) || 0;
+    if(u === "g"  && /kg/.test(t)) return n * 1000;
+    if(u === "ml" && /(^|[^m])l/.test(t)) return n * 1000;
+    return n;
+  }
+  function bonito(cant, u){
+    if(!cant) return "0 " + u;
+    if((u === "g" || u === "ml") && cant >= 1000){
+      return (cant / 1000).toFixed(2).replace(/[.]?0+$/, "").replace(".", ",") + (u === "g" ? " kg" : " l");
+    }
+    return (Math.round(cant * 10) / 10).toString().replace(".", ",") + " " + u;
+  }
+  // ingrediente -> productos que lo llevan
+  function porIngrediente(){
+    var m = {};
+    PRODUCTOS.forEach(function(p){
+      (RECETA[p.n] || []).forEach(function(g){ (m[g] = m[g] || []).push(p.n); });
+    });
+    Object.keys(BASES).forEach(function(b){
+      Object.keys(BASES[b].r).forEach(function(g){ (m[g] = m[g] || []).push(b); });
+    });
+    return m;
+  }
+  function esBase(n){ return !!BASES[n]; }
+  // ingrediente -> {total, conCarga, sinCarga, productos:[...]}
+  function cuentaIng(ing){
+    var ped = pedidasPorProducto(), total = 0, con = 0, sin = 0, filas = [];
+    (porIngrediente()[ing] || []).forEach(function(p){
+      var c = cuantoLleva(p, ing), n = ped[p] || 0;
+      if(c) con++; else sin++;
+      total += c * n;
+      filas.push({prod:p, cuanto:c, piezas:n, sale:c * n, saca:seSaca(p, ing),
+                  base:!!BASES[p], tanda:cuantoTanda(p, ing), rinde:BASES[p] ? BASES[p].rinde : 0});
+    });
+    return {total:total, con:con, sin:sin, filas:filas};
+  }
+  function entraEnPedidos(ing){
+    var ped = pedidasPorProducto();
+    return (porIngrediente()[ing] || []).some(function(p){ return ped[p]; });
+  }
+  // ---------- lista de compras ----------
+  function ingCompras(){
+    var usados = porIngrediente();
+    var cache = {};
+    function cta(n){ return cache[n] || (cache[n] = cuentaIng(n)); }
+    var base = verTodos ? INGR.slice() : INGR.filter(function(x){ return entraEnPedidos(x.n); });
+    base.sort(function(a, b){ return cta(b.n).total - cta(a.n).total || a.n.localeCompare(b.n); });
+
+    function necesita(x){ return cta(x.n).total; }
+
+    function ast(k){ return k.sin ? '<span class="asterisco" title="falta cargar alg\u00fan producto">*</span>' : ""; }
+    function vacio(){ return '<td class="g-num" colspan="2"><span class="sinCargar">sin cargar la medida</span></td>'; }
+
+    function ast(k){ return k.sin ? '<span class="asterisco" title="falta cargar alg\u00fan producto">*</span>' : ""; }
+
+    var faltantes = base.filter(function(x){ return !x.libre && cta(x.n).con && necesita(x) > x.stock; }).length;
+    var banda = '<div class="banda"><b>Para los ' + activos().length + ' pedidos sin entregar</b>' +
+      '<span class="aparte">' + (faltantes === 0 ? 'alcanza con lo que hay'
+        : 'hay que comprar ' + faltantes + (faltantes === 1 ? ' ingrediente' : ' ingredientes')) + '</span></div>';
+
+    var cuerpo = base.map(function(x){
+      var k = cta(x.n);
+      var pie = !k.filas.length ? "todav\u00eda en ninguna receta"
+        : k.sin === 0 ? "en " + k.filas.length + (k.filas.length === 1 ? " producto" : " productos")
+        : k.con === 0 ? "sin cargar en " + k.sin + (k.sin === 1 ? " producto" : " productos")
+        : "falta cargarlo en " + k.sin + " de " + k.filas.length;
+      return '<tr>' +
+        '<td class="g-nom"><button class="abre" type="button" data-ing="' + x.n + '">' + x.n + '</button>' +
+        '<span class="bajo' + (k.sin && k.filas.length ? " alerta" : "") + '">' + pie + '</span></td>' +
+        (function(v){ return '<td class="g-num"><input value="' + v + '" data-stock="' + x.n + '" data-auto="1" ' +
+          'style="width:' + Math.max(1, v.length) + 'ch"></td>'; })(bonito(x.stock, x.u)) +
+        (k.con
+          ? '<td class="g-num g-flojo">' + bonito(k.total, x.u) + ast(k) + '</td>' +
+            '<td class="g-fin g-num">' + (x.libre ? '<span class="sinCargar">no se compra</span>'
+              : Math.max(0, k.total - x.stock)
+              ? '<b class="urge">' + bonito(k.total - x.stock, x.u) + '</b>'
+              : '<span class="sinCargar">&mdash;</span>') + '</td>'
+          : '<td class="g-num" colspan="2"><span class="sinCargar">sin cargar la medida</span></td>') +
+        '<td class="g-fin g-flojo">' + (k.filas.length
+          ? (function(n){ return n === 0 ? "en ninguno" : n === k.filas.length ? "en todos" : "en " + n + " de " + k.filas.length; })(contarSacables(x.n))
+          : "\u2014") + '</td></tr>';
+    }).join("");
+
+    var pie = '<div class="pie-tabla"><button class="abrir" type="button" data-ingnuevo="1">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ingrediente nuevo</button>' +
+      '<span class="cuantos">' + base.length + ' de ' + INGR.length + ' ingredientes' +
+      '<button type="button" data-todos="1">' + (verTodos ? "Solo los del finde" : "Ver todos") + '</button></span></div>';
+
+    return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
+      '<th>Ingrediente</th><th class="g-num">Stock</th>' +
+      '<th class="g-num">Necesito</th><th class="g-num">Falta</th><th class="g-fin">Se saca</th>' +
+      '</tr></thead><tbody>' + cuerpo + '</tbody></table></div>' + pie + fichaIng();
+  }
+
+  var TIPEADO_I = {n:"", p:"", t:""};
+  function sincronizarIng(){
+    var a = document.getElementById("i-nombre"), b = document.getElementById("i-precio"), c = document.getElementById("i-trae");
+    TIPEADO_I = {n: a ? a.value.trim() : "", p: b ? b.value : "", t: c ? c.value : ""};
+  }
+  function restaurarIng(){
+    var a = document.getElementById("i-nombre"), b = document.getElementById("i-precio"), c = document.getElementById("i-trae");
+    if(a && TIPEADO_I.n) a.value = TIPEADO_I.n;
+    if(b && TIPEADO_I.p) b.value = TIPEADO_I.p;
+    if(c && TIPEADO_I.t) c.value = TIPEADO_I.t;
+  }
+  function fichaIng(){
+    if(ingElegido === undefined) return "";
+    var nuevo = ingElegido === null;
+    var x = nuevo ? {n:"", u:"g"} : buscaIng(ingElegido);
+    if(!x) return "";
+    var u = uniNueva || x.u;
+    var k = nuevo ? {filas:[], total:0, con:0, sin:0} : cuentaIng(x.n);
+
+    var reparto = nuevo
+      ? '<p class="nota-f">Cuando lo sumes a la receta de un producto, ac\u00e1 vas a poder cargar cu\u00e1nto lleva.</p>'
+      : (k.filas.length
+        ? '<div class="reparto">' + k.filas.map(function(r){
+            var val = r.base ? (r.tanda ? bonito(r.tanda, u) : "") : (r.cuanto ? bonito(r.cuanto, u) : "");
+            return '<div class="fila"><span class="qn">' + r.prod +
+              (r.base && r.rinde > 1 ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
+              '<span class="cajaNum"><input value="' + val + '" data-cant="' + r.prod + '" data-auto="1" ' +
+                'style="width:' + Math.max(3, String(val).length) + 'ch" placeholder="0"></span>' +
+              (BASES[r.prod] ? '<span class="llave chica hueca">Base</span>'
+                : '<button class="llave chica" type="button" data-saca="' + r.prod + '" aria-pressed="' + r.saca + '" ' +
+                  'title="' + (r.saca ? "El cliente lo puede sacar" : "No se puede sacar") + '">' +
+                  (r.saca ? "Se saca" : "Fijo") + '</button>') +
+              '<span class="sale">' + (!r.cuanto ? '<span class="sinCargar">sin cargar</span>'
+                : r.base && r.rinde > 1 ? redondo(r.cuanto) + ' ' + u + ' c/u'
+                : !r.piezas ? '<span class="sinCargar">no se pide</span>'
+                : '\u00d7 ' + r.piezas + ' = ' + bonito(r.sale, u)) + '</span></div>';
+          }).join("") +
+          '<div class="fila total"><span class="qn">Hace falta</span><span class="sale">' +
+            (k.con ? bonito(k.total, u) : "\u2014") + '</span></div></div>' +
+          (k.sin ? '<p class="nota-f menos">Falta el n\u00famero en ' + k.sin +
+            (k.sin === 1 ? ' producto' : ' productos') + '. Mientras tanto el total va corto.</p>' : '')
+        : '<p class="nota-f">Todav\u00eda no entra en ninguna receta.</p>');
+
+    return '<div class="telon" data-icerrar="1"><div class="modal" data-adentro="1">' +
+      '<h4>' + (nuevo ? "Ingrediente nuevo" : x.n) + '</h4>' +
+      '<p class="sub-m">' + (nuevo ? "Queda disponible para las recetas." :
+        (k.filas.length ? "Se usa en " + k.filas.length + (k.filas.length === 1 ? " producto" : " productos")
+                        : "Todav\u00eda no se usa en ninguna receta")) + '</p>' +
+      '<div class="campo"><label>Nombre</label><input id="i-nombre" value="' + x.n + '" placeholder="C\u00f3mo se llama"></div>' +
+      '<div class="par junto"><div class="campo"><label>Se mide en</label><div class="chips">' + UNIDADES.map(function(w){
+        return '<button type="button" data-uni="' + w + '" aria-pressed="' + (u === w) + '">' + unidadLarga(w) + '</button>';
+      }).join("") + '</div></div>' +
+      '<div class="campo corto"><label>Se compra de a</label><span class="conUn">' +
+        '<input id="i-trae" value="' + (nuevo || !x.trae ? "" : bonito(x.trae, u)) + '" placeholder="0">' +
+        '</span></div>' +
+      '<div class="campo corto"><label>Precio del bulto</label><span class="conUn">' +
+        '<input id="i-precio" value="' + (nuevo || !x.sale ? "" : plata(x.sale)) + '" placeholder="$">' +
+        '<em>' + (!nuevo && x.trae ? "= " + plata(porMedida(x) * (u === "u" ? 1 : 1000)) + " " + (u === "u" ? "c/u" : u === "ml" ? "el litro" : "el kilo") : "") + '</em></span></div></div>' +
+      '<div class="campo"><label>En cada producto</label>' + reparto +
+        (nuevo || !k.filas.length ? '' :
+          '<p class="nota-f menos"><b>Se saca</b> quiere decir que el cliente puede pedir la pizza sin \u00e9l. ' +
+          contarSacables(x.n) + ' de ' + k.filas.length + ' lo permiten.</p>') + '</div>' +
+      '<div class="acciones"><button class="btn" type="button" data-iguardar="1">' +
+        (nuevo ? "Crear ingrediente" : "Guardar cambios") + '</button>' +
+      '<button class="btn flaco" type="button" data-icerrar="1">Cancelar</button>' +
+      (nuevo ? '' : '<div class="secundarias">' + (k.filas.length
+        ? '<span class="noBorra">No se puede borrar: est\u00e1 en ' + k.filas.length +
+          (k.filas.length === 1 ? ' receta' : ' recetas') + '</span>'
+        : '<button class="enlace" type="button" data-iborrar="' + x.n + '">Borrar ingrediente</button>') +
+        '</div>') + '</div>' +
+      '</div></div>';
+  }
+
+  // ---------- costos ----------
+
+
+  function costoBase(nom){
+    var filas = [], falta = 0;
+    Object.keys(BASES[nom].r).forEach(function(g){
+      var x = buscaIng(g), c = cuantoLleva(nom, g), pm = porMedida(x);
+      if(!c || (!pm && !(x && x.trae))) falta++;
+      filas.push({ing:g, cuanto:c, u:x ? x.u : "g", pm:pm, sub:c * pm, sangria:true});
+    });
+    return {filas:filas, costo:filas.reduce(function(a, r){ return a + r.sub; }, 0), falta:falta};
+  }
+
+  function costoProducto(nom){
+    var p = buscaProd(nom);
+    if(!p) return null;
+    var bn = baseDe(p.f), b = costoBase(bn);
+    var filas = [{ing:bn, cuanto:1, u:"", pm:0, sub:b.costo, base:true}].concat(b.filas);
+    var sinPrecio = b.falta;
+    (RECETA[nom] || []).forEach(function(g){
+      var x = buscaIng(g), c = cuantoLleva(nom, g), pm = porMedida(x);
+      if(!c || !pm) sinPrecio++;
+      filas.push({ing:g, cuanto:c, u:x ? x.u : "g", pm:pm, sub:c * pm});
+    });
+    var costo = filas.reduce(function(a, r){ return a + (r.sangria ? 0 : r.sub); }, 0);
+    var venta = p.f === "emp" ? P.pack[12] / 12 : p.p;
+    return {p:p, filas:filas, costo:costo, venta:venta,
+            margen:venta - costo, pct: venta ? (venta - costo) / venta * 100 : 0,
+            sinPrecio:sinPrecio};
+  }
+
+  function costoPedido(p){
+    return p.items.reduce(function(a, it){
+      var d = costoProducto(it.n);
+      if(!d) return a;
+      return a + d.costo * (it.t === "pack" ? it.pack * it.c : it.c);
+    }, 0);
+  }
+
+  var MESES = [
+    {m:"Mayo",   pedidos:34, factura:1284000, costo:352000},
+    {m:"Junio",  pedidos:41, factura:1596000, costo:449000},
+    {m:"Julio",  pedidos:47, factura:1913000, costo:551000}
+  ];
+
+  function vistaMeses(){
+    var e = entregados();
+    var enCurso = {m:"Agosto", pedidos:e.length,
+                   factura:e.reduce(function(a, p){ return a + total(p); }, 0),
+                   costo:e.reduce(function(a, p){ return a + costoPedido(p); }, 0), curso:true};
+    var filas = MESES.concat([enCurso]);
+    var cerrados = MESES;
+    var mediaPct = cerrados.reduce(function(a, x){ return a + (x.factura - x.costo) / x.factura * 100; }, 0) / cerrados.length;
+
+    var banda = '<div class="banda"><b>Agosto va ' + plata(enCurso.factura) + ' cobrados</b>' +
+      '<span>&middot; ' + enCurso.pedidos + (enCurso.pedidos === 1 ? ' pedido entregado' : ' pedidos entregados') +
+      ' &middot; quedan ' + plata(activos().reduce(function(a, p){ return a + total(p); }, 0)) + ' sin entregar</span>' +
+      '<span class="aparte">margen de los tres meses cerrados: ' + Math.round(mediaPct) + '%</span></div>';
+
+    return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
+      '<th>Mes</th><th class="g-num">Pedidos</th><th class="g-num">Cobr\u00f3</th>' +
+      '<th class="g-num">Cost\u00f3</th><th class="g-num">Dej\u00f3</th><th class="g-fin">Margen</th>' +
+      '</tr></thead><tbody>' + filas.map(function(x){
+        var deja = x.factura - x.costo, pct = x.factura ? deja / x.factura * 100 : 0;
+        return '<tr><td class="g-nom">' + x.m +
+          (x.curso ? '<span class="bajo">todav\u00eda abierto</span>' : '') + '</td>' +
+          '<td class="g-num g-flojo">' + x.pedidos + '</td>' +
+          '<td class="g-num">' + plata(x.factura) + '</td>' +
+          '<td class="g-num g-flojo">' + plata(x.costo) + '</td>' +
+          '<td class="g-num"><b>' + plata(deja) + '</b></td>' +
+          '<td class="g-fin g-num">' + (x.factura ? Math.round(pct) + '%' : "\u2014") + '</td></tr>';
+      }).join("") + '</tbody></table></div>' +
+      '<div class="pie-tabla"><span class="cuantos">Mayo, junio y julio son n\u00fameros de ejemplo. ' +
+      'Agosto sale de los pedidos entregados de verdad.</span></div>';
+  }
+
+  function vistaCostos(){
+    var ped = pedidasPorProducto();
+    var datos = PRODUCTOS.map(function(p){ return costoProducto(p.n); })
+      .filter(function(d){ return d; });
+    datos.sort(function(a, b){ return a.pct - b.pct; });
+
+    var tandaCosto = 0, tandaVenta = 0;
+    datos.forEach(function(d){
+      var n = ped[d.p.n] || 0;
+      tandaCosto += d.costo * n; tandaVenta += d.venta * n;
+    });
+    var flojos = datos.filter(function(d){ return d.pct < CONF.margenMin && !d.sinPrecio; }).length;
+    var incompletos = datos.filter(function(d){ return d.sinPrecio; }).length;
+
+    var banda = '<div class="banda"><b>Hacer todo lo que hay pedido cuesta ' + plata(tandaCosto) + '</b>' +
+      '<span>&middot; se cobra ' + plata(tandaVenta) + ' &middot; deja ' + plata(tandaVenta - tandaCosto) +
+      (tandaVenta ? ' (' + Math.round((tandaVenta - tandaCosto) / tandaVenta * 100) + '%)' : '') + '</span>' +
+      '<span class="aparte">' + (incompletos
+        ? incompletos + (incompletos === 1 ? ' producto sin terminar de cargar' : ' productos sin terminar de cargar')
+        : flojos ? flojos + (flojos === 1 ? ' producto' : ' productos') + ' bajo el ' + CONF.margenMin + '%'
+        : 'ninguno bajo el ' + CONF.margenMin + '%') + '</span></div>';
+
+    var col = '<div class="columna"><ul>' + datos.map(function(d){
+      return '<li class="' + (d.p.n === prodCosto ? "elegido" : "") + '">' +
+        '<button type="button" data-pc="' + d.p.n + '"><span class="izq">' +
+        '<span class="fila-p"><span class="nom">' + d.p.n + '</span>' +
+        '<span class="pct' + (d.pct < CONF.margenMin ? " flojo" : "") + '">' + Math.round(d.pct) +
+        '%' + (d.sinPrecio ? '<span class="asterisco">*</span>' : '') + '</span></span>' +
+        '<span class="fila-p"><span class="fam">' + (d.sinPrecio
+          ? 'falta cargar ' + d.sinPrecio : FAM[d.p.f]) + '</span>' +
+        '<span class="plata">' + plata(d.venta) + ' &minus; ' + plata(d.costo) + '</span></span>' +
+        '</span></button></li>';
+    }).join("") + '</ul></div>';
+
+    var d = costoProducto(prodCosto) || datos[0];
+    var det = '<div class="detalle">' +
+      '<div class="det-tope"><h4>' + d.p.n + '</h4>' +
+      '<span class="estado ' + (d.sinPrecio ? "e-entregado" : d.pct < CONF.margenMin ? "e-entregado" : "e-prep") + '">' +
+        (d.sinPrecio ? "margen sin confirmar" : Math.round(d.pct) + '% de margen') + '</span></div>' +
+      '<p class="det-meta">' + FAM[d.p.f] + (d.p.f === "emp" ? " \u00b7 precio por unidad, del pack de 12" : "") + '</p>' +
+      '<ul class="desglose">' + d.filas.map(function(r){
+        var x = buscaIng(r.ing);
+        return '<li class="' + (r.base ? "fija" : r.sangria ? "sangria" : "") + '">' +
+          '<span class="qn">' + r.ing + '</span>' +
+          '<span class="cuanto">' + (r.base ? "" : (r.cuanto ? bonito(r.cuanto, r.u) : '<i>sin medida</i>')) + '</span>' +
+          '<span class="precio">' + (r.base ? "" : x && x.trae ? precioBulto(x) : '<i>sin precio</i>') + '</span>' +
+          '<span class="sub">' + (r.sub ? plata(r.sub) : r.base ? "\u2014" : (r.pm === 0 && r.cuanto ? plata(0) : "\u2014")) + '</span></li>';
+      }).join("") + '</ul>' +
+      '<dl class="cuentas">' +
+        '<div><dt>Cuesta</dt><dd>' + plata(d.costo) + (d.sinPrecio ? '<span class="asterisco">*</span>' : '') + '</dd></div>' +
+        '<div><dt>Se vende a</dt><dd>' + plata(d.venta) + '</dd></div>' +
+        '<div class="fuerte"><dt>Deja</dt><dd>' + plata(d.margen) + ' <em>' + Math.round(d.pct) + '%</em></dd></div>' +
+      '</dl>' +
+      (d.sinPrecio ? '<p class="nota-f menos">' + d.sinPrecio +
+        (d.sinPrecio === 1 ? ' ingrediente sin medida o sin precio' : ' ingredientes sin medida o sin precio') +
+        ': el costo real es m\u00e1s alto. Se cargan en Ingredientes.</p>' : '') +
+      '<p class="nota-f menos">Flojo quiere decir por debajo del ' + CONF.margenMin + '% de margen.</p>' +
+      '</div>';
+
+    return banda + '<div class="doble">' + col + det + '</div>';
+  }
+
+  var REGLAS =
+    '<div class="reglas"><b>Reglas que valen en las seis</b><ul>' +
+    '<li><b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">Bowlby es del cliente, Archivo es del vendedor.</b> ' +
+      'La tipograf\u00eda con personalidad se usa solo en la tienda; el panel va todo en Archivo, ' +
+      'sin engrosado y con n\u00fameros tabulares. Se prob\u00f3 al rev\u00e9s y qued\u00f3 pesado.</li>' +
+    '<li>Las cabeceras de la barra lateral y del contenido miden <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">58 px fijos</b>, ' +
+      'as\u00ed sus filetes de 2 px coinciden por construcci\u00f3n y no por acomodar a ojo.</li>' +
+    '<li>Texto con texto se alinea por <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">l\u00ednea de base</b>; ' +
+      'pastilla con texto, por <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">centro</b>.</li>' +
+    '<li>Nada se borra si dej\u00f3 rastro: un producto o un ingrediente nombrado en un pedido viejo ' +
+      'se marca agotado, no se elimina.</li>' +
+    '</ul></div>';
+
+  var NOTAS = {
+    inicio: function(){
+      return '<h2>1 &middot; Inicio</h2>' +
+      '<div class="bloque"><h3>Cinco cifras y dos listas</h3>' +
+      '<p>Arriba, <b>Pedidos nuevos, Falta comprar, Producci\u00f3n, Costo y Total</b>. Salieron de un cat\u00e1logo ' +
+      'de veintis\u00e9is cifras que el panel sabe calcular; el t\u00edtulo de cada tarjeta es un selector, ' +
+      'as\u00ed que la fila se puede rearmar sin tocar c\u00f3digo.</p>' +
+      '<p>Abajo, las dos preguntas de la tanda: <b>Hornear</b> y <b>Comprar</b>. Las dos salen de los mismos ' +
+      'pedidos sin entregar.</p></div>' +
+
+      '<div class="bloque"><h3>Los filetes de las dos listas coinciden</h3>' +
+      '<p>Todos los renglones miden <b>30 px</b>, los de familia incluidos. As\u00ed cada l\u00ednea cae en un m\u00faltiplo ' +
+      'de 30 desde el mismo origen y las dos mitades quedan en grilla. No es casualidad ni ojo: es la \u00fanica ' +
+      'manera de que coincidan cuando la izquierda tiene encabezados que la derecha no.</p></div>' +
+
+      '<div class="bloque"><h3>La tienda se abre y se cierra ac\u00e1</h3>' +
+      '<p>El interruptor est\u00e1 en la cabecera, y el estado baja al <b>pie de la barra lateral</b>: se ve desde ' +
+      'cualquier pantalla. Es el error caro de este dise\u00f1o &mdash; dejarla cerrada un martes sin darse cuenta.</p>' +
+      '<p>Ese interruptor existe porque <b>Configuraci\u00f3n se elimin\u00f3</b>. Se arm\u00f3 entera y se descart\u00f3: cada ' +
+      'n\u00famero que le quedaba pertenec\u00eda al lado de lo que afecta.</p></div>' +
+
+      '<div class="bloque"><h3>Lo que se descart\u00f3</h3>' +
+      '<p>Tres versiones enteras: una que abr\u00eda con <b>\u00abhoy toca amasar\u00bb</b> en tipograf\u00eda grande, una con ' +
+      '<b>registro de actividad</b> y una que dibujaba <b>la semana</b> con el d\u00eda de hoy en verde. ' +
+      'Ganaron las cifras porque son las que cambian todos los d\u00edas.</p></div>' +
+
+      '<dl class="medidas">' +
+        '<div><dt>Barra lateral</dt><dd>212 px</dd></div>' +
+        '<div><dt>Cabeceras</dt><dd>58 px</dd></div>' +
+        '<div><dt>Cifra de tarjeta</dt><dd>28 px / 800</dd></div>' +
+        '<div><dt>Pie de tarjeta</dt><dd>11,84 px</dd></div>' +
+        '<div><dt>Rengl\u00f3n de lista</dt><dd>30 px</dd></div>' +
+      '</dl>';
+    },
+
+    pedidos: function(){
+      return '<h2>2 &middot; Pedidos</h2>' +
+      '<div class="bloque"><h3>Lista ancha y detalle</h3>' +
+      '<p>La lista a la izquierda (326 px) para barrer, y el pedido entero a la derecha: tel\u00e9fono, ' +
+      'ingredientes sacados, total y acciones. Se descart\u00f3 una <b>cinta de solapas</b> &mdash; en 390 px ' +
+      'entraban 3 de 7 &mdash; y unas pesta\u00f1as al pie.</p></div>' +
+
+      '<div class="bloque"><h3>Una acci\u00f3n principal, dos enlaces</h3>' +
+      '<p><b>\u00abEmpezar a preparar\u00bb</b> va a todo el ancho, con el nombre completo y no abreviado. ' +
+      'Debajo, <b>escribirle por WhatsApp</b> en verde y <b>cancelar</b> en gris, como enlaces: no son ' +
+      'botones del mismo peso porque cancelar es destructiva y rara.</p></div>' +
+
+      '<div class="bloque"><h3>Es la fuente de todo lo dem\u00e1s</h3>' +
+      '<p>Avanz\u00e1 o cancel\u00e1 un pedido y and\u00e1 a Producci\u00f3n, a Inicio o a Costos: los n\u00fameros se ' +
+      'recalculan solos porque no hay copias, hay una sola lista.</p></div>' +
+
+      '<div class="bloque"><h3>Cuatro estados, no m\u00e1s</h3>' +
+      '<p><b>Nuevo \u2192 Preparando \u2192 Entregado</b>, m\u00e1s <b>Cancelado</b> como salida. ' +
+      'El pedido cancelado se tacha y sale de todos los c\u00e1lculos, pero no desaparece del historial.</p></div>';
+    },
+
+    produccion: function(){
+      return '<h2>3 &middot; Producci\u00f3n</h2>' +
+      '<div class="bloque"><h3>Consolida los pedidos sin entregar</h3>' +
+      '<p>Nuevos y preparando, no el historial. <b>Cancel\u00e1 uno en Pedidos y sale del c\u00e1lculo.</b> ' +
+      'Es la pantalla del s\u00e1bado a la ma\u00f1ana: qu\u00e9 hay que hacer, todo junto.</p></div>' +
+
+      '<div class="bloque"><h3>Tres titulares elegidos entre diez</h3>' +
+      '<p><b>Masa</b> en kilos y bollos, <b>Empanadas</b> en unidades y gustos, y <b>Pedidos a cubrir</b>. ' +
+      'Se descartaron harina, piezas al horno, hornadas, plata de la tanda y con cambios: todas siguen ' +
+      'disponibles como tarjeta en Inicio.</p>' +
+      '<p>El pie de <b>Pedidos a cubrir</b> no repite el n\u00famero: dice <b>de cu\u00e1ndo es el m\u00e1s viejo ' +
+      'sin entregar</b>. Es el dato que avisa si algo se qued\u00f3 atr\u00e1s.</p></div>' +
+
+      '<div class="bloque"><h3>Los \u00absin\u00bb van desglosados</h3>' +
+      '<p>En pizzas y focaccias: <b>\u00abMargarita 5 \u00b7 2 sin albahaca\u00bb</b>. No alcanza con el total ' +
+      'cuando dos de esas cinco se arman distinto.</p>' +
+      '<p>En empanadas se muestra la <b>unidad, no el pack</b>: lo que se cocina son 18 empanadas de carne ' +
+      'aunque hayan entrado como un pack de 12 y uno de 6.</p></div>';
+    },
+
+    productos: function(){
+      return '<h2>4 &middot; Productos</h2>' +
+      '<div class="bloque"><h3>Lista y ficha, en rengl\u00f3n etiquetado</h3>' +
+      '<p>Etiqueta a la izquierda, valor a la derecha, un filete entre cada uno &mdash; como una planilla. ' +
+      'Se probaron cuatro formas de la ficha: apilada, en el lugar (sin etiquetas) y en dos columnas. ' +
+      'Gan\u00f3 esta porque <b>todo queda alineado en una sola columna</b> y el ojo baja comparando.</p>' +
+      '<p>El costo es que los campos no parecen editables hasta que pas\u00e1s el mouse. Se aprende una vez.</p></div>' +
+
+      '<div class="bloque"><h3>El alta al pie de la columna</h3>' +
+      '<p><b>+ Producto nuevo</b> queda fijo abajo aunque la lista scrollee, y abre <b>la misma ficha en blanco</b>. ' +
+      'No hay una pantalla de alta distinta de la de edici\u00f3n.</p></div>' +
+
+      '<div class="bloque"><h3>Los ingredientes se cargan sin bot\u00f3n</h3>' +
+      '<p>El campo para sumar uno <b>ya est\u00e1 ah\u00ed</b>, con la misma l\u00ednea de puntos que los dem\u00e1s campos: ' +
+      'escrib\u00eds y Enter. Antes era una pastilla punteada que parec\u00eda una pastilla rota entre las buenas.</p></div>' +
+
+      '<div class="bloque"><h3>Las empanadas no tienen precio propio</h3>' +
+      '<p>Se cobran por pack. Los dos precios &mdash; <b>x6 y x12</b> &mdash; se editan en la ficha de cualquier ' +
+      'gusto y valen para todos. Cambi\u00e1 el x12 y mir\u00e1 los totales en Pedidos.</p></div>' +
+
+      '<div class="bloque"><h3>No hay bot\u00f3n de borrar</h3>' +
+      '<p>Un producto puede estar nombrado en pedidos viejos; si lo borr\u00e1s, el historial queda hablando ' +
+      'de algo que no existe. Lo que se hace es <b>marcarlo agotado</b>: sale de la carta del cliente ' +
+      'y sigue vivo en Pedidos y Producci\u00f3n.</p></div>';
+    },
+
+    ingredientes: function(){
+      return '<h2>5 &middot; Ingredientes</h2>' +
+      '<div class="bloque"><h3>Es la lista de compras</h3>' +
+      '<p><b>Stock \u00b7 Necesito \u00b7 Falta</b>, en el orden de la resta. El stock se edita en el rengl\u00f3n; ' +
+      'las otras dos salen solas de los pedidos. La \u00faltima columna es la lista: lo que hay que ir a buscar.</p>' +
+      '<p>Se probaron otras tres maneras de contar esa resta &mdash; lo que te queda despu\u00e9s de la tanda, ' +
+      'una barra de consumo y un sem\u00e1foro con \u00abjusto\u00bb. Gan\u00f3 la m\u00e1s literal.</p></div>' +
+
+      '<div class="bloque"><h3>La cantidad es del par producto\u2013ingrediente</h3>' +
+      '<p>Es la decisi\u00f3n que oblig\u00f3 a rehacer el modelo. <b>Una fugazzeta lleva 200 g de cebolla y una ' +
+      'empanada de carne, 15.</b> Abr\u00ed <b>Cebolla</b>: los cuatro productos que la llevan, con su n\u00famero ' +
+      'y lo que aporta cada uno.</p>' +
+      '<p>El asterisco avisa que el total va corto porque falta cargar alg\u00fan producto.</p></div>' +
+
+      '<div class="bloque"><h3>Se compra por bulto, se usa por gramo</h3>' +
+      '<p>Cada ingrediente guarda <b>cu\u00e1nto trae el bulto y cu\u00e1nto sale</b>, y el panel divide. ' +
+      'Resuelve de una vez las tapas (60 u a $9.000) y la harina (25 kg a $32.000): se carga como compr\u00e1s, ' +
+      'no traducido a mano.</p></div>' +
+
+      '<div class="bloque"><h3>El bollo es una receta, no un n\u00famero</h3>' +
+      '<p>Se carga <b>por tanda entera con un rinde</b>, como se amasa. Abr\u00ed <b>Harina 000</b> con ' +
+      '<b>Ver todos</b>: el rengl\u00f3n dice <b>rinde 6</b> y el campo son los 1000 g de la tanda; al costado ' +
+      'el panel divide en 166,7 g por bollo.</p>' +
+      '<p>La receta es la del vendedor: 1 kg de harina, 700 g de agua, 100 g de masa madre y 30 g de sal, ' +
+      'para 6 bollos de 280 g. El <b>peso del bollo dej\u00f3 de existir como dato</b>: la harina sale de ac\u00e1.</p></div>' +
+
+      '<div class="bloque"><h3>Qu\u00e9 se puede sacar</h3>' +
+      '<p>Tambi\u00e9n por par: si el cliente puede pedir <b>ese</b> producto sin <b>ese</b> ingrediente. ' +
+      'Abr\u00ed <b>Albahaca</b> y sac\u00e1le el permiso en Margarita &mdash; la columna de la derecha pasa a ' +
+      '\u00aben 2 de 3\u00bb.</p></div>' +
+
+      '<div class="bloque"><h3>Alta, baja y modificaci\u00f3n</h3>' +
+      '<p>El nombre abre la ficha, el pie da de alta. <b>Borrar solo si no est\u00e1 en ninguna receta</b>: ' +
+      'prob\u00e1 abrir Muzzarella y despu\u00e9s uno reci\u00e9n creado.</p></div>';
+    },
+
+    costos: function(){
+      return '<h2>6 &middot; Costos</h2>' +
+      '<div class="bloque"><h3>Nada se carga ac\u00e1</h3>' +
+      '<p>Todo sale de multiplicar <b>la receta por el precio de compra</b>. Es lo que una planilla no puede ' +
+      'hacer sola: el panel ya tiene las recetas, los gramos y los precios de venta.</p></div>' +
+
+      '<div class="bloque"><h3>Del peor margen al mejor</h3>' +
+      '<p>Es el orden en que conviene mirarla. Abr\u00ed la primera: el desglose muestra <b>la base sangrada</b> ' +
+      '&mdash; el bollo con sus cuatro ingredientes adentro &mdash; y despu\u00e9s lo que lleva el producto.</p>' +
+      '<p>El <b>margen m\u00ednimo est\u00e1 fijo en 55%</b>. Abajo de eso, el producto queda marcado.</p></div>' +
+
+      '<div class="bloque"><h3>El asterisco es una advertencia, no un detalle</h3>' +
+      '<p>Los productos sin terminar de cargar aparec\u00edan <b>primeros en margen</b>, porque su costo era ' +
+      'solo el bollo. Eso es peor que no tener la pantalla: te har\u00eda subir el precio de lo que m\u00e1s te conviene. ' +
+      'Ahora llevan asterisco, dicen <b>margen sin confirmar</b> y la banda de arriba los cuenta.</p></div>' +
+
+      '<div class="bloque"><h3>Por mes: lo cobrado contra lo que cost\u00f3</h3>' +
+      '<p>El mes en curso <b>se calcula de verdad</b>, de los pedidos entregados. Marc\u00e1 uno como entregado ' +
+      'en Pedidos y volv\u00e9. Los meses anteriores son de ejemplo.</p>' +
+      '<p>Lo que <b>no</b> est\u00e1: luz, alquiler, sueldos. Eso es un libro de caja y ah\u00ed el panel no le gana ' +
+      'a una planilla.</p></div>';
+    }
+  };
+
+  function pintar(){
+    var cont;
+    if(seccion === "pedidos") cont = '<div class="obra">' + vistaPedidos() + '</div>';
+    else if(seccion === "produccion"){
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Producci\u00f3n</h3>' +
+        '<span class="sub">' + activos().length + ' pedidos sin entregar</span></span></div>' +
+        cuerpoLista() + '</div>';
+    }
+    else if(seccion === "inicio"){
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Inicio</h3>' +
+        '<span class="sub">' + activos().length + ' pedidos sin entregar</span></span>' +
+        '<span class="llave-tienda"><span class="et-t">La tienda</span>' +
+        '<button class="llave" type="button" data-tienda="1" aria-pressed="' + tiendaAbierta + '">' +
+          (tiendaAbierta ? "Abierta" : "Cerrada") + '</button></span></div>' +
+        (tiendaAbierta ? '' :
+          '<div class="banda cerrada"><b>La tienda está cerrada</b>' +
+          '<span>&middot; no entran pedidos nuevos hasta que la abras</span></div>') +
+        '<div class="ini">' + tarjetasHTML() + abHornear() + '</div></div>';
+    }
+    else if(seccion === "productos"){
+      var chips = [["todo","Todo"]].concat(FAMS.map(function(k){ return [k, FAM[k]]; }));
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Productos</h3>' +
+        '<span class="sub">' + resumenProd() + '</span></span>' +
+        '<div class="filtros">' + chips.map(function(o){
+          return '<button type="button" data-fp="' + o[0] + '" aria-pressed="' + (famProd === o[0]) + '">' + o[1] + '</button>';
+        }).join("") + '</div></div>' + prodFicha() + '</div>';
+    }
+    else if(seccion === "ingredientes"){
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Ingredientes</h3>' +
+        '<span class="sub">' + INGR.length + ' en las recetas</span></span></div>' + ingCompras() + '</div>';
+    }
+    else if(seccion === "costos"){
+      var NOMK = {producto:"Por producto", mes:"Por mes"};
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Costos</h3>' +
+        '<span class="sub">' + (vistaCostos2 === "mes" ? "lo cobrado contra lo que cost\u00f3" : "lo que deja cada producto") + '</span></span>' +
+        '<div class="filtros">' + Object.keys(NOMK).map(function(v){
+          return '<button type="button" data-vk="' + v + '" aria-pressed="' + (vistaCostos2 === v) + '">' + NOMK[v] + '</button>';
+        }).join("") + '</div></div>' +
+        (vistaCostos2 === "mes" ? vistaMeses() : vistaCostos()) + '</div>';
+    }
+    else{
+      var nom = SECCIONES.filter(function(s){ return s.id === seccion; })[0].n;
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>'+nom+'</h3></span></div>' +
+        '<p class="placeholder">Esta pantalla todavía no está diseñada.</p></div>';
+    }
+    document.getElementById("marco").innerHTML = menu() + cont;
+
+    document.getElementById("lado").innerHTML = NOTAS[seccion]() + REGLAS;
+
+    document.querySelectorAll("#marco [data-s]").forEach(function(b){
+      b.addEventListener("click", function(){ seccion = b.dataset.s; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-f]").forEach(function(b){
+      b.addEventListener("click", function(){ filtro = b.dataset.f; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-el]").forEach(function(b){
+      b.addEventListener("click", function(){ elegido = b.dataset.el; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-av]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var p = PEDIDOS.filter(function(x){ return x.n === b.dataset.av; })[0];
+        p.estado = SIG[p.estado]; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-abrir]").forEach(function(b){
+      b.addEventListener("click", function(){ elegido = b.dataset.abrir; seccion = "pedidos"; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-fp]").forEach(function(b){
+      b.addEventListener("click", function(){
+        famProd = b.dataset.fp; TIPEADO = null;
+        if(!listaProd().filter(function(x){ return x.n === prodElegido; }).length && listaProd().length){
+          prodElegido = listaProd()[0].n;
+        }
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-ep]").forEach(function(b){
+      b.addEventListener("click", function(){ prodElegido = b.dataset.ep; TIPEADO = null; sumando = false; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-tienda]").forEach(function(b){
+      b.addEventListener("click", function(){ tiendaAbierta = !tiendaAbierta; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-todos]").forEach(function(b){
+      b.addEventListener("click", function(){ verTodos = !verTodos; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-stock]").forEach(function(b){
+      b.addEventListener("change", function(){
+        var x = buscaIng(b.dataset.stock);
+        x.stock = leerMedida(b.value, x.u);
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-auto]").forEach(function(b){
+      b.addEventListener("input", function(){
+        b.style.width = Math.max(1, b.value.length) + "ch";
+      });
+    });
+    document.querySelectorAll("#marco [data-vk]").forEach(function(b){
+      b.addEventListener("click", function(){ vistaCostos2 = b.dataset.vk; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-pc]").forEach(function(b){
+      b.addEventListener("click", function(){ prodCosto = b.dataset.pc; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-ing]").forEach(function(b){
+      b.addEventListener("click", function(){ ingElegido = b.dataset.ing; uniNueva = null; TIPEADO_I = {n:"", p:"", t:""}; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-ingnuevo]").forEach(function(b){
+      b.addEventListener("click", function(){
+        ingElegido = null; uniNueva = "g"; TIPEADO_I = {n:"", p:"", t:""}; pintar();
+        var c = document.getElementById("i-nombre"); if(c) c.focus();
+      });
+    });
+    document.querySelectorAll("#marco [data-icerrar]").forEach(function(b){
+      b.addEventListener("click", function(e){
+        if(e.target.closest("[data-adentro]") && b.dataset.icerrar && b.classList.contains("telon")) return;
+        ingElegido = undefined; uniNueva = null; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-uni]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizarIng();
+        uniNueva = b.dataset.uni;
+        if(ingElegido !== null){ var x = buscaIng(ingElegido); if(x) x.u = uniNueva; }
+        pintar(); restaurarIng();
+      });
+    });
+    document.querySelectorAll("#marco [data-saca]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizarIng();
+        var n = TIPEADO_I.n, p = b.dataset.saca;
+        QUITABLE[p] = QUITABLE[p] || {};
+        QUITABLE[p][ingElegido] = !QUITABLE[p][ingElegido];
+        pintar(); restaurarIng();
+      });
+    });
+    document.querySelectorAll("#marco [data-cant]").forEach(function(b){
+      b.addEventListener("change", function(){
+        sincronizarIng();
+        ponerCuanto(b.dataset.cant, ingElegido, leerMedida(b.value, buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g"));
+        pintar(); restaurarIng();
+      });
+    });
+    document.querySelectorAll("#marco [data-iborrar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var n = b.dataset.iborrar;
+        INGR = INGR.filter(function(y){ return y.n !== n; });
+        Object.keys(CANT).forEach(function(p){ delete CANT[p][n]; });
+        ingElegido = undefined; uniNueva = null; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-iguardar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var nom = document.getElementById("i-nombre").value.trim();
+        var pre = soloNum(document.getElementById("i-precio").value);
+        var tra = leerMedida(document.getElementById("i-trae").value, uniNueva || (ingElegido !== null && buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g"));
+        if(!nom){ document.getElementById("i-nombre").focus(); return; }
+        if(ingElegido === null){
+          if(!buscaIng(nom)) INGR.push({n:nom, u:uniNueva || "g", stock:0, trae:tra, sale:pre});
+        }else{
+          var x = buscaIng(ingElegido);
+          x.sale = pre; x.trae = tra;
+          if(uniNueva) x.u = uniNueva;
+          if(nom !== x.n){
+            Object.keys(RECETA).forEach(function(p){
+              RECETA[p] = RECETA[p].map(function(g){ return g === x.n ? nom : g; });
+            });
+            Object.keys(CANT).forEach(function(p){
+              if(CANT[p][x.n] !== undefined){ CANT[p][nom] = CANT[p][x.n]; delete CANT[p][x.n]; }
+            });
+            x.n = nom;
+          }
+        }
+        ingElegido = undefined; uniNueva = null; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-nuevo]").forEach(function(b){
+      b.addEventListener("click", function(){
+        prodElegido = null; TIPEADO = null; sumando = false;
+        BORRADOR = {f: famProd === "todo" ? "pizza" : famProd, n:"", p:0, ing:[]};
+        pintar();
+        var c = document.getElementById("f-nombre"); if(c) c.focus();
+      });
+    });
+    document.querySelectorAll("#marco [data-fam]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        if(prodElegido === null) BORRADOR.f = b.dataset.fam;
+        else buscaProd(prodElegido).f = b.dataset.fam;
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-abrire]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar(); sumando = true; pintar();
+        var c = document.getElementById("ing-nuevo"); if(c) c.focus();
+      });
+    });
+    document.querySelectorAll("#marco [data-qi]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        var k = +b.dataset.qi;
+        if(prodElegido === null) BORRADOR.ing.splice(k, 1);
+        else{ RECETA[prodElegido] = (RECETA[prodElegido] || []).slice(); RECETA[prodElegido].splice(k, 1); }
+        pintar();
+      });
+    });
+    function sumarIngrediente(nombre){
+      sincronizar();
+      if(prodElegido === null) BORRADOR.ing.push(nombre);
+      else RECETA[prodElegido] = (RECETA[prodElegido] || []).concat([nombre]);
+      pintar();
+      var c = document.getElementById("ing-nuevo"); if(c) c.focus();
+    }
+    document.querySelectorAll("#marco [data-elegirIng]").forEach(function(b){
+      b.addEventListener("mousedown", function(e){ e.preventDefault(); });
+      b.addEventListener("click", function(){ sumarIngrediente(b.dataset.elegiring); });
+    });
+
+    var campoIng = document.getElementById("ing-nuevo");
+    if(campoIng){
+      var caja = document.getElementById("candidatos");
+      function visibles(){
+        return caja ? [].slice.call(caja.querySelectorAll("li")).filter(function(li){
+          return !li.hidden && !li.classList.contains("nada");
+        }) : [];
+      }
+      // sin tildes: "oreg" tiene que encontrar "Oregano"
+      function pelado(x){
+        return x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      function filtrar(){
+        if(!caja) return;
+        var t = pelado(campoIng.value.trim()), hay = 0;
+        caja.querySelectorAll("li").forEach(function(li){
+          if(li.classList.contains("nada")) return;
+          var ok = pelado(li.textContent).indexOf(t) >= 0;
+          li.hidden = !ok;
+          li.classList.remove("marcado");
+          if(ok) hay++;
+        });
+        caja.querySelector(".nada").hidden = hay > 0;
+        var v = visibles();
+        if(v.length) v[0].classList.add("marcado");
+      }
+      filtrar();
+      campoIng.addEventListener("input", filtrar);
+      campoIng.addEventListener("blur", function(){
+        window.setTimeout(function(){
+          if(document.getElementById("ing-nuevo") === campoIng){ sincronizar(); sumando = false; pintar(); }
+        }, 120);
+      });
+      campoIng.addEventListener("keydown", function(e){
+        var v = visibles();
+        if(e.key === "Enter"){
+          e.preventDefault();
+          var m = caja && caja.querySelector("li.marcado");
+          if(m) sumarIngrediente(m.querySelector("button").dataset.elegiring);
+        }else if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+          e.preventDefault();
+          if(!v.length) return;
+          var i = v.findIndex(function(li){ return li.classList.contains("marcado"); });
+          v.forEach(function(li){ li.classList.remove("marcado"); });
+          var j = e.key === "ArrowDown" ? (i + 1) % v.length : (i <= 0 ? v.length - 1 : i - 1);
+          v[j].classList.add("marcado");
+          v[j].scrollIntoView({block:"nearest"});
+        }else if(e.key === "Escape"){ sincronizar(); sumando = false; pintar(); }
+      });
+    }
+    document.querySelectorAll("#marco [data-crear]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var v = leerFicha();
+        if(!v.n){ var c = document.getElementById("f-nombre"); if(c) c.focus(); return; }
+        var p = {f:BORRADOR.f, n:v.n, act:true};
+        if(BORRADOR.f !== "emp"){ p.p = v.p; }
+        else{
+          if(v.p6) P.pack[6] = v.p6;
+          if(v.p12) P.pack[12] = v.p12;
+        }
+        PRODUCTOS.push(p);
+        RECETA[v.n] = BORRADOR.ing.slice();
+        prodElegido = v.n; TIPEADO = null;
+        if(famProd !== "todo" && famProd !== BORRADOR.f) famProd = BORRADOR.f;
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-cancelar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        prodElegido = (listaProd()[0] || PRODUCTOS[0]).n; TIPEADO = null; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-guardar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var x = buscaProd(prodElegido); if(!x) return;
+        var v = leerFicha();
+        if(x.f !== "emp"){ x.p = v.p; }
+        else{
+          delete x.p;
+          if(v.p6) P.pack[6] = v.p6;
+          if(v.p12) P.pack[12] = v.p12;
+        }
+        if(v.n && v.n !== x.n){
+          RECETA[v.n] = RECETA[x.n] || []; delete RECETA[x.n];
+          x.n = v.n; prodElegido = v.n;
+        }
+        TIPEADO = null;
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-tog]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var x = buscaProd(b.dataset.tog); x.act = !x.act; TIPEADO = null; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-can]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var p = PEDIDOS.filter(function(x){ return x.n === b.dataset.can; })[0];
+        p.estado = "cancelado"; pintar();
+      });
+    });
+  }
+
+  pintar();
+</script>
