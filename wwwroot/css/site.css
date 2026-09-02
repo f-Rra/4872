@@ -1,31 +1,41 @@
-html {
-  font-size: 14px;
+/* ============================================================
+   48·72 — los átomos del diseño
+
+   Salen de diseño/la-tienda.html y diseño/el-panel.html, que son
+   la especificación. Ninguna pantalla define un color ni una
+   fuente por su cuenta: los pide de acá.
+   ============================================================ */
+
+:root{
+  /* la marca */
+  --verde:#1E5245;
+  --verde-hondo:#143A31;
+  --papel:#F3EDE1;
+
+  /* los grises: piedra para lo apagado, la familia hoja para el panel */
+  --piedra:#9A9287;
+  --hoja:#E4E4E6;
+  --hoja-linea:#C6C6CB;
+  --hoja-tinta:#26262A;
+  --hoja-suave:#5C5C64;
+
+  /* Bowlby es del cliente, Archivo es del vendedor */
+  --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --cara:"Bowlby One",Impact,sans-serif;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+/* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.
+   La plantilla traía html{font-size:14px} hasta los 768, que encogía cada
+   medida cerrada un 12,5% en telefono, que es donde se usa la tienda */
+html{font-size:16px}
+
+body{
+  margin:0;
+  background:var(--papel);
+  color:var(--verde);
+  font-family:var(--ui);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
+a{color:var(--verde)}
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
-}
+.cara{font-family:var(--cara)}
