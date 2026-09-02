@@ -1,6 +1,15 @@
+using System.Globalization;
 using f4872.Data;
+using f4872.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+
+// una sola cultura para toda la app, fijada antes que nada: asi los precios y las
+// fechas salen iguales en las vistas, en los formularios y en lo que corra fuera
+// de un request. No se usa UseRequestLocalization porque eso es para sitios en
+// varios idiomas, y este habla uno solo
+CultureInfo.DefaultThreadCurrentCulture = Cultura.Argentina();
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.DefaultThreadCurrentCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 

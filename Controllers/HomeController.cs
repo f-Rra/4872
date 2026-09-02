@@ -19,6 +19,7 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         ViewData["Base"] = await EstadoDeLaBase();
+        ViewData["Formato"] = $"{9800:C}  ·  {0.1667:N2}  ·  {DateTime.Now:D}";
         return View();
     }
 
