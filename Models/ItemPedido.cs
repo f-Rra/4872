@@ -27,6 +27,18 @@ public class ItemPedido
     [DisplayName("Precio unitario")]
     public decimal PrecioUnitario { get; set; }
 
+    public ICollection<ItemQuitado> Quitados { get; set; } = new List<ItemQuitado>();
+
+    // "sin albahaca, oliva", igual que en la maqueta. Va ordenado alfabeticamente
+    // a proposito: dos items con el mismo sin tienen que dar el mismo texto, que
+    // es lo que despues permite agruparlos en un solo renglon del resumen.
+    // Necesita los quitados cargados: sin Include da vacio, que se lee como
+    // "no sacaron nada"
+    [DisplayName("Sin")]
+    public string Sin => Quitados.Count == 0
+        ? ""
+        : "sin " + string.Join(", ", Quitados.Select(x => x.Ingrediente).OrderBy(x => x));
+
     [DisplayName("Total")]
     public decimal Total => Cantidad * PrecioUnitario;
 
