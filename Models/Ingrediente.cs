@@ -25,6 +25,10 @@ public class Ingrediente
     [DisplayName("No se compra")]
     public bool Libre { get; set; }
 
+    // en que recetas aparece: es por donde la lista de compras averigua cuanto
+    // hace falta de cada cosa
+    public ICollection<ProductoIngrediente> Usos { get; set; } = new List<ProductoIngrediente>();
+
     // el precio por gramo no se guarda: se divide. Guardarlo seria tener dos
     // numeros que pueden contradecirse el dia que cambie el precio
     [DisplayName("Precio por medida")]

@@ -23,6 +23,10 @@ public class Producto
     public int? IdBase { get; set; }
     public Base? Base { get; set; }
 
+    // se llama Receta y no Ingredientes porque cada renglon no es un ingrediente:
+    // es un ingrediente con su cantidad y con si se puede sacar
+    public ICollection<ProductoIngrediente> Receta { get; set; } = new List<ProductoIngrediente>();
+
     [DisplayName("Se cobra por pack")]
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
