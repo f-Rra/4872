@@ -49,8 +49,8 @@ Familia, nombre, precio y activo, con su `ProductoConfiguracion`. Las empanadas 
 
 **6 ·** `feat(datos): modelar el ingrediente`
 
-Unidad, stock, el bulto en que se compra (cuánto trae y cuánto sale) y la bandera de lo que no se compra — el agua, la masa madre. El precio por gramo se deriva, no se guarda.
-→ *Verificar:* la tabla aparece con las dos columnas del bulto.
+Unidad, stock, cómo se compra (qué cantidad trae y cuánto sale) y la bandera de lo que no se compra — el agua, la masa madre. El precio por gramo se deriva, no se guarda.
+→ *Verificar:* la tabla aparece con las dos columnas de la compra.
 
 **7 ·** `feat(datos): modelar la base`
 
@@ -218,7 +218,7 @@ Con las cantidades legibles: 42 kg y no 42000 g.
 
 Nombre, unidad y la bandera de lo que no se compra.
 
-**41 ·** `feat(panel): cargar el bulto de compra`
+**41 ·** `feat(panel): cargar la compra del ingrediente`
 
 Cuánto trae y cuánto sale. De ahí sale el precio por gramo, que es lo que después usan los costos.
 
@@ -234,7 +234,7 @@ El stock contra lo que hace falta para los pedidos del finde. El agua y la masa 
 **44 ·** `feat(panel): calcular el costo de cada producto`
 
 Receta × precio de compra, con la base desglosada.
-→ *Verificar:* cambiar el precio de un bulto y que el costo se mueva.
+→ *Verificar:* cambiar el precio de una compra y que el costo se mueva.
 
 **45 ·** `feat(panel): mostrar el margen y avisar los datos incompletos`
 
@@ -270,4 +270,4 @@ Va al final porque recién ahí se sabe qué se hizo de verdad. Qué es, cómo s
 
 El **logo**, las **fotos cenitales** (centradas, mismo fondo, misma altura, misma luz), los **precios reales** y el **dominio** — los `.com.ar` estaban libres el 2026-08-25 y eso cambia.
 
-La **carta de verdad** hace falta antes de la fase 4: nombres, precios, gustos, ingredientes de cada producto, cuáles se pueden sacar y los bultos con su precio de compra.
+La **carta de verdad** hace falta antes de la fase 4: nombres, precios, gustos, ingredientes de cada producto, cuáles se pueden sacar y cómo se compra cada uno con su precio.
