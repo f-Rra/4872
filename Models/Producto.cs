@@ -18,6 +18,11 @@ public class Producto
 
     public bool Activo { get; set; } = true;
 
+    // la sub-receta que consume: el bollo en pizzas y focaccias, la tapa en
+    // empanadas. Una unidad por producto, que es como se arma
+    public int? IdBase { get; set; }
+    public Base? Base { get; set; }
+
     [DisplayName("Se cobra por pack")]
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 

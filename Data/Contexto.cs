@@ -9,6 +9,7 @@ public class Contexto : DbContext
 
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Ingrediente> Ingredientes => Set<Ingrediente>();
+    public DbSet<Base> Bases => Set<Base>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {

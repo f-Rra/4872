@@ -31,5 +31,12 @@ public class ProductoConfiguracion : IEntityTypeConfiguration<Producto>
         // dos productos con el mismo nombre en la misma familia son el mismo producto
         producto.HasIndex(x => new { x.Familia, x.Nombre })
             .IsUnique();
+
+        // Restrict y no Cascade: borrar el bollo no puede llevarse puestas las
+        // pizzas. Si una base esta en uso, primero hay que sacarla de los productos
+        producto.HasOne(x => x.Base)
+            .WithMany(x => x.Productos)
+            .HasForeignKey(x => x.IdBase)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
