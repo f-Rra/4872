@@ -15,6 +15,10 @@ public class Base
 
     public ICollection<Producto> Productos { get; set; } = new List<Producto>();
 
+    // se llama Receta igual que la del producto, pero las cantidades de acá son
+    // de la tanda entera y las de allá son de una unidad
+    public ICollection<BaseIngrediente> Receta { get; set; } = new List<BaseIngrediente>();
+
     [DisplayName("Se carga")]
     public string ComoSeCarga => Rinde > 1 ? $"por tanda de {Rinde}" : "de a uno";
 }

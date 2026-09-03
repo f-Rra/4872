@@ -32,7 +32,7 @@ public class ProductoIngredienteConfiguracion : IEntityTypeConfiguration<Product
         // borrar un ingrediente en uso, en cambio, se frena: primero hay que
         // sacarlo de las recetas, si no las pizzas quedan sin la mitad
         renglon.HasOne(x => x.Ingrediente)
-            .WithMany(x => x.Usos)
+            .WithMany(x => x.UsosEnProductos)
             .HasForeignKey(x => x.IdIngrediente)
             .OnDelete(DeleteBehavior.Restrict);
     }
