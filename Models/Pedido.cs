@@ -34,6 +34,14 @@ public class Pedido
     [DisplayName("Estado")]
     public EstadoPedido Estado { get; set; }
 
+    public ICollection<ItemPedido> Items { get; set; } = new List<ItemPedido>();
+
+    // ojo: suma lo que este cargado. Consultado sin Include da cero, que es un
+    // numero creible y equivocado, asi que el total de una lista se pide en la
+    // consulta y esto se usa cuando el pedido ya vino con sus items
+    [DisplayName("Total")]
+    public decimal Total => Items.Sum(x => x.Total);
+
     // el cancelado sale de los calculos pero queda en el historial
     [DisplayName("Cuenta")]
     public bool Cuenta => Estado != EstadoPedido.Cancelado;
