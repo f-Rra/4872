@@ -483,8 +483,7 @@
   var solapa = "pizzas";
   var cupo = 12;               // tamaño elegido en el segmentado
   var tienda = "abierta";      // abierta | banda | gris | lleno
-  var formaDir = "simple";     // simple | modo | detalle   (sin decidir)
-  var entrega = "envio";
+  var formaDir = "simple";     // simple | detalle   (sin decidir)
   var carrito = {};            // clave -> {precio, cant, sin:[]}
   var tipeado = {nom:"", dir:"", ref:"", wa:""};
 
@@ -650,15 +649,8 @@
 
   function pintarDatos(){
     var h = campo("nom", "Tu nombre", "Cómo te anotamos");
-    if(formaDir === "modo"){
-      h += '<div class="tam" style="margin:0">' +
-        '<button type="button" data-en="envio" aria-pressed="' + (entrega === "envio") + '">Te la llevamos</button>' +
-        '<button type="button" data-en="retiro" aria-pressed="' + (entrega === "retiro") + '">La retiro</button></div>';
-      if(entrega === "envio") h += campo("dir", "Dirección", "Calle y número");
-    }else{
-      h += campo("dir", "Dirección", "Calle y número");
-      if(formaDir === "detalle") h += campo("ref", "Piso, timbre o referencia", "Opcional");
-    }
+    h += campo("dir", "Dirección", "Calle y número");
+    if(formaDir === "detalle") h += campo("ref", "Piso, timbre o referencia", "Opcional");
     h += '<div class="campo"><label for="wa">Tu WhatsApp</label>' +
       '<input id="wa" type="tel" inputmode="tel" placeholder="11 5555 5555" autocomplete="off" value="' + tipeado.wa + '">' +
       '<p class="frase">Te escribimos por acá para coordinar la entrega.</p></div>';
@@ -668,9 +660,6 @@
     ["nom", "dir", "ref", "wa"].forEach(function(k){
       var e = document.getElementById(k);
       if(e) e.addEventListener("input", function(){ leer(); revisar(); });
-    });
-    document.querySelectorAll("[data-en]").forEach(function(b){
-      b.addEventListener("click", function(){ leer(); entrega = b.dataset.en; pintarDatos(); revisar(); });
     });
     revisar();
   }
@@ -682,11 +671,10 @@
     });
   }
   function revisar(){
-    var pideDir = formaDir !== "modo" || entrega === "envio";
     document.getElementById("confirmar").disabled =
       tipeado.nom.trim().length < 2 ||
       tipeado.wa.replace(/\D/g, "").length < 8 ||
-      (pideDir && tipeado.dir.trim().length < 5) ||
+      tipeado.dir.trim().length < 5 ||
       !Object.keys(carrito).length;
   }
 
@@ -827,10 +815,9 @@
       'al 9% va <b>debajo del WhatsApp</b>, que es el campo que explica.</p></div>' +
 
       '<div class="abierta"><b>Sin decidir: cómo se pide la dirección</b>' +
-      'Faltaba dónde entregar. Las tres entran sin scroll — medido.' +
+      'Faltaba dónde entregar. Las dos entran sin scroll — medido. El retiro se descartó: todo se entrega.' +
       '<div class="variantes" id="v-dir">' +
         '<button type="button" data-d="simple" aria-pressed="' + (formaDir === "simple") + '">Un renglón más</button>' +
-        '<button type="button" data-d="modo" aria-pressed="' + (formaDir === "modo") + '">Retiro o envío</button>' +
         '<button type="button" data-d="detalle" aria-pressed="' + (formaDir === "detalle") + '">Con referencia</button>' +
       '</div></div>' +
 
