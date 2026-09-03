@@ -1,3 +1,4 @@
+using f4872.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace f4872.Data;
@@ -5,6 +6,8 @@ namespace f4872.Data;
 public class Contexto : DbContext
 {
     public Contexto(DbContextOptions<Contexto> opciones) : base(opciones) { }
+
+    public DbSet<Producto> Productos => Set<Producto>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
