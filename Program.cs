@@ -40,6 +40,16 @@ builder.Services.AddDbContext<Contexto>(opciones => opciones.UseNpgsql(conexion.
 
 var app = builder.Build();
 
+// la carta de prueba es inventada, asi que solo en la maquina de uno y solo si
+// no hay nada cargado. Ver Data/Sembrador.cs
+if (app.Environment.IsDevelopment())
+{
+    using var alcance = app.Services.CreateScope();
+    await Sembrador.SembrarSiEstaVacia(
+        alcance.ServiceProvider.GetRequiredService<Contexto>(),
+        alcance.ServiceProvider.GetRequiredService<ILogger<Program>>());
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
