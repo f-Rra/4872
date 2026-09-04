@@ -1,0 +1,22 @@
+@*
+    El marco del comprador. No carga Bootstrap a propósito: el diseño de la
+    tienda está medido al píxel y el reboot de Bootstrap pelearía con él.
+*@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · 48·72</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@@400;500;600;700;800&family=Bowlby+One&display=swap" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tienda.css" asp-append-version="true" />
+</head>
+<body>
+    @RenderBody()
+    <script src="~/js/tienda.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,48 @@
+/* ============================================================
+   La tienda — el armazón
+
+   Contra diseño/la-tienda.html. Las medidas de acá están
+   cerradas y medidas: la cabecera son 162 px y de eso depende
+   que las siete pizzas entren en la primera pantalla.
+   ============================================================ */
+
+*{box-sizing:border-box}
+
+/* el alto es el de la ventana y no el del contenido: así la cabecera y las
+   solapas quedan fijas y lo único que se mueve es la lista. dvh y no vh
+   porque en el teléfono la barra del navegador aparece y desaparece */
+.tienda{
+  display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+  max-width:520px;margin:0 auto;
+}
+
+/* ---------- la cabecera ---------- */
+.tapa{
+  flex:none;
+  padding:1.25rem .95rem 1rem;
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+}
+.logo{display:block;width:84px;height:84px;flex:none}
+
+/* ---------- las solapas ---------- */
+.solapas{display:flex;border-bottom:2px solid var(--verde);flex:none}
+.solapas button{
+  flex:1;font-family:var(--ui);font-weight:800;font-size:.72rem;
+  letter-spacing:.08em;text-transform:uppercase;
+  background:transparent;color:var(--verde);border:0;padding:.72rem .3rem;cursor:pointer;
+  transition:background .16s ease,color .16s ease;
+}
+.solapas button + button{border-left:2px solid var(--verde)}
+.solapas button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+.solapas button:focus-visible{outline:2px solid var(--verde);outline-offset:-4px}
+
+/* ---------- el hueco de la lista ---------- */
+.lista{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+
+/* provisorio: se va en el commit 15, cuando la lista traiga la carta */
+.vacio{
+  margin:auto;padding:2rem 1.5rem;text-align:center;
+  color:var(--piedra);font-size:.86rem;font-weight:600;
+}
