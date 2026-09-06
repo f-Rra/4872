@@ -4,9 +4,9 @@ Tienda web y panel de vendedor para una pizzería napoletana de una sola sucursa
 
 ## Estado
 
-**El diseño está cerrado antes que el código.** Nueve pantallas maquetadas y medidas, con las decisiones tomadas una por una. Las maquetas viven en `diseño/` y están publicadas:
+**El diseño está cerrado antes que el código.** Diez pantallas maquetadas y medidas, con las decisiones tomadas una por una. Las maquetas viven en `diseño/` y están publicadas:
 
-- **[La tienda](https://claude.ai/code/artifact/019297d7-ce3f-463a-a117-3341c3b04f8b)** (`diseño/la-tienda.html`) — las tres pantallas del comprador: la carta, el checkout y la confirmación.
+- **[La tienda](https://claude.ai/code/artifact/019297d7-ce3f-463a-a117-3341c3b04f8b)** (`diseño/la-tienda.html`) — las cuatro pantallas del comprador: el inicio, la carta, el checkout y la confirmación.
 - **[El panel](https://claude.ai/code/artifact/0a303942-558d-41e1-940e-fb75788f0e0f)** (`diseño/el-panel.html`) — las seis del vendedor.
 
 Los dos archivos **se explican solos**: cada pantalla trae al costado por qué quedó así, qué se descartó y sus medidas cerradas. Son la especificación; ante una duda de diseño, se miran primero.
