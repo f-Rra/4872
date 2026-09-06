@@ -40,10 +40,57 @@
 
 .lista{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
 
-/* provisorio: se va en el commit 17, cuando la lista traiga la carta */
+/* provisorio: se va en el commit 18, cuando entren las empanadas */
 .vacio{
   margin:auto;padding:2rem 1.5rem;text-align:center;
   color:var(--piedra);font-size:.86rem;font-weight:600;
+}
+
+/* ---------- el renglón de la carta ---------- */
+ol.carta{list-style:none;margin:0;padding:0}
+ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid rgba(30,82,69,.24)}
+
+.renglon{display:flex;align-items:baseline;gap:.55rem}
+.nombre{
+  font-family:var(--cara);font-size:var(--tit);line-height:1.12;
+  letter-spacing:-.02em;margin:0;-webkit-text-stroke:var(--grosor) currentColor;
+}
+/* los puntos suspensivos entre el nombre y el precio: se estiran y por eso el
+   precio queda siempre pegado al borde, alineado entre renglones */
+.puntos{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.32rem);min-width:1.2rem}
+.plata{
+  margin:0;font-family:var(--cara);font-size:calc(var(--tit) * .92);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+  -webkit-text-stroke:var(--grosor) currentColor;
+}
+
+.abajo{display:flex;align-items:center;gap:.6rem;margin-top:.55rem}
+/* nowrap a propósito: los cuatro ingredientes tienen que entrar en una fila.
+   Si alguno se parte, el renglón está mal medido y hay que verlo */
+.fila-ing{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:0;min-width:0;flex:1}
+.ing{
+  font-family:var(--ui);font-weight:600;color:var(--verde);
+  font-size:var(--ing-cuerpo);line-height:1.3;flex:0 0 auto;white-space:nowrap;
+  display:inline-block;text-align:center;padding:.08rem .1rem;
+  background:transparent;border:0;
+}
+.sep{
+  flex:0 0 auto;opacity:.5;padding:0 .3rem;
+  font-size:var(--ing-cuerpo);font-weight:600;user-select:none;
+}
+
+/* el agotado se tacha, no se esconde: si se escondiera, el cliente no sabría
+   que existe */
+li.agotada{color:var(--piedra)}
+li.agotada .nombre,
+li.agotada .plata{text-decoration:line-through}
+li.agotada .puntos{border-bottom-color:rgba(154,146,135,.5)}
+li.agotada .ing{color:var(--piedra)}
+.sello{
+  flex:none;font-family:var(--ui);font-weight:800;font-size:.66rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--piedra);
+  border:1.4px solid var(--piedra);border-radius:999px;padding:.2rem .55rem;
+  align-self:center;white-space:nowrap;
 }
 
 /* ============================================================

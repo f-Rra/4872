@@ -1,9 +1,20 @@
+using f4872.Data;
+using f4872.Models;
+using f4872.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace f4872.Controllers;
 
 public class TiendaController : Controller
 {
+    private readonly Contexto _contexto;
+
+    public TiendaController(Contexto contexto)
+    {
+        _contexto = contexto;
+    }
+
     // el inicio: existe para el que llega de cero, porque el nombre no dice que
     // esto es una pizzería ni que el pedido tarda días
     public IActionResult Index()
@@ -14,8 +25,35 @@ public class TiendaController : Controller
     // la carta. La acción se llama en español como todo el código; /shop es
     // solo la dirección que ve el cliente
     [Route("shop")]
-    public IActionResult Carta()
+    public async Task<IActionResult> Carta()
     {
-        return View();
+        // una sola consulta para las dos familias: son la misma forma de renglón
+        // y traerlas por separado serían dos viajes a la base para nada
+        var renglones = await _contexto.Productos
+            .Where(x => x.Familia == Familia.Pizza || x.Familia == Familia.Focaccia)
+            .OrderBy(x => x.IdProducto)
+            .Select(x => new
+            {
+                x.Familia,
+                Renglon = new RenglonCarta
+                {
+                    Nombre = x.Nombre,
+                    Precio = x.Precio,
+                    Activo = x.Activo,
+                    // sin columna de orden, el de la receta no está garantizado:
+                    // ver la nota del commit. Por IdIngrediente al menos es estable
+                    Ingredientes = x.Receta
+                        .OrderBy(r => r.IdIngrediente)
+                        .Select(r => r.Ingrediente.Nombre)
+                        .ToList()
+                }
+            })
+            .ToListAsync();
+
+        return View(new CartaVm
+        {
+            Pizzas = [.. renglones.Where(x => x.Familia == Familia.Pizza).Select(x => x.Renglon)],
+            Focaccias = [.. renglones.Where(x => x.Familia == Familia.Focaccia).Select(x => x.Renglon)]
+        });
     }
 }

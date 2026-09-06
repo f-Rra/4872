@@ -1,8 +1,10 @@
-// El armazón: por ahora las solapas solo cambian de estado, porque todavía no
-// hay carta que mostrar. En el commit 15 esto pasa a filtrar la lista.
+// Las solapas cambian qué familia se ve. Las tres listas ya vienen en el HTML:
+// se muestran y se esconden, no se piden de nuevo al servidor, así que cambiar
+// de solapa es instantáneo y funciona con la carta ya cargada.
 (function () {
   var solapas = document.getElementById("solapas");
-  if (!solapas) return;
+  var lista = document.getElementById("lista");
+  if (!solapas || !lista) return;
 
   solapas.addEventListener("click", function (e) {
     var boton = e.target.closest("button[data-solapa]");
@@ -11,5 +13,11 @@
     solapas.querySelectorAll("button").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b === boton));
     });
+
+    lista.querySelectorAll("[data-familia]").forEach(function (g) {
+      g.hidden = g.dataset.familia !== boton.dataset.solapa;
+    });
+
+    lista.scrollTop = 0;
   });
 })();

@@ -1,6 +1,42 @@
+@model f4872.ViewModels.CartaVm
 @{
     ViewData["Title"] = "La carta";
     Layout = "_Tienda";
+}
+
+@* pizzas y focaccias comparten el mismo renglón: se piden igual *@
+@functions {
+    void Renglones(IReadOnlyList<f4872.ViewModels.RenglonCarta> lista)
+    {
+        <ol class="carta">
+            @foreach (var p in lista)
+            {
+                <li class="@(p.Activo ? null : "agotada")">
+                    <div class="renglon">
+                        <p class="nombre">@p.Nombre</p>
+                        <i class="puntos"></i>
+                        <p class="plata">@(p.Precio?.ToString("C") ?? "—")</p>
+                        @if (!p.Activo)
+                        {
+                            <span class="sello">Se acabó</span>
+                        }
+                    </div>
+                    <div class="abajo">
+                        <div class="fila-ing">
+                            @for (var i = 0; i < p.Ingredientes.Count; i++)
+                            {
+                                if (i > 0)
+                                {
+                                    <span class="sep">·</span>
+                                }
+                                <span class="ing">@p.Ingredientes[i]</span>
+                            }
+                        </div>
+                    </div>
+                </li>
+            }
+        </ol>
+    }
 }
 
 <div class="tienda">
@@ -16,7 +52,9 @@
     </nav>
 
     <main class="lista" id="lista">
-        <p class="vacio">Acá va la carta.</p>
+        <div data-familia="pizzas">@{ Renglones(Model.Pizzas); }</div>
+        <div data-familia="empanadas" hidden><p class="vacio">Acá van las empanadas.</p></div>
+        <div data-familia="focaccias" hidden>@{ Renglones(Model.Focaccias); }</div>
     </main>
 
 </div>

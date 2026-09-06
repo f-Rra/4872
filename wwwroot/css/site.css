@@ -22,6 +22,14 @@
   /* Bowlby es del cliente, Archivo es del vendedor */
   --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
   --cara:"Bowlby One",Impact,sans-serif;
+
+  /* las medidas cerradas del renglón de la carta. Salen medidas de la maqueta:
+     0,79 rem es el techo del ingrediente — más grande y los cuatro no entran
+     en una fila */
+  --tit:1.10rem;
+  --grosor:.4px;
+  --ing-cuerpo:.79rem;
+  --aire:1rem;
 }
 
 /* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.
