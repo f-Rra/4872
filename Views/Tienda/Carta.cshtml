@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "La carta";
+    Layout = "_Tienda";
+}
+
+<div class="tienda">
+
+    <header class="tapa">
+        <img class="logo" src="~/img/logo.png" alt="48·72" width="240" height="240" />
+    </header>
+
+    <nav class="solapas" id="solapas" aria-label="Familias">
+        <button type="button" data-solapa="pizzas" aria-pressed="true">Pizzas</button>
+        <button type="button" data-solapa="empanadas" aria-pressed="false">Empanadas</button>
+        <button type="button" data-solapa="focaccias" aria-pressed="false">Focaccias</button>
+    </nav>
+
+    <main class="lista" id="lista">
+        <p class="vacio">Acá va la carta.</p>
+    </main>
+
+</div>

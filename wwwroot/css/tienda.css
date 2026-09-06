@@ -1,32 +1,32 @@
 /* ============================================================
-   La tienda — el armazón
+   La tienda
 
    Contra diseño/la-tienda.html. Las medidas de acá están
-   cerradas y medidas: la cabecera son 162 px y de eso depende
-   que las siete pizzas entren en la primera pantalla.
+   cerradas y medidas: cambiar una es cambiar el diseño.
    ============================================================ */
 
 *{box-sizing:border-box}
 
-/* el alto es el de la ventana y no el del contenido: así la cabecera y las
-   solapas quedan fijas y lo único que se mueve es la lista. dvh y no vh
-   porque en el teléfono la barra del navegador aparece y desaparece */
-.tienda{
-  display:flex;flex-direction:column;
-  height:100vh;height:100dvh;
-  max-width:520px;margin:0 auto;
-}
+/* las dos pantallas comparten el ancho de columna, pero no el alto: la carta
+   fija la ventana para que la cabecera quede quieta, y el inicio fluye */
+.tienda,
+.inicio{max-width:520px;margin:0 auto}
+
+/* el alto de la carta es el de la ventana: así la cabecera y las solapas
+   quedan fijas y lo único que se mueve es la lista. dvh y no vh porque en el
+   teléfono la barra del navegador aparece y desaparece */
+.tienda{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
 /* ---------- la cabecera ---------- */
 .tapa{
   flex:none;
   padding:1.25rem .95rem 1rem;
-  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  display:flex;justify-content:center;
   border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
 }
 .logo{display:block;width:84px;height:84px;flex:none}
 
-/* ---------- las solapas ---------- */
+/* ---------- las solapas de la carta ---------- */
 .solapas{display:flex;border-bottom:2px solid var(--verde);flex:none}
 .solapas button{
   flex:1;font-family:var(--ui);font-weight:800;font-size:.72rem;
@@ -38,11 +38,98 @@
 .solapas button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
 .solapas button:focus-visible{outline:2px solid var(--verde);outline-offset:-4px}
 
-/* ---------- el hueco de la lista ---------- */
 .lista{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
 
-/* provisorio: se va en el commit 15, cuando la lista traiga la carta */
+/* provisorio: se va en el commit 17, cuando la lista traiga la carta */
 .vacio{
   margin:auto;padding:2rem 1.5rem;text-align:center;
   color:var(--piedra);font-size:.86rem;font-weight:600;
+}
+
+/* ============================================================
+   El inicio
+   ============================================================ */
+
+.portada{
+  padding:1.25rem .95rem 1.15rem;display:flex;flex-direction:column;align-items:center;
+  border-bottom:2px solid var(--verde);
+}
+/* sin ancho máximo y con el cuerpo justo para que entre en un renglón:
+   mide 314 px contra 358 disponibles */
+.promesa{
+  margin:0;font-family:var(--cara);font-size:1.04rem;line-height:1.2;text-align:center;
+  letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
+}
+
+/* mismo padding y misma línea de cierre que la portada */
+.cta-pie{
+  padding:1.25rem .95rem 1.15rem;
+  border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+}
+.cta{
+  display:block;width:100%;background:var(--verde);color:var(--papel);
+  border:0;padding:.86rem;text-align:center;text-decoration:none;
+  font-family:var(--ui);font-weight:800;font-size:.8rem;letter-spacing:.12em;
+  text-transform:uppercase;cursor:pointer;
+}
+
+.rubro{
+  margin:0 0 .8rem;font-size:.67rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--piedra);
+}
+.seccion{padding:1.15rem .95rem}
+.cierre{border-bottom:2px solid var(--verde)}
+
+/* ---------- las credenciales ---------- */
+.credenciales{display:flex;flex-direction:column}
+.cred{display:grid;grid-template-columns:1.9rem 1fr;gap:.7rem;align-items:start;padding:.85rem 0}
+.cred:first-child{padding-top:0}
+.cred:last-child{padding-bottom:0}
+/* separador entre credenciales y ninguno después de la última: el bloque lo
+   cierra la línea verde maciza de .cierre */
+.cred + .cred{border-top:2px dotted rgba(30,82,69,.28)}
+.cred svg{
+  width:1.9rem;height:1.9rem;stroke:var(--verde);fill:none;
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+}
+.cred b{display:block;font-size:.9rem;font-weight:700;line-height:1.25}
+.cred span{display:block;font-size:.78rem;color:var(--piedra);line-height:1.35;margin-top:.1rem}
+
+/* ---------- el recorrido ---------- */
+.recorrido{list-style:none;margin:0;padding:0}
+.recorrido li{
+  display:grid;grid-template-columns:1.5rem 1fr;column-gap:.65rem;
+  align-items:start;position:relative;padding-bottom:.95rem;
+}
+.recorrido li:last-child{padding-bottom:0}
+/* la línea va continua de punta a punta: punteada dejaba huecos en los
+   extremos y hacía parecer que los círculos estaban a distinta distancia */
+.recorrido li::before{
+  content:"";position:absolute;left:.7rem;top:1.55rem;bottom:0;
+  border-left:2px solid var(--verde);
+}
+.recorrido li:last-child::before{display:none}
+.recorrido .n{
+  width:1.5rem;height:1.5rem;border:2px solid var(--verde);border-radius:50%;
+  display:grid;place-items:center;font-size:.72rem;font-weight:800;
+  font-variant-numeric:tabular-nums;background:var(--papel);
+}
+.recorrido .que{display:flex;flex-direction:column;gap:.08rem;min-width:0}
+.recorrido .que b{font-size:.93rem;font-weight:700;line-height:1.25}
+.recorrido .que span{font-size:.78rem;color:var(--piedra);line-height:1.35}
+
+/* el renglón de la espera va sin frase, y sin ella medía 39,2 px contra los
+   51,9 de los demás: se le devuelven los 12,7 que faltaban para que la
+   separación entre círculos quede pareja. El círculo no se centra porque
+   centrarlo deja la distancia de arriba siempre 28 px distinta de la de abajo;
+   se baja el título 2 px, que es lo único que hace falta */
+.recorrido li.fermenta{padding-bottom:1.745rem}
+.recorrido li.fermenta .que b{
+  font-family:var(--cara);font-size:1rem;letter-spacing:-.02em;
+  display:block;margin-top:2px;
+}
+.recorrido li.fermenta .n{border:0;background:transparent}
+.recorrido li.fermenta .n svg{
+  width:1.5rem;height:1.5rem;stroke:var(--verde);fill:var(--papel);
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
 }
