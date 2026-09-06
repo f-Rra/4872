@@ -50,10 +50,26 @@ public class TiendaController : Controller
             })
             .ToListAsync();
 
+        // las empanadas no traen receta ni precio: en la carta van solo con el
+        // nombre, y lo que se cobra es el pack
+        var gustos = await _contexto.Productos
+            .Where(x => x.Familia == Familia.Empanada)
+            .OrderBy(x => x.IdProducto)
+            .Select(x => new Gusto { Nombre = x.Nombre, Activo = x.Activo })
+            .ToListAsync();
+
+        var packs = await _contexto.Packs
+            .Where(x => x.Activo)
+            .OrderBy(x => x.Unidades)
+            .Select(x => new TamanoPack { Unidades = x.Unidades, Precio = x.Precio })
+            .ToListAsync();
+
         return View(new CartaVm
         {
             Pizzas = [.. renglones.Where(x => x.Familia == Familia.Pizza).Select(x => x.Renglon)],
-            Focaccias = [.. renglones.Where(x => x.Familia == Familia.Focaccia).Select(x => x.Renglon)]
+            Focaccias = [.. renglones.Where(x => x.Familia == Familia.Focaccia).Select(x => x.Renglon)],
+            Gustos = gustos,
+            Packs = packs
         });
     }
 }

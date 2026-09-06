@@ -20,4 +20,17 @@
 
     lista.scrollTop = 0;
   });
+
+  // el tamaño del pack: por ahora solo se elige. Empieza a servir de verdad en
+  // el commit 20, cuando el contador tenga que saber a qué pack suma
+  var tam = document.getElementById("tam");
+  if (tam) {
+    tam.addEventListener("click", function (e) {
+      var boton = e.target.closest("button[data-unidades]");
+      if (!boton) return;
+      tam.querySelectorAll("button").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === boton));
+      });
+    });
+  }
 })();

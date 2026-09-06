@@ -79,6 +79,30 @@ ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid rgba(30,82,69,.24
   font-size:var(--ing-cuerpo);font-weight:600;user-select:none;
 }
 
+/* ---------- las empanadas: packs de un gusto ---------- */
+.tam{display:flex;border:2px solid var(--verde);margin:2rem .95rem 0}
+.tam button{
+  flex:1;font-family:var(--ui);font-weight:800;font-size:.76rem;
+  letter-spacing:.05em;text-transform:uppercase;
+  background:transparent;color:var(--verde);border:0;padding:.62rem .3rem;cursor:pointer;
+  transition:background .15s ease,color .15s ease;
+}
+.tam button + button{border-left:2px solid var(--verde)}
+.tam button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+.tam button:focus-visible{outline:2px solid var(--verde);outline-offset:-5px}
+
+ol.gustos{list-style:none;margin:2rem 0 0;padding:0;border-top:1px solid rgba(30,82,69,.24)}
+ol.gustos li{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.72rem .95rem;border-bottom:1px solid rgba(30,82,69,.24);
+}
+ol.gustos .nom{
+  flex:1;margin:0;font-family:var(--cara);font-size:1.02rem;letter-spacing:-.02em;
+  -webkit-text-stroke:var(--grosor) currentColor;min-width:0;
+}
+ol.gustos li.agotada{color:var(--piedra)}
+ol.gustos li.agotada .nom{text-decoration:line-through}
+
 /* el agotado se tacha, no se esconde: si se escondiera, el cliente no sabría
    que existe */
 li.agotada{color:var(--piedra)}

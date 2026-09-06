@@ -53,7 +53,40 @@
 
     <main class="lista" id="lista">
         <div data-familia="pizzas">@{ Renglones(Model.Pizzas); }</div>
-        <div data-familia="empanadas" hidden><p class="vacio">Acá van las empanadas.</p></div>
+        <div data-familia="empanadas" hidden>
+            @if (Model.Packs.Count == 0)
+            {
+                <p class="vacio">Todavía no hay precios de pack cargados.</p>
+            }
+            else
+            {
+                @* el segmentado fija el tamaño: no hay unidades sueltas ni packs
+                   mezclados, así que el precio se elige una vez y vale para todos *@
+                <div class="tam" id="tam">
+                    @foreach (var t in Model.Packs)
+                    {
+                        var elegido = t.Unidades == Model.Packs[^1].Unidades;
+                        <button type="button" data-unidades="@t.Unidades" aria-pressed="@elegido.ToString().ToLowerInvariant()">
+                            @* con paréntesis: pegado a la x, Razor lee el @@ como literal *@
+                            Packs x@(t.Unidades) · @t.Precio.ToString("C")
+                        </button>
+                    }
+                </div>
+
+                <ol class="gustos">
+                    @foreach (var g in Model.Gustos)
+                    {
+                        <li class="@(g.Activo ? null : "agotada")">
+                            <p class="nom">@g.Nombre</p>
+                            @if (!g.Activo)
+                            {
+                                <span class="sello">Se acabó</span>
+                            }
+                        </li>
+                    }
+                </ol>
+            }
+        </div>
         <div data-familia="focaccias" hidden>@{ Renglones(Model.Focaccias); }</div>
     </main>
 

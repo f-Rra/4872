@@ -66,6 +66,13 @@ public static class Sembrador
         ("Acelga",            Medida.Unidad,        0,     6,  3000, false)
     ];
 
+    // los dos tamaños son de verdad; los precios, inventados como todo lo demás
+    private static readonly (int Unidades, decimal Precio)[] LosPacks =
+    [
+        (6, 7900),
+        (12, 15200)
+    ];
+
     // la receta del bollo es la única cosa real de todo este archivo
     private static readonly (string N, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
     [
@@ -121,6 +128,22 @@ public static class Sembrador
 
     public static async Task SembrarSiEstaVacia(Contexto contexto, ILogger logger)
     {
+        // los packs tienen guarda propia: son dos filas que la pantalla de
+        // empanadas necesita para poder mostrar un precio, y se suman despues
+        // de la carta. Con una sola guarda, quien ya tenia la base sembrada se
+        // quedaba sin ellos
+        if (!await contexto.Packs.AnyAsync())
+        {
+            contexto.Packs.AddRange(LosPacks.Select(p => new Pack
+            {
+                Unidades = p.Unidades,
+                Precio = p.Precio
+            }));
+            await contexto.SaveChangesAsync();
+            logger.LogWarning(
+                "Sembrados {Cuantos} tamanos de pack con precios INVENTADOS.", LosPacks.Length);
+        }
+
         // si ya hay algo cargado no se toca nada: el dia que entre la carta de
         // verdad, esto no puede volver a meterle las pizzas inventadas
         if (await contexto.Productos.AnyAsync() || await contexto.Ingredientes.AnyAsync())
