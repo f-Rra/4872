@@ -46,9 +46,15 @@
     </header>
 
     <nav class="solapas" id="solapas" aria-label="Familias">
-        <button type="button" data-solapa="pizzas" aria-pressed="true">Pizzas</button>
-        <button type="button" data-solapa="empanadas" aria-pressed="false">Empanadas</button>
-        <button type="button" data-solapa="focaccias" aria-pressed="false">Focaccias</button>
+        <button type="button" data-solapa="pizzas" aria-pressed="true">
+            <i class="dib pizza" aria-hidden="true"></i>Pizzas
+        </button>
+        <button type="button" data-solapa="empanadas" aria-pressed="false">
+            <i class="dib empanada" aria-hidden="true"></i>Empanadas
+        </button>
+        <button type="button" data-solapa="focaccias" aria-pressed="false">
+            <i class="dib focaccia" aria-hidden="true"></i>Focaccias
+        </button>
     </nav>
 
     <main class="lista" id="lista">
@@ -68,7 +74,7 @@
                         var elegido = t.Unidades == Model.Packs[^1].Unidades;
                         <button type="button" data-unidades="@t.Unidades" aria-pressed="@elegido.ToString().ToLowerInvariant()">
                             @* con paréntesis: pegado a la x, Razor lee el @@ como literal *@
-                            Packs x@(t.Unidades) · @t.Precio.ToString("C")
+                            x@(t.Unidades) · @t.Precio.ToString("C")
                         </button>
                     }
                 </div>

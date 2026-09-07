@@ -18,24 +18,26 @@
 .tienda{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
 /* ---------- la cabecera ---------- */
+/* sin línea arriba de todo: el borde de la pantalla ya cierra */
 .tapa{
   flex:none;
   padding:1.25rem .95rem 1rem;
   display:flex;justify-content:center;
-  border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+  border-bottom:2px solid transparent;position:relative;
 }
-.logo{display:block;width:84px;height:84px;flex:none}
+.logo{display:block;width:104px;height:104px;flex:none}
 
 /* ---------- las solapas de la carta ---------- */
-.solapas{display:flex;border-bottom:2px solid var(--verde);flex:none}
+.solapas{display:flex;gap:2px;border-bottom:2px solid transparent;flex:none;position:relative;z-index:0}
 .solapas button{
-  flex:1;font-family:var(--ui);font-weight:800;font-size:.72rem;
+  flex:1 1 0;min-width:0;font-family:var(--ui);font-weight:800;font-size:.72rem;
   letter-spacing:.08em;text-transform:uppercase;
   background:transparent;color:var(--verde);border:0;padding:.72rem .3rem;cursor:pointer;
-  transition:background .16s ease,color .16s ease;
+  display:flex;flex-direction:column;align-items:center;gap:.3rem;position:relative;
+  transition:color .16s ease;
 }
-.solapas button + button{border-left:2px solid var(--verde)}
-.solapas button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+.solapas button[aria-pressed="true"]{color:var(--papel)}
+.solapas .dib{width:28px;height:28px}
 .solapas button:focus-visible{outline:2px solid var(--verde);outline-offset:-4px}
 
 .lista{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
@@ -48,7 +50,7 @@
 
 /* ---------- el renglón de la carta ---------- */
 ol.carta{list-style:none;margin:0;padding:0}
-ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid rgba(30,82,69,.24)}
+ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
 
 .renglon{display:flex;align-items:baseline;gap:.55rem}
 .nombre{
@@ -80,21 +82,23 @@ ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid rgba(30,82,69,.24
 }
 
 /* ---------- las empanadas: packs de un gusto ---------- */
-.tam{display:flex;border:2px solid var(--verde);margin:2rem .95rem 0}
+.tam{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+     column-gap:2px;border:2px solid transparent;margin:2rem .95rem 0;position:relative;z-index:0}
 .tam button{
-  flex:1;font-family:var(--ui);font-weight:800;font-size:.76rem;
-  letter-spacing:.05em;text-transform:uppercase;
-  background:transparent;color:var(--verde);border:0;padding:.62rem .3rem;cursor:pointer;
+  min-width:0;position:relative;
+  font-family:var(--ui);font-weight:800;font-size:.76rem;
+  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;color:var(--verde);border:0;padding:.62rem .6rem;cursor:pointer;
   transition:background .15s ease,color .15s ease;
 }
-.tam button + button{border-left:2px solid var(--verde)}
-.tam button[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+.tam button[aria-pressed="true"]{color:var(--papel)}
 .tam button:focus-visible{outline:2px solid var(--verde);outline-offset:-5px}
 
-ol.gustos{list-style:none;margin:2rem 0 0;padding:0;border-top:1px solid rgba(30,82,69,.24)}
+ol.gustos{list-style:none;margin:2rem 0 0;padding:0;border-top:1px solid transparent;position:relative}
 ol.gustos li{
   display:flex;align-items:center;gap:.5rem;
-  padding:.72rem .95rem;border-bottom:1px solid rgba(30,82,69,.24);
+  padding:.72rem .95rem;border-bottom:1px solid transparent;position:relative;
 }
 ol.gustos .nom{
   flex:1;margin:0;font-family:var(--cara);font-size:1.02rem;letter-spacing:-.02em;
@@ -123,7 +127,7 @@ li.agotada .ing{color:var(--piedra)}
 
 .portada{
   padding:1.25rem .95rem 1.15rem;display:flex;flex-direction:column;align-items:center;
-  border-bottom:2px solid var(--verde);
+  border-bottom:2px solid transparent;position:relative;
 }
 /* sin ancho máximo y con el cuerpo justo para que entre en un renglón:
    mide 314 px contra 358 disponibles */
@@ -132,10 +136,11 @@ li.agotada .ing{color:var(--piedra)}
   letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
 }
 
-/* mismo padding y misma línea de cierre que la portada */
+/* mismo padding que la portada. Sin línea abajo de todo: la última que se ve
+   es la de arriba del botón */
 .cta-pie{
   padding:1.25rem .95rem 1.15rem;
-  border-top:2px solid var(--verde);border-bottom:2px solid var(--verde);
+  border-top:2px solid transparent;position:relative;
 }
 .cta{
   display:block;width:100%;background:var(--verde);color:var(--papel);
@@ -149,20 +154,17 @@ li.agotada .ing{color:var(--piedra)}
   text-transform:uppercase;color:var(--piedra);
 }
 .seccion{padding:1.15rem .95rem}
-.cierre{border-bottom:2px solid var(--verde)}
+.cierre{border-bottom:2px solid transparent;position:relative}
 
 /* ---------- las credenciales ---------- */
 .credenciales{display:flex;flex-direction:column}
-.cred{display:grid;grid-template-columns:1.9rem 1fr;gap:.7rem;align-items:start;padding:.85rem 0}
+.cred{display:grid;grid-template-columns:42px 1fr;gap:.7rem;align-items:start;padding:.85rem 0}
 .cred:first-child{padding-top:0}
 .cred:last-child{padding-bottom:0}
 /* separador entre credenciales y ninguno después de la última: el bloque lo
    cierra la línea verde maciza de .cierre */
-.cred + .cred{border-top:2px dotted rgba(30,82,69,.28)}
-.cred svg{
-  width:1.9rem;height:1.9rem;stroke:var(--verde);fill:none;
-  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
-}
+.cred + .cred{border-top:2px solid transparent;position:relative}
+.cred .dib{width:42px;height:42px}
 .cred b{display:block;font-size:.9rem;font-weight:700;line-height:1.25}
 .cred span{display:block;font-size:.78rem;color:var(--piedra);line-height:1.35;margin-top:.1rem}
 
@@ -175,13 +177,14 @@ li.agotada .ing{color:var(--piedra)}
 .recorrido li:last-child{padding-bottom:0}
 /* la línea va continua de punta a punta: punteada dejaba huecos en los
    extremos y hacía parecer que los círculos estaban a distinta distancia */
-.recorrido li::before{
-  content:"";position:absolute;left:.7rem;top:1.55rem;bottom:0;
-  border-left:2px solid var(--verde);
-}
+/* la vertical se corre media banda para caer justo donde caía el borde */
+.recorrido li::before{top:1.55rem;bottom:0;left:calc(.7rem + 1px - var(--trazo-alto) / 2)}
+.solapas button + button::after,
+.tam button + button::after{top:0;bottom:0;left:calc(-1px - var(--trazo-alto) / 2);z-index:1}
 .recorrido li:last-child::before{display:none}
 .recorrido .n{
-  width:1.5rem;height:1.5rem;border:2px solid var(--verde);border-radius:50%;
+  width:1.5rem;height:1.5rem;border:2px solid transparent;border-radius:50%;
+  position:relative;
   display:grid;place-items:center;font-size:.72rem;font-weight:800;
   font-variant-numeric:tabular-nums;background:var(--papel);
 }
@@ -204,3 +207,132 @@ li.agotada .ing{color:var(--piedra)}
   width:1.5rem;height:1.5rem;stroke:var(--verde);fill:var(--papel);
   stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
 }
+
+/* ============================================================
+   Los dibujos
+
+   Van como máscara y no como imagen: el archivo aporta la
+   silueta y el color lo pone el texto. Por eso el mismo dibujo
+   sale verde en una solapa apagada y crudo en la encendida, sin
+   guardar dos versiones. Los PNG están a 160 px, el doble del
+   uso más grande, para que aguanten en pantallas de 3x.
+   ============================================================ */
+
+.dib{
+  display:block;flex:none;background-color:currentColor;
+  -webkit-mask:var(--dibujo) center/contain no-repeat;
+  mask:var(--dibujo) center/contain no-repeat;
+}
+.dib.fermento{--dibujo:url("../img/fermento.png")}
+.dib.harina{--dibujo:url("../img/harina.png")}
+.dib.envase{--dibujo:url("../img/envase.png")}
+.dib.pizza{--dibujo:url("../img/pizza.png")}
+.dib.empanada{--dibujo:url("../img/empanada.png")}
+.dib.focaccia{--dibujo:url("../img/focaccia.png")}
+
+/* ============================================================
+   Las líneas
+
+   Ninguna recta se saca: se vuelve transparente y encima se
+   pinta el trazo con una máscara. El borde sigue ocupando su
+   alto, así que ninguna medida cerrada de arriba se mueve, y
+   como es máscara el trazo toma el color que le pongan, igual
+   que los dibujos.
+   ============================================================ */
+
+.tapa::after,
+.solapas::after,
+.portada::after,
+.cierre::after,
+.cta-pie::before,
+ol.carta li::after,
+ol.gustos::before,
+ol.gustos li::after,
+.cred + .cred::before{
+  content:"";position:absolute;left:0;right:0;height:var(--trazo-alto);
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--trazo) repeat-x left center/auto 100%;
+  mask:var(--trazo) repeat-x left center/auto 100%;
+}
+/* El trazo va centrado sobre el borde que reemplaza, media banda de cada
+   lado. Un absoluto se posiciona contra la caja de adentro, no contra el
+   borde, asi que hay que sumarle el ancho del borde o el trazo queda corrido
+   y el verde de al lado nunca cierra contra el. */
+.tapa::after,
+.solapas::after,
+.portada::after,
+.cierre::after{bottom:calc(var(--trazo-alto) / -2 - 2px)}
+ol.carta li::after,
+ol.gustos li::after{bottom:calc(var(--trazo-alto) / -2 - 1px)}
+.cta-pie::before,
+.cred + .cred::before{top:calc(var(--trazo-alto) / -2 - 2px)}
+ol.gustos::before{top:calc(var(--trazo-alto) / -2 - 1px)}
+
+/* las que en la maqueta eran suaves siguen suaves */
+ol.carta li::after,
+ol.gustos::before,
+ol.gustos li::after{opacity:.35}
+.cred + .cred::before{opacity:.55}
+
+/* las verticales son el mismo trazo girado sobre su eje */
+.recorrido li::before,
+.solapas button + button::after,
+.tam button + button::after{
+  content:"";position:absolute;width:var(--trazo-alto);
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--trazo-v) repeat-y center top/100% auto;
+  mask:var(--trazo-v) repeat-y center top/100% auto;
+}
+
+/* El relleno de lo elegido sale del MISMO dibujo que la línea que lo bordea.
+   Un bloque de borde recto contra un trazo a pulso siempre deja papel de un
+   lado y pintura de más del otro; recortándolo con la misma onda, el borde
+   del verde y la línea son la misma curva y encajan exacto.
+
+   Va detrás de los botones, tapando toda la fila, y se recorta a la columna
+   encendida. La onda arranca en el mismo x que las dos líneas que toca, así
+   que las tres van en fase. */
+.solapas::before{
+  content:"";position:absolute;z-index:-1;left:0;right:0;top:-4px;bottom:-6px;
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--banda) repeat-x left top/auto 100%;
+  mask:var(--banda) repeat-x left top/auto 100%;
+}
+
+/* la caja del pack: el contorno y el relleno son el mismo camino, uno
+   perfilado y el otro macizo, estirados igual. Por eso calzan */
+.tam::after{
+  content:"";position:absolute;z-index:1;inset:-2px;background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--caja) center/100% 100% no-repeat;
+  mask:var(--caja) center/100% 100% no-repeat;
+}
+.tam::before{
+  content:"";position:absolute;z-index:-1;inset:-2px;background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--caja-llena) center/100% 100% no-repeat;
+  mask:var(--caja-llena) center/100% 100% no-repeat;
+}
+
+/* el botón deja de ser un rectángulo: es el mismo trazo, cerrado y macizo.
+   Está dibujado a la proporción real que tiene en el teléfono, así al
+   estirarlo al 100% la panza no se deforma */
+.cta{
+  -webkit-mask:var(--boton) center/100% 100% no-repeat;
+  mask:var(--boton) center/100% 100% no-repeat;
+}
+
+/* el círculo del recorrido, también a pulso. El reloj de la espera no lleva:
+   no es un número, es la marca del tiempo */
+.recorrido li:not(.fermenta) .n::before{
+  content:"";position:absolute;inset:-1px;background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--anillo) center/contain no-repeat;
+  mask:var(--anillo) center/contain no-repeat;
+}
+
+/* El corte vertical del relleno tambien ondula, con la misma curva y en la
+   misma fase que el divisor: un corte recto contra el trazo a pulso deja
+   el mismo hilo de papel que teniamos arriba y abajo. */
+.solapas:has(button:nth-child(1)[aria-pressed="true"])::before{clip-path:polygon(0 0px,0 110.00px,calc(33.3333% + 0.21px) 110.00px,calc(33.3333% + 0.49px) 106.07px,calc(33.3333% + 0.51px) 102.14px,calc(33.3333% + 0.26px) 98.21px,calc(33.3333% - 0.27px) 94.29px,calc(33.3333% - 0.46px) 90.36px,calc(33.3333% - 0.23px) 86.43px,calc(33.3333% + 0.29px) 82.50px,calc(33.3333% + 0.49px) 78.57px,calc(33.3333% + 0.38px) 74.64px,calc(33.3333% - 0.05px) 70.71px,calc(33.3333% - 0.44px) 66.79px,calc(33.3333% - 0.45px) 62.86px,calc(33.3333% - 0.08px) 58.93px,calc(33.3333% + 0.39px) 55.00px,calc(33.3333% + 0.51px) 51.07px,calc(33.3333% + 0.35px) 47.14px,calc(33.3333% - 0.07px) 43.21px,calc(33.3333% - 0.34px) 39.29px,calc(33.3333% - 0.28px) 35.36px,calc(33.3333% + 0.10px) 31.43px,calc(33.3333% + 0.46px) 27.50px,calc(33.3333% + 0.47px) 23.57px,calc(33.3333% + 0.17px) 19.64px,calc(33.3333% - 0.33px) 15.71px,calc(33.3333% - 0.53px) 11.79px,calc(33.3333% - 0.41px) 7.86px,calc(33.3333% + 0.01px) 3.93px,calc(33.3333% + 0.32px) 0.00px)}
+.solapas:has(button:nth-child(2)[aria-pressed="true"])::before{clip-path:polygon(calc(33.3333% + 0.32px) 0.00px,calc(33.3333% + 0.01px) 3.93px,calc(33.3333% - 0.41px) 7.86px,calc(33.3333% - 0.53px) 11.79px,calc(33.3333% - 0.33px) 15.71px,calc(33.3333% + 0.17px) 19.64px,calc(33.3333% + 0.47px) 23.57px,calc(33.3333% + 0.46px) 27.50px,calc(33.3333% + 0.10px) 31.43px,calc(33.3333% - 0.28px) 35.36px,calc(33.3333% - 0.34px) 39.29px,calc(33.3333% - 0.07px) 43.21px,calc(33.3333% + 0.35px) 47.14px,calc(33.3333% + 0.51px) 51.07px,calc(33.3333% + 0.39px) 55.00px,calc(33.3333% - 0.08px) 58.93px,calc(33.3333% - 0.45px) 62.86px,calc(33.3333% - 0.44px) 66.79px,calc(33.3333% - 0.05px) 70.71px,calc(33.3333% + 0.38px) 74.64px,calc(33.3333% + 0.49px) 78.57px,calc(33.3333% + 0.29px) 82.50px,calc(33.3333% - 0.23px) 86.43px,calc(33.3333% - 0.46px) 90.36px,calc(33.3333% - 0.27px) 94.29px,calc(33.3333% + 0.26px) 98.21px,calc(33.3333% + 0.51px) 102.14px,calc(33.3333% + 0.49px) 106.07px,calc(33.3333% + 0.21px) 110.00px,calc(66.6667% + 0.21px) 110.00px,calc(66.6667% + 0.49px) 106.07px,calc(66.6667% + 0.51px) 102.14px,calc(66.6667% + 0.26px) 98.21px,calc(66.6667% - 0.27px) 94.29px,calc(66.6667% - 0.46px) 90.36px,calc(66.6667% - 0.23px) 86.43px,calc(66.6667% + 0.29px) 82.50px,calc(66.6667% + 0.49px) 78.57px,calc(66.6667% + 0.38px) 74.64px,calc(66.6667% - 0.05px) 70.71px,calc(66.6667% - 0.44px) 66.79px,calc(66.6667% - 0.45px) 62.86px,calc(66.6667% - 0.08px) 58.93px,calc(66.6667% + 0.39px) 55.00px,calc(66.6667% + 0.51px) 51.07px,calc(66.6667% + 0.35px) 47.14px,calc(66.6667% - 0.07px) 43.21px,calc(66.6667% - 0.34px) 39.29px,calc(66.6667% - 0.28px) 35.36px,calc(66.6667% + 0.10px) 31.43px,calc(66.6667% + 0.46px) 27.50px,calc(66.6667% + 0.47px) 23.57px,calc(66.6667% + 0.17px) 19.64px,calc(66.6667% - 0.33px) 15.71px,calc(66.6667% - 0.53px) 11.79px,calc(66.6667% - 0.41px) 7.86px,calc(66.6667% + 0.01px) 3.93px,calc(66.6667% + 0.32px) 0.00px)}
+.solapas:has(button:nth-child(3)[aria-pressed="true"])::before{clip-path:polygon(calc(66.6667% + 0.32px) 0.00px,calc(66.6667% + 0.01px) 3.93px,calc(66.6667% - 0.41px) 7.86px,calc(66.6667% - 0.53px) 11.79px,calc(66.6667% - 0.33px) 15.71px,calc(66.6667% + 0.17px) 19.64px,calc(66.6667% + 0.47px) 23.57px,calc(66.6667% + 0.46px) 27.50px,calc(66.6667% + 0.10px) 31.43px,calc(66.6667% - 0.28px) 35.36px,calc(66.6667% - 0.34px) 39.29px,calc(66.6667% - 0.07px) 43.21px,calc(66.6667% + 0.35px) 47.14px,calc(66.6667% + 0.51px) 51.07px,calc(66.6667% + 0.39px) 55.00px,calc(66.6667% - 0.08px) 58.93px,calc(66.6667% - 0.45px) 62.86px,calc(66.6667% - 0.44px) 66.79px,calc(66.6667% - 0.05px) 70.71px,calc(66.6667% + 0.38px) 74.64px,calc(66.6667% + 0.49px) 78.57px,calc(66.6667% + 0.29px) 82.50px,calc(66.6667% - 0.23px) 86.43px,calc(66.6667% - 0.46px) 90.36px,calc(66.6667% - 0.27px) 94.29px,calc(66.6667% + 0.26px) 98.21px,calc(66.6667% + 0.51px) 102.14px,calc(66.6667% + 0.49px) 106.07px,calc(66.6667% + 0.21px) 110.00px,100% 110.00px,100% 0px)}
+.tam:has(button:nth-child(1)[aria-pressed="true"])::before{clip-path:polygon(0 0px,0 70.00px,calc(50.0000% - 0.15px) 70.00px,calc(50.0000% - 0.40px) 67.50px,calc(50.0000% - 0.50px) 65.00px,calc(50.0000% - 0.44px) 62.50px,calc(50.0000% - 0.22px) 60.00px,calc(50.0000% + 0.15px) 57.50px,calc(50.0000% + 0.39px) 55.00px,calc(50.0000% + 0.50px) 52.50px,calc(50.0000% + 0.50px) 50.00px,calc(50.0000% + 0.38px) 47.50px,calc(50.0000% + 0.15px) 45.00px,calc(50.0000% - 0.14px) 42.50px,calc(50.0000% - 0.31px) 40.00px,calc(50.0000% - 0.35px) 37.50px,calc(50.0000% - 0.26px) 35.00px,calc(50.0000% - 0.04px) 32.50px,calc(50.0000% + 0.28px) 30.00px,calc(50.0000% + 0.46px) 27.50px,calc(50.0000% + 0.50px) 25.00px,calc(50.0000% + 0.42px) 22.50px,calc(50.0000% + 0.21px) 20.00px,calc(50.0000% - 0.13px) 17.50px,calc(50.0000% - 0.39px) 15.00px,calc(50.0000% - 0.51px) 12.50px,calc(50.0000% - 0.51px) 10.00px,calc(50.0000% - 0.39px) 7.50px,calc(50.0000% - 0.14px) 5.00px,calc(50.0000% + 0.16px) 2.50px,calc(50.0000% + 0.32px) 0.00px)}
+.tam:has(button:nth-child(2)[aria-pressed="true"])::before{clip-path:polygon(calc(50.0000% + 0.32px) 0.00px,calc(50.0000% + 0.16px) 2.50px,calc(50.0000% - 0.14px) 5.00px,calc(50.0000% - 0.39px) 7.50px,calc(50.0000% - 0.51px) 10.00px,calc(50.0000% - 0.51px) 12.50px,calc(50.0000% - 0.39px) 15.00px,calc(50.0000% - 0.13px) 17.50px,calc(50.0000% + 0.21px) 20.00px,calc(50.0000% + 0.42px) 22.50px,calc(50.0000% + 0.50px) 25.00px,calc(50.0000% + 0.46px) 27.50px,calc(50.0000% + 0.28px) 30.00px,calc(50.0000% - 0.04px) 32.50px,calc(50.0000% - 0.26px) 35.00px,calc(50.0000% - 0.35px) 37.50px,calc(50.0000% - 0.31px) 40.00px,calc(50.0000% - 0.14px) 42.50px,calc(50.0000% + 0.15px) 45.00px,calc(50.0000% + 0.38px) 47.50px,calc(50.0000% + 0.50px) 50.00px,calc(50.0000% + 0.50px) 52.50px,calc(50.0000% + 0.39px) 55.00px,calc(50.0000% + 0.15px) 57.50px,calc(50.0000% - 0.22px) 60.00px,calc(50.0000% - 0.44px) 62.50px,calc(50.0000% - 0.50px) 65.00px,calc(50.0000% - 0.40px) 67.50px,calc(50.0000% - 0.15px) 70.00px,100% 70.00px,100% 0px)}

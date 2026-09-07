@@ -30,6 +30,23 @@
   --grosor:.4px;
   --ing-cuerpo:.79rem;
   --aire:1rem;
+
+  /* el trazo a mano: la línea del logo y de los dibujos, vuelta línea de la
+     página. Van como máscara y no como imagen, así que el color lo pone quien
+     las usa. linea-vertical es la misma linea girada sobre su eje */
+  --trazo:url("../img/linea.svg");
+  --trazo-v:url("../img/linea-vertical.svg");
+  --trazo-alto:8px;
+
+  /* el mismo trazo, macizo: recorta el relleno de lo elegido para que su
+     borde y la línea sean la misma curva */
+  --banda:url("../img/banda.svg");
+  --caja-llena:url("../img/caja-llena.svg");
+
+  /* y cerrado sobre sí mismo: el botón macizo y el círculo */
+  --boton:url("../img/boton.svg");
+  --caja:url("../img/caja.svg");
+  --anillo:url("../img/anillo.svg");
 }
 
 /* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.
