@@ -3,6 +3,9 @@ namespace f4872.ViewModels;
 // un renglón de la carta, ya resuelto: la vista no navega entidades ni sabe de EF
 public class RenglonCarta
 {
+    // el contador se identifica por id y no por nombre: es lo que despues viaja
+    // al pedido, y un nombre puede cambiar sin que cambie el producto
+    public int IdProducto { get; set; }
     public string Nombre { get; set; } = null!;
     public decimal? Precio { get; set; }
     public bool Activo { get; set; }
@@ -12,6 +15,7 @@ public class RenglonCarta
 // las empanadas van solo con el nombre: el precio no es del gusto, es del pack
 public class Gusto
 {
+    public int IdProducto { get; set; }
     public string Nombre { get; set; } = null!;
     public bool Activo { get; set; }
 }

@@ -16,7 +16,16 @@
                         <p class="nombre">@p.Nombre</p>
                         <i class="puntos"></i>
                         <p class="plata">@(p.Precio?.ToString("C") ?? "—")</p>
-                        @if (!p.Activo)
+                        @* el agotado lleva la pastilla en lugar del contador: se ve, pero no se pide *@
+                        @if (p.Activo)
+                        {
+                            <span class="contador cero" data-clave="p@(p.IdProducto)">
+                                <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
+                                <span class="n">0</span>
+                                <button type="button" data-mas aria-label="Sumar uno">+</button>
+                            </span>
+                        }
+                        else
                         {
                             <span class="sello">Se acabó</span>
                         }
@@ -82,9 +91,20 @@
                 <ol class="gustos">
                     @foreach (var g in Model.Gustos)
                     {
-                        <li class="@(g.Activo ? null : "agotada")">
+                        @* el gusto no lleva la clave escrita: depende del tamaño elegido,
+                           así que la pone el navegador cada vez que se pinta *@
+                        <li class="@(g.Activo ? null : "agotada")" data-gusto="@g.IdProducto">
                             <p class="nom">@g.Nombre</p>
-                            @if (!g.Activo)
+                            @if (g.Activo)
+                            {
+                                <span class="otro" hidden></span>
+                                <span class="contador cero">
+                                    <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
+                                    <span class="n">0</span>
+                                    <button type="button" data-mas aria-label="Sumar uno">+</button>
+                                </span>
+                            }
+                            else
                             {
                                 <span class="sello">Se acabó</span>
                             }

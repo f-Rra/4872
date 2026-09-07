@@ -37,6 +37,7 @@ public class TiendaController : Controller
                 x.Familia,
                 Renglon = new RenglonCarta
                 {
+                    IdProducto = x.IdProducto,
                     Nombre = x.Nombre,
                     Precio = x.Precio,
                     Activo = x.Activo,
@@ -55,7 +56,7 @@ public class TiendaController : Controller
         var gustos = await _contexto.Productos
             .Where(x => x.Familia == Familia.Empanada)
             .OrderBy(x => x.IdProducto)
-            .Select(x => new Gusto { Nombre = x.Nombre, Activo = x.Activo })
+            .Select(x => new Gusto { IdProducto = x.IdProducto, Nombre = x.Nombre, Activo = x.Activo })
             .ToListAsync();
 
         var packs = await _contexto.Packs

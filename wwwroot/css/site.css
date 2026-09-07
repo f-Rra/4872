@@ -31,6 +31,10 @@
   --ing-cuerpo:.79rem;
   --aire:1rem;
 
+  /* el contador: alto y ancho de cada tecla, medidos en la maqueta */
+  --ancho-c:1.05rem;
+  --alto-c:1.3rem;
+
   /* el trazo a mano: la línea del logo y de los dibujos, vuelta línea de la
      página. Van como máscara y no como imagen, así que el color lo pone quien
      las usa. linea-vertical es la misma linea girada sobre su eje */

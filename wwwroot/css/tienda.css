@@ -114,6 +114,38 @@ li.agotada .nombre,
 li.agotada .plata{text-decoration:line-through}
 li.agotada .puntos{border-bottom-color:rgba(154,146,135,.5)}
 li.agotada .ing{color:var(--piedra)}
+/* ---------- el contador ----------
+   Va junto al precio y no al final del renglón: al final quedaba colgado
+   cuando los ingredientes no llenaban el ancho. En cero se apaga el borde y
+   el número, y el menos queda deshabilitado: no hay de dónde sacar. */
+.contador{
+  display:inline-flex;align-items:center;flex:none;
+  border:1.4px solid var(--verde);border-radius:999px;overflow:hidden;height:var(--alto-c);
+}
+.renglon .contador{align-self:center;margin-left:.15rem}
+.contador button{
+  width:var(--ancho-c);height:100%;border:0;background:transparent;color:var(--verde);
+  cursor:pointer;display:grid;place-items:center;
+  font-family:var(--ui);font-weight:800;font-size:.82rem;line-height:1;padding:0;
+  transition:background .14s ease;
+}
+.contador button:hover:not(:disabled){background:rgba(30,82,69,.13)}
+.contador button:disabled{opacity:.3;cursor:not-allowed}
+.contador button:focus-visible{outline:2px solid var(--verde);outline-offset:-2px}
+.contador .n{
+  min-width:var(--ancho-c);text-align:center;font-family:var(--ui);font-weight:800;
+  font-size:.76rem;font-variant-numeric:tabular-nums;line-height:1;
+}
+.contador.cero{border-color:rgba(30,82,69,.45)}
+.contador.cero .n{opacity:.35}
+
+/* cuántos packs del otro tamaño ya lleva ese gusto: sin esto, cambiar de
+   tamaño parece haber borrado lo que ya se habia sumado */
+ol.gustos .otro{
+  flex:none;font-size:.66rem;font-weight:700;letter-spacing:.04em;
+  opacity:.65;white-space:nowrap;
+}
+
 .sello{
   flex:none;font-family:var(--ui);font-weight:800;font-size:.66rem;
   letter-spacing:.06em;text-transform:uppercase;color:var(--piedra);
