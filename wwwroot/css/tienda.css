@@ -95,8 +95,8 @@ ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;posit
      column-gap:2px;border:2px solid transparent;margin:2rem .95rem 0;position:relative;z-index:0}
 .tam button{
   min-width:0;position:relative;
-  font-family:var(--ui);font-weight:800;font-size:.76rem;
-  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  font-family:var(--ui);font-weight:800;font-stretch:75%;font-size:.76rem;
+  letter-spacing:.02em;white-space:nowrap;font-variant-numeric:tabular-nums;
   display:flex;align-items:center;justify-content:center;
   background:transparent;color:var(--verde);border:0;padding:.62rem .6rem;cursor:pointer;
   transition:background .15s ease,color .15s ease;
@@ -122,14 +122,27 @@ li.agotada{color:var(--piedra)}
 li.agotada .nombre,
 li.agotada .plata{text-decoration:line-through}
 li.agotada .puntos{border-bottom-color:rgba(154,146,135,.5)}
-li.agotada .ing{color:var(--piedra)}
+li.agotada .ing,
+li.agotada .ing.fijo,
+li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 /* ---------- el contador ----------
    Va junto al precio y no al final del renglón: al final quedaba colgado
    cuando los ingredientes no llenaban el ancho. En cero se apaga el borde y
-   el número, y el menos queda deshabilitado: no hay de dónde sacar. */
+   el número, y el menos queda deshabilitado: no hay de dónde sacar.
+
+   El contorno es la misma pastilla dibujada del botón, perfilada. Va en un
+   pseudo por encima de las teclas: si fuera máscara del contador se comería
+   los botones de adentro. El borde transparente y el radio se quedan igual
+   para que la caja mida lo mismo y el fondo del hover siga recortado. */
 .contador{
-  display:inline-flex;align-items:center;flex:none;
-  border:1.4px solid var(--verde);border-radius:999px;overflow:hidden;height:var(--alto-c);
+  display:inline-flex;align-items:center;flex:none;position:relative;
+  border:1.4px solid transparent;border-radius:999px;overflow:hidden;height:var(--alto-c);
+}
+.contador::before{
+  content:"";position:absolute;z-index:1;inset:-1.4px;pointer-events:none;
+  background-color:var(--verde);
+  -webkit-mask:var(--pastilla-hueca) center/100% 100% no-repeat;
+  mask:var(--pastilla-hueca) center/100% 100% no-repeat;
 }
 .renglon .contador{align-self:center;margin-left:.15rem}
 .contador button{
@@ -145,7 +158,7 @@ li.agotada .ing{color:var(--piedra)}
   min-width:var(--ancho-c);text-align:center;font-family:var(--ui);font-weight:800;
   font-size:.76rem;font-variant-numeric:tabular-nums;line-height:1;
 }
-.contador.cero{border-color:rgba(30,82,69,.45)}
+.contador.cero::before{opacity:.45}
 .contador.cero .n{opacity:.35}
 
 /* cuántos packs del otro tamaño ya lleva ese gusto: sin esto, cambiar de
@@ -156,11 +169,68 @@ li.agotada .ing{color:var(--piedra)}
 }
 .renglon .otro{align-self:center;margin-right:.35rem}
 
+/* la pastilla del agotado, dibujada igual que las demás. Va en su propio
+   archivo y no estirando la del contador: al estirar una pastilla angosta a
+   este ancho, el trazo de los lados verticales engorda y se nota */
 .sello{
   flex:none;font-family:var(--ui);font-weight:800;font-size:.66rem;
   letter-spacing:.06em;text-transform:uppercase;color:var(--piedra);
-  border:1.4px solid var(--piedra);border-radius:999px;padding:.2rem .55rem;
-  align-self:center;white-space:nowrap;
+  border:1.4px solid transparent;border-radius:999px;padding:.2rem .55rem;
+  align-self:center;white-space:nowrap;position:relative;
+}
+.sello::before{
+  content:"";position:absolute;inset:-1.4px;pointer-events:none;
+  background-color:var(--piedra);
+  -webkit-mask:var(--pastilla-sello) center/100% 100% no-repeat;
+  mask:var(--pastilla-sello) center/100% 100% no-repeat;
+}
+
+/* ---------- la barra del pedido ----------
+   Arranca en alto cero y crece al sumar algo. Anima el alto y no la
+   posición: así la lista se acomoda sola y el último renglón nunca queda
+   tapado, que es lo que pasaría con una barra flotando encima.
+
+   El borde de arriba no es una recta: se recorta con la misma onda que las
+   demás líneas, anclada al mismo x, así queda en fase con ellas. La máscara
+   mide 200 px de alto a propósito — la onda queda quieta arriba mientras la
+   barra crece, en vez de estirarse con ella. */
+/* el rótulo, el total y el botón van los tres juntos y el grupo al medio: se
+   leen como una sola frase — qué llevás, cuánto sale y por dónde seguir */
+.pedido{
+  flex:none;background-color:var(--verde);color:var(--papel);
+  padding:0 .95rem;display:flex;align-items:center;justify-content:center;gap:.7rem;
+  height:0;overflow:hidden;
+  transition:height .24s ease,padding .24s ease;
+  -webkit-mask:var(--pie) repeat-x left top/auto 200px;
+  mask:var(--pie) repeat-x left top/auto 200px;
+}
+/* los 4 px de más arriba son la media banda que se lleva la onda */
+.pedido.visible{height:auto;padding-top:calc(.75rem + 4px);padding-bottom:.75rem}
+.cuenta{flex:none;font-size:.86rem;font-weight:600}
+/* el total en Archivo y no en Bowlby: Bowlby empasta los seis dígitos y no
+   tiene números tabulares, así que el total saltaba de ancho al cambiar */
+/* Archivo en su versión angosta, el eje wdth al 75%. Bowlby empasta los seis
+   dígitos sobre el verde y no tiene números tabulares, así que el total
+   saltaba de ancho al cambiar. Angosta ocupa 53 px contra 76, y no se
+   confunde con la Archivo normal del resto de la app */
+.total{
+  flex:none;font-family:var(--ui);font-weight:800;font-stretch:75%;
+  font-size:1.05rem;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+/* la pastilla también va dibujada: es la misma onda, aplicada perpendicular al
+   borde de una píldora. El radio lo pone el dibujo, no un border-radius */
+.ver{
+  font-family:var(--ui);font-weight:800;font-size:.76rem;letter-spacing:.1em;
+  text-transform:uppercase;flex:none;
+  background-color:var(--papel);color:var(--verde);border:0;
+  padding:.55rem .95rem;cursor:pointer;
+  -webkit-mask:var(--pastilla) center/100% 100% no-repeat;
+  mask:var(--pastilla) center/100% 100% no-repeat;
+}
+.ver:focus-visible{outline:2px solid var(--papel);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){
+  .pedido{transition:none}
 }
 
 /* ============================================================

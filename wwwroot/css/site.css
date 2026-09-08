@@ -51,6 +51,10 @@
   --boton:url("../img/boton.svg");
   --caja:url("../img/caja.svg");
   --anillo:url("../img/anillo.svg");
+  --pie:url("../img/pie.svg");
+  --pastilla:url("../img/pastilla.svg");
+  --pastilla-hueca:url("../img/pastilla-hueca.svg");
+  --pastilla-sello:url("../img/pastilla-sello.svg");
 }
 
 /* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.

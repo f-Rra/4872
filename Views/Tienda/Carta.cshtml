@@ -1,4 +1,7 @@
 @model f4872.ViewModels.CartaVm
+@* el precio viaja al navegador con punto decimal y sin separadores: lo lee
+   parseFloat, que no entiende el formato de es-AR *@
+@using System.Globalization
 @{
     ViewData["Title"] = "La carta";
     Layout = "_Tienda";
@@ -11,7 +14,8 @@
         <ol class="carta">
             @foreach (var p in lista)
             {
-                <li class="@(p.Activo ? null : "agotada")" data-base="p@(p.IdProducto)">
+                <li class="@(p.Activo ? null : "agotada")" data-base="p@(p.IdProducto)"
+                    data-precio="@(p.Precio?.ToString(CultureInfo.InvariantCulture))">
                     <div class="renglon">
                         <p class="nombre">@p.Nombre</p>
                         <i class="puntos"></i>
@@ -19,8 +23,9 @@
                            lo que se achique sea la linea de puntos y no otra cosa *@
                         <span class="otro" hidden></span>
                         <p class="plata">@(p.Precio?.ToString("C") ?? "—")</p>
-                        @* el agotado lleva la pastilla en lugar del contador: se ve, pero no se pide *@
-                        @if (p.Activo)
+                        @* el agotado lleva la pastilla en lugar del contador: se ve, pero no se
+                           pide. Sin precio tampoco: sumaria cero al total *@
+                        @if (p.Activo && p.Precio.HasValue)
                         {
                             <span class="contador cero">
                                 <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
@@ -30,7 +35,7 @@
                         }
                         else
                         {
-                            <span class="sello">Se acabó</span>
+                            <span class="sello">Sin stock</span>
                         }
                     </div>
                     <div class="abajo">
@@ -94,7 +99,9 @@
                     @foreach (var t in Model.Packs)
                     {
                         var elegido = t.Unidades == Model.Packs[^1].Unidades;
-                        <button type="button" data-unidades="@t.Unidades" aria-pressed="@elegido.ToString().ToLowerInvariant()">
+                        <button type="button" data-unidades="@t.Unidades"
+                                data-precio="@t.Precio.ToString(CultureInfo.InvariantCulture)"
+                                aria-pressed="@elegido.ToString().ToLowerInvariant()">
                             @* con paréntesis: pegado a la x, Razor lee el @@ como literal *@
                             x@(t.Unidades) · @t.Precio.ToString("C")
                         </button>
@@ -119,7 +126,7 @@
                             }
                             else
                             {
-                                <span class="sello">Se acabó</span>
+                                <span class="sello">Sin stock</span>
                             }
                         </li>
                     }
@@ -128,5 +135,14 @@
         </div>
         <div data-familia="focaccias" hidden>@{ Renglones(Model.Focaccias); }</div>
     </main>
+
+    @* Arranca en alto cero y crece al sumar algo. No flota por encima de la
+       lista: le saca alto, así el último renglón nunca queda tapado.
+       El botón todavía no lleva a ningún lado: el checkout entra en el 24 *@
+    <div class="pedido" id="pedido">
+        <span class="cuenta" id="cuenta-n">0 cosas</span>
+        <b class="total" id="cuenta-t">$0</b>
+        <button class="ver" type="button" id="ir-checkout">Ver pedido</button>
+    </div>
 
 </div>
