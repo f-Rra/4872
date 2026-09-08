@@ -19,6 +19,18 @@
   // una cosa distinta en x6 que en x12, y el tamaño se elige en la pantalla.
   function clavePack(idGusto, unidades) { return "e" + idGusto + "x" + unidades; }
 
+  // La combinacion es parte de lo pedido: dos margaritas con todo y una sin
+  // albahaca son dos cosas distintas, con su propio contador. Por eso la clave
+  // del renglon lleva pegados los ingredientes sacados.
+  function claveRenglon(li) {
+    var sin = [];
+    li.querySelectorAll(".ing[aria-pressed='false']").forEach(function (b) {
+      sin.push(Number(b.dataset.ing));
+    });
+    sin.sort(function (a, b) { return a - b; });
+    return li.dataset.base + (sin.length ? "|" + sin.join(",") : "");
+  }
+
   function tamanoElegido() {
     var b = tam && tam.querySelector("button[aria-pressed='true']");
     return b ? b.dataset.unidades : null;
@@ -42,8 +54,27 @@
   }
 
   function pintar() {
-    lista.querySelectorAll("ol.carta .contador").forEach(function (c) {
-      pintarContador(c, c.dataset.clave);
+    lista.querySelectorAll("ol.carta li[data-base]").forEach(function (li) {
+      var contador = li.querySelector(".contador");
+      if (!contador) return;
+      var clave = claveRenglon(li);
+      pintarContador(contador, clave);
+
+      // Cuantas lleva del mismo producto con otra combinacion. Sin esto, tachar
+      // un ingrediente pone el contador en cero y parece que se borro el pedido.
+      var otras = 0, todasConTodo = true;
+      Object.keys(carrito).forEach(function (k) {
+        if (k === clave) return;
+        if (k !== li.dataset.base && k.indexOf(li.dataset.base + "|") !== 0) return;
+        otras += carrito[k];
+        if (k !== li.dataset.base) todasConTodo = false;
+      });
+      var otro = li.querySelector(".otro");
+      // pizzas y focaccias son las dos femeninas, asi que alcanza con una forma
+      otro.textContent = otras
+        ? otras + (todasConTodo ? " con todo" : (otras === 1 ? " modificada" : " modificadas"))
+        : "";
+      otro.hidden = otras === 0;
     });
 
     var unidades = tamanoElegido();
@@ -61,7 +92,9 @@
       tam.querySelectorAll("button[data-unidades]").forEach(function (b) {
         if (b.dataset.unidades === unidades) return;
         var cuantos = carrito[clavePack(li.dataset.gusto, b.dataset.unidades)] || 0;
-        if (cuantos) dice.push(cuantos + " en x" + b.dataset.unidades);
+        if (cuantos) {
+          dice.push(cuantos + (cuantos === 1 ? " pack x" : " packs x") + b.dataset.unidades);
+        }
       });
       otro.textContent = dice.join(" · ");
       otro.hidden = dice.length === 0;
@@ -72,8 +105,17 @@
   // todo el tiempo, así que colgarle uno a cada botón sería trabajo repetido
   lista.addEventListener("click", function (e) {
     var boton = e.target.closest(".contador button");
-    if (!boton) return;
-    mover(boton.closest(".contador").dataset.clave, "menos" in boton.dataset ? -1 : 1);
+    if (boton) {
+      mover(boton.closest(".contador").dataset.clave, "menos" in boton.dataset ? -1 : 1);
+      return;
+    }
+
+    // tachar o destachar un ingrediente cambia la clave del renglon, asi que el
+    // contador tiene que volver a leer cuantas hay de esa combinacion
+    var chip = e.target.closest(".ing:not(.fijo)");
+    if (!chip || chip.disabled) return;
+    chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    pintar();
   });
 
   solapas.addEventListener("click", function (e) {

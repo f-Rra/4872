@@ -1,5 +1,15 @@
 namespace f4872.ViewModels;
 
+// un ingrediente del renglón. El quitable sale del par producto-ingrediente:
+// es del par y no del ingrediente, porque la misma cebolla es quitable en una
+// fugazzeta y no lo es en otra receta
+public class IngredienteCarta
+{
+    public int IdIngrediente { get; set; }
+    public string Nombre { get; set; } = null!;
+    public bool Quitable { get; set; }
+}
+
 // un renglón de la carta, ya resuelto: la vista no navega entidades ni sabe de EF
 public class RenglonCarta
 {
@@ -9,7 +19,7 @@ public class RenglonCarta
     public string Nombre { get; set; } = null!;
     public decimal? Precio { get; set; }
     public bool Activo { get; set; }
-    public IReadOnlyList<string> Ingredientes { get; set; } = [];
+    public IReadOnlyList<IngredienteCarta> Ingredientes { get; set; } = [];
 }
 
 // las empanadas van solo con el nombre: el precio no es del gusto, es del pack

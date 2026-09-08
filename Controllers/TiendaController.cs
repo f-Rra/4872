@@ -45,7 +45,12 @@ public class TiendaController : Controller
                     // ver la nota del commit. Por IdIngrediente al menos es estable
                     Ingredientes = x.Receta
                         .OrderBy(r => r.IdIngrediente)
-                        .Select(r => r.Ingrediente.Nombre)
+                        .Select(r => new IngredienteCarta
+                        {
+                            IdIngrediente = r.IdIngrediente,
+                            Nombre = r.Ingrediente.Nombre,
+                            Quitable = r.Quitable
+                        })
                         .ToList()
                 }
             })

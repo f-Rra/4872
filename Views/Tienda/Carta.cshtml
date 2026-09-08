@@ -11,15 +11,18 @@
         <ol class="carta">
             @foreach (var p in lista)
             {
-                <li class="@(p.Activo ? null : "agotada")">
+                <li class="@(p.Activo ? null : "agotada")" data-base="p@(p.IdProducto)">
                     <div class="renglon">
                         <p class="nombre">@p.Nombre</p>
                         <i class="puntos"></i>
+                        @* cuantas lleva con otra combinacion: va antes del precio para que
+                           lo que se achique sea la linea de puntos y no otra cosa *@
+                        <span class="otro" hidden></span>
                         <p class="plata">@(p.Precio?.ToString("C") ?? "—")</p>
                         @* el agotado lleva la pastilla en lugar del contador: se ve, pero no se pide *@
                         @if (p.Activo)
                         {
-                            <span class="contador cero" data-clave="p@(p.IdProducto)">
+                            <span class="contador cero">
                                 <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
                                 <span class="n">0</span>
                                 <button type="button" data-mas aria-label="Sumar uno">+</button>
@@ -38,7 +41,17 @@
                                 {
                                     <span class="sep">·</span>
                                 }
-                                <span class="ing">@p.Ingredientes[i]</span>
+                                var r = p.Ingredientes[i];
+                                @* el fijo se ve igual pero no se toca: sin el deja de ser esa pizza *@
+                                if (r.Quitable)
+                                {
+                                    <button type="button" class="ing" data-ing="@r.IdIngrediente"
+                                            aria-pressed="true" disabled="@(!p.Activo)">@r.Nombre</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="ing fijo" disabled>@r.Nombre</button>
+                                }
                             }
                         </div>
                     </div>
