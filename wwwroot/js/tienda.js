@@ -8,11 +8,25 @@
 
   var tam = document.getElementById("tam");
 
-  // El pedido vive acá y en ningún otro lado. Un pedido a medio armar no es un
-  // pedido: no tiene por qué ocupar una fila en la base ni avisarle nada a
-  // nadie. Guardarlo entre recargas es otro commit; por ahora dura lo que dure
-  // la pestaña abierta.
+  // El pedido vive en el navegador y en ningún otro lado. Un pedido a medio
+  // armar no es un pedido: no tiene por qué ocupar una fila en la base ni
+  // avisarle nada a nadie. Pero sí tiene que sobrevivir a una recarga o a un
+  // «volver atrás», que en un teléfono pasa todo el tiempo.
+  var LLAVE = "4872.pedido";
   var carrito = {};
+
+  // localStorage tira excepción en modo privado y con las cookies bloqueadas.
+  // Si falla, el pedido sigue funcionando: se pierde al recargar, nada más.
+  function guardar() {
+    try { localStorage.setItem(LLAVE, JSON.stringify(carrito)); } catch (e) { /* sin guardar */ }
+  }
+
+  function leer() {
+    try {
+      var guardado = JSON.parse(localStorage.getItem(LLAVE) || "{}");
+      return guardado && typeof guardado === "object" && !Array.isArray(guardado) ? guardado : {};
+    } catch (e) { return {}; }
+  }
 
   // La clave de una pizza o una focaccia la escribe el servidor con el id del
   // producto. La de un pack no se puede escribir de antemano: el mismo gusto es
@@ -87,6 +101,7 @@
     // el cero se borra en vez de guardarse: el carrito es lo que se pidió, y un
     // producto en cero no se pidió
     if (cuantos > 0) { carrito[clave] = cuantos; } else { delete carrito[clave]; }
+    guardar();
     pintar();
   }
 
@@ -151,6 +166,52 @@
   }
 
 
+  // La carta pudo cambiar entre una visita y la otra: un producto que ya no
+  // está, un gusto dado de baja, un ingrediente que salió de la receta. Lo
+  // guardado se contrasta contra lo que hay en pantalla y lo que no existe se
+  // tira. Sin esto, una clave vieja sumaría al total un producto sin precio.
+  function existe(clave) {
+    if (clave.charAt(0) === "e") {
+      var partes = clave.slice(1).split("x");
+      return !!(lista.querySelector("ol.gustos li[data-gusto='" + partes[0] + "']") &&
+                tam && tam.querySelector("button[data-unidades='" + partes[1] + "']"));
+    }
+    var trozos = clave.split("|");
+    var li = lista.querySelector("li[data-base='" + trozos[0] + "']");
+    if (!li) return false;
+    if (!trozos[1]) return true;
+    return trozos[1].split(",").every(function (id) {
+      return li.querySelector(".ing[data-ing='" + id + "']");
+    });
+  }
+
+  function recuperar() {
+    var guardado = leer();
+    Object.keys(guardado).forEach(function (k) {
+      var cuantos = Math.floor(Number(guardado[k]));
+      if (cuantos > 0 && existe(k)) carrito[k] = cuantos;
+    });
+    guardar();
+  }
+
+  // Si a un producto le quedó una sola combinación, se le marcan los
+  // ingredientes como estaban. Sin esto la pantalla vuelve con el contador en
+  // cero y un «2 modificadas» al costado, que se lee como que se perdió algo.
+  // Con dos combinaciones o más no hay una sola respuesta, así que no se toca.
+  function recuperarIngredientes() {
+    lista.querySelectorAll("ol.carta li[data-base]").forEach(function (li) {
+      var suyas = Object.keys(carrito).filter(function (k) {
+        return k === li.dataset.base || k.indexOf(li.dataset.base + "|") === 0;
+      });
+      if (suyas.length !== 1) return;
+      var sin = suyas[0].split("|")[1];
+      var sacados = sin ? sin.split(",") : [];
+      li.querySelectorAll(".ing[data-ing]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(sacados.indexOf(b.dataset.ing) < 0));
+      });
+    });
+  }
+
   // un solo escucha para toda la lista: los contadores son muchos y se pintan
   // todo el tiempo, así que colgarle uno a cada botón sería trabajo repetido
   lista.addEventListener("click", function (e) {
@@ -196,5 +257,7 @@
     });
   }
 
+  recuperar();
+  recuperarIngredientes();
   pintar();
 })();
