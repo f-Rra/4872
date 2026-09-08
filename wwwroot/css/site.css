@@ -30,6 +30,8 @@
   --grosor:.4px;
   --ing-cuerpo:.79rem;
   --aire:1rem;
+  /* el renglon del resumen del checkout */
+  --item:1rem;
 
   /* el contador: alto y ancho de cada tecla, medidos en la maqueta */
   --ancho-c:1.05rem;
@@ -55,6 +57,7 @@
   --pastilla:url("../img/pastilla.svg");
   --pastilla-hueca:url("../img/pastilla-hueca.svg");
   --pastilla-sello:url("../img/pastilla-sello.svg");
+  --pastilla-sin:url("../img/pastilla-sin.svg");
 }
 
 /* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.

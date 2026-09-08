@@ -95,8 +95,9 @@ ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;posit
      column-gap:2px;border:2px solid transparent;margin:2rem .95rem 0;position:relative;z-index:0}
 .tam button{
   min-width:0;position:relative;
-  font-family:var(--ui);font-weight:800;font-stretch:75%;font-size:.76rem;
-  letter-spacing:.02em;white-space:nowrap;font-variant-numeric:tabular-nums;
+  font-family:var(--ui);font-weight:800;font-size:.76rem;
+  letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  font-variant-numeric:tabular-nums;
   display:flex;align-items:center;justify-content:center;
   background:transparent;color:var(--verde);border:0;padding:.62rem .6rem;cursor:pointer;
   transition:background .15s ease,color .15s ease;
@@ -209,19 +210,18 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 .cuenta{flex:none;font-size:.86rem;font-weight:600}
 /* el total en Archivo y no en Bowlby: Bowlby empasta los seis dígitos y no
    tiene números tabulares, así que el total saltaba de ancho al cambiar */
-/* Archivo en su versión angosta, el eje wdth al 75%. Bowlby empasta los seis
-   dígitos sobre el verde y no tiene números tabulares, así que el total
-   saltaba de ancho al cambiar. Angosta ocupa 53 px contra 76, y no se
-   confunde con la Archivo normal del resto de la app */
-.total{
-  flex:none;font-family:var(--ui);font-weight:800;font-stretch:75%;
-  font-size:1.05rem;font-variant-numeric:tabular-nums;white-space:nowrap;
+/* Archivo y no Bowlby: Bowlby empasta los seis dígitos sobre el verde y no
+   tiene números tabulares, así que el total saltaba de ancho al cambiar */
+.cuenta-total{
+  flex:none;font-weight:800;font-size:1.05rem;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 /* la pastilla también va dibujada: es la misma onda, aplicada perpendicular al
    borde de una píldora. El radio lo pone el dibujo, no un border-radius */
 .ver{
   font-family:var(--ui);font-weight:800;font-size:.76rem;letter-spacing:.1em;
-  text-transform:uppercase;flex:none;
+  text-transform:uppercase;flex:none;text-decoration:none;
+  display:inline-flex;align-items:center;
   background-color:var(--papel);color:var(--verde);border:0;
   padding:.55rem .95rem;cursor:pointer;
   -webkit-mask:var(--pastilla) center/100% 100% no-repeat;
@@ -448,3 +448,93 @@ ol.gustos li::after{opacity:.35}
 .solapas:has(button:nth-child(3)[aria-pressed="true"])::before{clip-path:polygon(calc(66.6667% + 0.32px) 0.00px,calc(66.6667% + 0.01px) 3.93px,calc(66.6667% - 0.41px) 7.86px,calc(66.6667% - 0.53px) 11.79px,calc(66.6667% - 0.33px) 15.71px,calc(66.6667% + 0.17px) 19.64px,calc(66.6667% + 0.47px) 23.57px,calc(66.6667% + 0.46px) 27.50px,calc(66.6667% + 0.10px) 31.43px,calc(66.6667% - 0.28px) 35.36px,calc(66.6667% - 0.34px) 39.29px,calc(66.6667% - 0.07px) 43.21px,calc(66.6667% + 0.35px) 47.14px,calc(66.6667% + 0.51px) 51.07px,calc(66.6667% + 0.39px) 55.00px,calc(66.6667% - 0.08px) 58.93px,calc(66.6667% - 0.45px) 62.86px,calc(66.6667% - 0.44px) 66.79px,calc(66.6667% - 0.05px) 70.71px,calc(66.6667% + 0.38px) 74.64px,calc(66.6667% + 0.49px) 78.57px,calc(66.6667% + 0.29px) 82.50px,calc(66.6667% - 0.23px) 86.43px,calc(66.6667% - 0.46px) 90.36px,calc(66.6667% - 0.27px) 94.29px,calc(66.6667% + 0.26px) 98.21px,calc(66.6667% + 0.51px) 102.14px,calc(66.6667% + 0.49px) 106.07px,calc(66.6667% + 0.21px) 110.00px,100% 110.00px,100% 0px)}
 .tam:has(button:nth-child(1)[aria-pressed="true"])::before{clip-path:polygon(0 0px,0 70.00px,calc(50.0000% - 0.15px) 70.00px,calc(50.0000% - 0.40px) 67.50px,calc(50.0000% - 0.50px) 65.00px,calc(50.0000% - 0.44px) 62.50px,calc(50.0000% - 0.22px) 60.00px,calc(50.0000% + 0.15px) 57.50px,calc(50.0000% + 0.39px) 55.00px,calc(50.0000% + 0.50px) 52.50px,calc(50.0000% + 0.50px) 50.00px,calc(50.0000% + 0.38px) 47.50px,calc(50.0000% + 0.15px) 45.00px,calc(50.0000% - 0.14px) 42.50px,calc(50.0000% - 0.31px) 40.00px,calc(50.0000% - 0.35px) 37.50px,calc(50.0000% - 0.26px) 35.00px,calc(50.0000% - 0.04px) 32.50px,calc(50.0000% + 0.28px) 30.00px,calc(50.0000% + 0.46px) 27.50px,calc(50.0000% + 0.50px) 25.00px,calc(50.0000% + 0.42px) 22.50px,calc(50.0000% + 0.21px) 20.00px,calc(50.0000% - 0.13px) 17.50px,calc(50.0000% - 0.39px) 15.00px,calc(50.0000% - 0.51px) 12.50px,calc(50.0000% - 0.51px) 10.00px,calc(50.0000% - 0.39px) 7.50px,calc(50.0000% - 0.14px) 5.00px,calc(50.0000% + 0.16px) 2.50px,calc(50.0000% + 0.32px) 0.00px)}
 .tam:has(button:nth-child(2)[aria-pressed="true"])::before{clip-path:polygon(calc(50.0000% + 0.32px) 0.00px,calc(50.0000% + 0.16px) 2.50px,calc(50.0000% - 0.14px) 5.00px,calc(50.0000% - 0.39px) 7.50px,calc(50.0000% - 0.51px) 10.00px,calc(50.0000% - 0.51px) 12.50px,calc(50.0000% - 0.39px) 15.00px,calc(50.0000% - 0.13px) 17.50px,calc(50.0000% + 0.21px) 20.00px,calc(50.0000% + 0.42px) 22.50px,calc(50.0000% + 0.50px) 25.00px,calc(50.0000% + 0.46px) 27.50px,calc(50.0000% + 0.28px) 30.00px,calc(50.0000% - 0.04px) 32.50px,calc(50.0000% - 0.26px) 35.00px,calc(50.0000% - 0.35px) 37.50px,calc(50.0000% - 0.31px) 40.00px,calc(50.0000% - 0.14px) 42.50px,calc(50.0000% + 0.15px) 45.00px,calc(50.0000% + 0.38px) 47.50px,calc(50.0000% + 0.50px) 50.00px,calc(50.0000% + 0.50px) 52.50px,calc(50.0000% + 0.39px) 55.00px,calc(50.0000% + 0.15px) 57.50px,calc(50.0000% - 0.22px) 60.00px,calc(50.0000% - 0.44px) 62.50px,calc(50.0000% - 0.50px) 65.00px,calc(50.0000% - 0.40px) 67.50px,calc(50.0000% - 0.15px) 70.00px,100% 70.00px,100% 0px)}
+
+/* ============================================================
+   El checkout
+
+   Contra diseño/la-tienda.html. La lista y el total los escribe
+   el navegador: el pedido vive ahí hasta que se confirma.
+   ============================================================ */
+
+/* la vuelta a la carta va arriba y sola: es lo único que se puede hacer desde
+   acá además de seguir, y de este lado el gesto de atrás del teléfono también
+   funciona porque es una pantalla de verdad y no un paso escondido */
+.barra-tope{
+  display:flex;align-items:center;gap:.6rem;flex:none;
+  padding:.8rem .9rem;border-bottom:2px solid transparent;position:relative;
+}
+.barra-tope a{
+  display:flex;align-items:center;gap:.45rem;color:var(--verde);text-decoration:none;
+  font-family:var(--ui);font-weight:700;font-size:.74rem;letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.barra-tope svg{width:14px;height:14px}
+
+.items{list-style:none;margin:0;padding:0;flex:none}
+.items li{
+  display:flex;align-items:baseline;gap:.42rem;
+  padding:.72rem .9rem;border-bottom:1px solid transparent;position:relative;
+}
+.items li:last-child{border-bottom:0}
+.items li:last-child::after{display:none}
+.cant{
+  font-family:var(--cara);font-size:calc(var(--item) * .94);flex:none;
+  min-width:1.15rem;font-variant-numeric:tabular-nums;
+}
+.item-nombre{
+  margin:0;flex:1;min-width:0;
+  font-family:var(--cara);font-size:var(--item);line-height:1.22;letter-spacing:-.022em;
+}
+/* el «sin» va pegado al nombre y no en otro renglón: es parte de qué se pidió,
+   no una aclaración al pie */
+/* Esta pastilla cambia de largo con el texto — de «sin Albahaca» a «sin
+   Albahaca, Oliva» hay un 40% de diferencia — así que estirar el dibujo entero
+   deformaba las puntas y el grosor, y las dos se veían de distinto tamaño.
+   Con border-image el dibujo se corta en tres: las dos puntas se pintan a su
+   medida y solo el tramo del medio acompaña el largo.
+
+   Es la única pieza dibujada que lleva el color adentro del archivo:
+   border-image pinta la imagen, no la usa de máscara, así que no puede tomarlo
+   del CSS. Si cambia el verde, hay que volver a generarla. */
+.sin{
+  font-family:var(--ui);font-size:calc(var(--item) * .84);font-weight:600;letter-spacing:0;
+  padding:.18rem .6rem;margin-left:.35rem;white-space:nowrap;
+  display:inline-block;vertical-align:.06em;
+  border:1.2px solid transparent;
+  border-image-source:var(--pastilla-sin);
+  border-image-slice:0 12 0 12 fill;
+  border-image-width:0 12px 0 12px;
+  border-image-repeat:stretch;
+}
+.item-plata{
+  margin:0;font-family:var(--cara);font-size:calc(var(--item) * .94);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.vacio-pedido{
+  font-family:var(--ui);font-size:.9rem;font-weight:600;opacity:.6;
+}
+
+.total{
+  display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex:none;
+  padding:.95rem .9rem;position:relative;
+  border-top:2px solid transparent;border-bottom:2px solid transparent;
+}
+.total dt{font-size:1.05rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.total dd{margin:0;font-family:var(--cara);font-size:1.72rem;font-variant-numeric:tabular-nums}
+.total .guia{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.35rem)}
+
+/* las tres líneas del checkout, con el mismo trazo que el resto */
+.barra-tope::after,
+.items li::after,
+.total::before,
+.total::after{
+  content:"";position:absolute;left:0;right:0;height:var(--trazo-alto);
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--trazo) repeat-x left center/auto 100%;
+  mask:var(--trazo) repeat-x left center/auto 100%;
+}
+.barra-tope::after,
+.total::after{bottom:calc(var(--trazo-alto) / -2 - 2px)}
+.items li::after{bottom:calc(var(--trazo-alto) / -2 - 1px)}
+.total::before{top:calc(var(--trazo-alto) / -2 - 2px)}
+.items li::after{opacity:.35}

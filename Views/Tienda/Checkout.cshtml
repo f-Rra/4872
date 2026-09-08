@@ -1,0 +1,36 @@
+@model f4872.ViewModels.CheckoutVm
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Tu pedido";
+    Layout = "_Tienda";
+}
+
+<div class="tienda">
+
+    <div class="barra-tope">
+        <a asp-action="Carta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                 stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" /></svg>
+            La carta
+        </a>
+    </div>
+
+    @* la lista y el total los escribe el navegador: el pedido está guardado ahí
+       y todavía no existe en la base *@
+    <main class="lista">
+        <ul class="items" id="items"></ul>
+        <dl class="total"><dt>Total</dt><i class="guia"></i><dd id="total">$0</dd></dl>
+    </main>
+
+</div>
+
+@* la carta como diccionario, para traducir las claves guardadas. El
+   serializador escapa < y > por defecto, así que un nombre con etiquetas
+   adentro no puede cerrar este bloque *@
+<script type="application/json" id="carta">
+    @Html.Raw(JsonSerializer.Serialize(Model))
+</script>
+
+@section Scripts {
+    <script src="~/js/checkout.js" asp-append-version="true"></script>
+}

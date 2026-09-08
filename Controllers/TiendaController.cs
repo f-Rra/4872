@@ -78,4 +78,50 @@ public class TiendaController : Controller
             Packs = packs
         });
     }
+
+    // el resumen del pedido. La pantalla no recibe el pedido: lo lee del
+    // navegador, que es donde vive hasta que se confirma. Lo que sí recibe es
+    // la carta, para poder traducir esas claves a nombres y precios
+    [Route("checkout")]
+    public async Task<IActionResult> Checkout()
+    {
+        var productos = await _contexto.Productos
+            .Where(x => x.Familia != Familia.Empanada && x.Precio != null)
+            .OrderBy(x => x.Familia)
+            .ThenBy(x => x.IdProducto)
+            .Select(x => new { x.IdProducto, x.Nombre, Precio = x.Precio!.Value })
+            .ToListAsync();
+
+        var gustos = await _contexto.Productos
+            .Where(x => x.Familia == Familia.Empanada)
+            .Select(x => new { x.IdProducto, x.Nombre })
+            .ToDictionaryAsync(x => x.IdProducto, x => x.Nombre);
+
+        var packs = await _contexto.Packs
+            .Where(x => x.Activo)
+            .ToDictionaryAsync(x => x.Unidades, x => x.Precio);
+
+        // el mismo ingrediente puede ser quitable en varias recetas: se piden
+        // distintos para no traer el nombre repetido una vez por producto
+        var ingredientes = await _contexto.ProductoIngredientes
+            .Where(x => x.Quitable)
+            .Select(x => new { x.IdIngrediente, x.Ingrediente.Nombre })
+            .Distinct()
+            .ToDictionaryAsync(x => x.IdIngrediente, x => x.Nombre);
+
+        return View(new CheckoutVm
+        {
+            Productos = productos
+                .Select((x, i) => new { x.IdProducto, Dato = new ProductoDelPedido
+                {
+                    Nombre = x.Nombre,
+                    Precio = x.Precio,
+                    Orden = i
+                } })
+                .ToDictionary(x => x.IdProducto, x => x.Dato),
+            Gustos = gustos,
+            Packs = packs,
+            Ingredientes = ingredientes
+        });
+    }
 }
