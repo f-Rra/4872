@@ -58,6 +58,9 @@
   --pastilla-hueca:url("../img/pastilla-hueca.svg");
   --pastilla-sello:url("../img/pastilla-sello.svg");
   --pastilla-sin:url("../img/pastilla-sin.svg");
+  --frase:url("../img/frase.svg");
+  --confirmar:url("../img/confirmar.svg");
+  --confirmar-hueca:url("../img/confirmar-hueca.svg");
 }
 
 /* el diseño mide en rem contra 16 px: 1.10rem de un nombre de pizza son 17,6.

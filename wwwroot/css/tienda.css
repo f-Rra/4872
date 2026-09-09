@@ -538,3 +538,84 @@ ol.gustos li::after{opacity:.35}
 .items li::after{bottom:calc(var(--trazo-alto) / -2 - 1px)}
 .total::before{top:calc(var(--trazo-alto) / -2 - 2px)}
 .items li::after{opacity:.35}
+
+/* ---------- los datos del cliente ----------
+   Tres campos: nombre, dirección y WhatsApp. La dirección va en un solo
+   renglón; lo que falte se arregla en la conversación de WhatsApp, que va a
+   haber igual. El campo se subraya en vez de encajonarse: es un renglón para
+   escribir, no una caja, y así se parece a la línea de puntos de la carta. */
+.datos{padding:1.1rem .9rem 0;display:flex;flex-direction:column;gap:1.05rem;flex:none}
+.campo{--aire-campo:.34rem;display:flex;flex-direction:column;gap:var(--aire-campo)}
+.campo label{font-size:.68rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.campo input{
+  font-family:var(--ui);font-size:1rem;font-weight:600;color:var(--verde);
+  background:transparent;border:0;border-bottom:2px solid transparent;
+  padding:.5rem .1rem;outline:0;position:relative;
+}
+.campo input::placeholder{color:rgba(30,82,69,.42);font-weight:500}
+.campo input:focus{background:rgba(30,82,69,.06)}
+/* el subrayado también es el trazo. Va en el .campo y no en el input, porque
+   un input no puede tener pseudo-elementos */
+.campo{position:relative}
+.campo::after,
+.frase::before{
+  content:"";position:absolute;left:0;right:0;height:var(--trazo-alto);
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--trazo) repeat-x left center/auto 100%;
+  mask:var(--trazo) repeat-x left center/auto 100%;
+}
+.campo::after{bottom:calc(var(--trazo-alto) / -2)}
+/* El campo de WhatsApp lleva la frase debajo, así que el final del campo ya no
+   es el final del input y el subrayado se iba al pie del bloque. Se dibuja
+   desde la frase hacia arriba, corrido su propio margen: así queda pegado al
+   input sin depender de ninguna medida escrita a mano. */
+.campo:has(.frase)::after{display:none}
+.frase{
+  position:relative;z-index:0;
+  margin:0;font-size:.82rem;font-weight:600;line-height:1.45;
+  padding:.6rem .7rem;
+}
+/* el fondo tampoco es un rectangulo: es la misma caja cerrada a pulso, maciza
+   y al 9% de verde. Va en su propio dibujo y no en el del segmentado porque
+   este bloque cambia de ancho con la pantalla: lleva preserveAspectRatio="none"
+   para llenarlo estirandose, en vez de achicarse y quedar centrado */
+.frase::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background-color:rgba(30,82,69,.09);pointer-events:none;
+  -webkit-mask:var(--frase) center/100% 100% no-repeat;
+  mask:var(--frase) center/100% 100% no-repeat;
+}
+/* el hueco lo pone el gap del campo, así que se descuenta de ahí y no de un
+   número escrito de nuevo: si cambia el gap, la línea lo sigue */
+.frase::before{top:calc(var(--aire-campo) * -1 - var(--trazo-alto) / 2)}
+
+/* ---------- el botón de confirmar ----------
+   Pegado abajo con margin-top:auto: si el pedido es corto la pantalla no
+   queda con el botón flotando en el medio. Habilitado va macizo y apagado va
+   perfilado, con la misma píldora dibujada de siempre. */
+.accion{padding:1.2rem .9rem 1.1rem;flex:none;margin-top:auto;position:relative}
+.accion::before{
+  content:"";position:absolute;left:0;right:0;top:calc(var(--trazo-alto) / -2);
+  height:var(--trazo-alto);background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--trazo) repeat-x left center/auto 100%;
+  mask:var(--trazo) repeat-x left center/auto 100%;
+}
+.confirmar{
+  position:relative;z-index:0;width:100%;height:3.05rem;cursor:pointer;border:0;
+  font-family:var(--ui);font-weight:800;font-size:.92rem;letter-spacing:.08em;
+  text-transform:uppercase;background:transparent;color:var(--papel);
+}
+/* el fondo va en un pseudo detrás del texto: si la máscara fuera del botón, en
+   el estado apagado —que es solo el contorno— se comería la palabra */
+.confirmar::before{
+  content:"";position:absolute;z-index:-1;inset:0;background-color:var(--verde);
+  -webkit-mask:var(--confirmar) center/100% 100% no-repeat;
+  mask:var(--confirmar) center/100% 100% no-repeat;
+}
+.confirmar:disabled{color:rgba(30,82,69,.42);cursor:not-allowed}
+.confirmar:disabled::before{
+  background-color:rgba(30,82,69,.3);
+  -webkit-mask:var(--confirmar-hueca) center/100% 100% no-repeat;
+  mask:var(--confirmar-hueca) center/100% 100% no-repeat;
+}
+.confirmar:focus-visible{outline:2px solid var(--verde);outline-offset:3px}

@@ -8,6 +8,11 @@
 
   // la misma llave que usa tienda.js para guardarlo
   var LLAVE = "4872.pedido";
+  // Los datos del cliente se guardan aparte y por el mismo motivo que el
+  // pedido: desde acá se vuelve a la carta a sumar algo, y perder lo tipeado
+  // en ese viaje es la forma más fácil de que alguien abandone el pedido.
+  var LLAVE_DATOS = "4872.datos";
+  var CAMPOS = ["nom", "dir", "wa"];
   var CARTA = JSON.parse(dato.textContent);
 
   function plata(n) { return "$" + n.toLocaleString("es-AR"); }
@@ -79,5 +84,45 @@
       filas.reduce(function (suma, f) { return suma + f.cuantos * f.precio; }, 0));
   }
 
+  // ---------- los datos del cliente ----------
+
+  function leerDatos() {
+    try {
+      var guardado = JSON.parse(localStorage.getItem(LLAVE_DATOS) || "{}");
+      return guardado && typeof guardado === "object" ? guardado : {};
+    } catch (e) { return {}; }
+  }
+
+  function guardarDatos() {
+    var datos = {};
+    CAMPOS.forEach(function (c) { datos[c] = document.getElementById(c).value; });
+    try { localStorage.setItem(LLAVE_DATOS, JSON.stringify(datos)); } catch (e) { /* sin guardar */ }
+  }
+
+  // La regla sale de la maqueta. El teléfono se mide en dígitos y no en
+  // caracteres, porque cada uno lo escribe como quiere: con guiones, con
+  // paréntesis, con el 15 adelante o sin nada.
+  function revisar() {
+    var valor = {};
+    CAMPOS.forEach(function (c) { valor[c] = document.getElementById(c).value; });
+    document.getElementById("confirmar").disabled =
+      valor.nom.trim().length < 2 ||
+      valor.dir.trim().length < 5 ||
+      valor.wa.replace(/\D/g, "").length < 8 ||
+      !Object.keys(leer()).length;
+  }
+
+  function engancharDatos() {
+    var guardado = leerDatos();
+    CAMPOS.forEach(function (c) {
+      var campo = document.getElementById(c);
+      if (!campo) return;
+      if (typeof guardado[c] === "string") campo.value = guardado[c];
+      campo.addEventListener("input", function () { guardarDatos(); revisar(); });
+    });
+    revisar();
+  }
+
   pintar();
+  engancharDatos();
 })();
