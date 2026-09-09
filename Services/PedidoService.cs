@@ -61,6 +61,16 @@ public class PedidoService
             throw new InvalidOperationException("El pedido está vacío.");
         }
 
+        // Lo primero que se mira contra la base. Una pantalla abierta desde
+        // antes sigue pudiendo postear aunque la carta ya diga que está
+        // cerrada, y un pedido que entra con la tienda cerrada es uno que él no
+        // va a ver hasta que la abra.
+        if (!await _contexto.Tienda.AnyAsync(x => x.Abierta))
+        {
+            throw new InvalidOperationException(
+                "Esta semana no tomamos pedidos. Volvemos a tomar pedidos el martes.");
+        }
+
         var renglones = datos.Items.Select(x => Leer(x.Key, x.Value)).ToList();
         var ids = renglones.Select(x => x.IdProducto).Distinct().ToList();
 

@@ -30,6 +30,13 @@ public class TiendaController : Controller
     [Route("shop")]
     public async Task<IActionResult> Carta()
     {
+        // Cerrada no se consulta nada: la pantalla no muestra la carta, así que
+        // traerla serían cuatro consultas para tirar a la basura.
+        if (!await Abierta())
+        {
+            return View(new CartaVm { Abierta = false });
+        }
+
         // una sola consulta para las dos familias: son la misma forma de renglón
         // y traerlas por separado serían dos viajes a la base para nada
         var renglones = await _contexto.Productos
@@ -88,6 +95,14 @@ public class TiendaController : Controller
     [HttpGet("checkout")]
     public async Task<IActionResult> Checkout()
     {
+        // se llega acá con el pedido guardado de la semana pasada y el botón de
+        // atrás. La carta es la que cuenta que está cerrada, así que manda ahí
+        // en vez de hacerle llenar un formulario que no va a poder mandar
+        if (!await Abierta())
+        {
+            return RedirectToAction(nameof(Carta));
+        }
+
         var productos = await _contexto.Productos
             .Where(x => x.Familia != Familia.Empanada && x.Precio != null)
             .OrderBy(x => x.Familia)
@@ -166,4 +181,8 @@ public class TiendaController : Controller
 
         return View(id);
     }
+
+    // el estado de la tienda: una sola fila, y la unica pregunta que se le hace
+    private async Task<bool> Abierta() =>
+        await _contexto.Tienda.AnyAsync(x => x.Abierta);
 }

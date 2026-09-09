@@ -38,6 +38,10 @@ public class TamanoPack
 
 public class CartaVm
 {
+    // Cerrada, la pantalla no muestra la carta, así que las cuatro listas
+    // llegan vacías: el controlador ni siquiera las consulta.
+    public bool Abierta { get; set; } = true;
+
     // pizzas y focaccias comparten renglón porque se piden igual, pero van en
     // solapas distintas: son dos listas y no una sola con un filtro
     public IReadOnlyList<RenglonCarta> Pizzas { get; set; } = [];

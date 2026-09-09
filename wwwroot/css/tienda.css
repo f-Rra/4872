@@ -654,3 +654,25 @@ ol.gustos li::after{opacity:.35}
 }
 .listo p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:29ch}
 .listo .marca{margin-top:1rem;font-size:1.1rem}
+
+/* Sin solapas la linea de la tapa no separa nada: queda una raya suelta arriba
+   de una pantalla vacia. Mismo criterio que arriba de todo, donde el borde de
+   la pantalla ya cierra. */
+.tienda:has(.cerrada) .tapa::after{display:none}
+
+/* ---------- la tienda cerrada ----------
+   Reemplaza la carta entera. Se probaron tres maneras: una banda arriba con la
+   carta legible, la carta en gris tachada, y esta. Gana esta porque las otras
+   dos dejan a la vista precios y contadores de algo que no se puede pedir.
+   Comparte la forma con la confirmación —centrada, la marca abajo— pero va
+   sobre papel: el verde pleno es el final de un pedido, no una puerta cerrada. */
+.cerrada{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.9rem;padding:2.5rem 1.4rem;text-align:center;
+}
+.cerrada h1{
+  margin:0;font-family:var(--cara);font-size:2rem;line-height:1.04;
+  letter-spacing:-.03em;max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
+}
+.cerrada p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
+.cerrada .marca{margin-top:1.2rem;font-size:1.15rem}

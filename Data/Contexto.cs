@@ -16,6 +16,7 @@ public class Contexto : DbContext
     public DbSet<ItemPedido> ItemPedidos => Set<ItemPedido>();
     public DbSet<ItemQuitado> ItemQuitados => Set<ItemQuitado>();
     public DbSet<Pack> Packs => Set<Pack>();
+    public DbSet<Tienda> Tienda => Set<Tienda>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {

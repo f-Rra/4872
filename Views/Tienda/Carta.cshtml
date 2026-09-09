@@ -72,77 +72,91 @@
         <img class="logo" src="~/img/logo.png" alt="48·72" width="240" height="240" />
     </header>
 
-    <nav class="solapas" id="solapas" aria-label="Familias">
-        <button type="button" data-solapa="pizzas" aria-pressed="true">
-            <i class="dib pizza" aria-hidden="true"></i>Pizzas
-        </button>
-        <button type="button" data-solapa="empanadas" aria-pressed="false">
-            <i class="dib empanada" aria-hidden="true"></i>Empanadas
-        </button>
-        <button type="button" data-solapa="focaccias" aria-pressed="false">
-            <i class="dib focaccia" aria-hidden="true"></i>Focaccias
-        </button>
-    </nav>
+    @if (!Model.Abierta)
+    {
+        @* Cerrada se va la carta entera y también las solapas: llevarían a
+           listas que no se pueden pedir. Queda el logo y el cartel. *@
+        <main class="lista">
+            <div class="cerrada">
+                <h1>Cerrado por esta semana</h1>
+                <p>Volvemos a tomar pedidos el martes. Mientras tanto la masa descansa.</p>
+                <p class="marca">48·72</p>
+            </div>
+        </main>
+    }
+    else
+    {
+        <nav class="solapas" id="solapas" aria-label="Familias">
+            <button type="button" data-solapa="pizzas" aria-pressed="true">
+                <i class="dib pizza" aria-hidden="true"></i>Pizzas
+            </button>
+            <button type="button" data-solapa="empanadas" aria-pressed="false">
+                <i class="dib empanada" aria-hidden="true"></i>Empanadas
+            </button>
+            <button type="button" data-solapa="focaccias" aria-pressed="false">
+                <i class="dib focaccia" aria-hidden="true"></i>Focaccias
+            </button>
+        </nav>
 
-    <main class="lista" id="lista">
-        <div data-familia="pizzas">@{ Renglones(Model.Pizzas); }</div>
-        <div data-familia="empanadas" hidden>
-            @if (Model.Packs.Count == 0)
-            {
-                <p class="vacio">Todavía no hay precios de pack cargados.</p>
-            }
-            else
-            {
-                @* el segmentado fija el tamaño: no hay unidades sueltas ni packs
-                   mezclados, así que el precio se elige una vez y vale para todos *@
-                <div class="tam" id="tam">
-                    @foreach (var t in Model.Packs)
-                    {
-                        var elegido = t.Unidades == Model.Packs[^1].Unidades;
-                        <button type="button" data-unidades="@t.Unidades"
-                                data-precio="@t.Precio.ToString(CultureInfo.InvariantCulture)"
-                                aria-pressed="@elegido.ToString().ToLowerInvariant()">
-                            @* con paréntesis: pegado a la x, Razor lee el @@ como literal *@
-                            x@(t.Unidades) · @t.Precio.ToString("C")
-                        </button>
-                    }
-                </div>
+        <main class="lista" id="lista">
+            <div data-familia="pizzas">@{ Renglones(Model.Pizzas); }</div>
+            <div data-familia="empanadas" hidden>
+                @if (Model.Packs.Count == 0)
+                {
+                    <p class="vacio">Todavía no hay precios de pack cargados.</p>
+                }
+                else
+                {
+                    @* el segmentado fija el tamaño: no hay unidades sueltas ni packs
+                       mezclados, así que el precio se elige una vez y vale para todos *@
+                    <div class="tam" id="tam">
+                        @foreach (var t in Model.Packs)
+                        {
+                            var elegido = t.Unidades == Model.Packs[^1].Unidades;
+                            <button type="button" data-unidades="@t.Unidades"
+                                    data-precio="@t.Precio.ToString(CultureInfo.InvariantCulture)"
+                                    aria-pressed="@elegido.ToString().ToLowerInvariant()">
+                                @* con paréntesis: pegado a la x, Razor lee el @@ como literal *@
+                                x@(t.Unidades) · @t.Precio.ToString("C")
+                            </button>
+                        }
+                    </div>
 
-                <ol class="gustos">
-                    @foreach (var g in Model.Gustos)
-                    {
-                        @* el gusto no lleva la clave escrita: depende del tamaño elegido,
-                           así que la pone el navegador cada vez que se pinta *@
-                        <li class="@(g.Activo ? null : "agotada")" data-gusto="@g.IdProducto">
-                            <p class="nom">@g.Nombre</p>
-                            @if (g.Activo)
-                            {
-                                <span class="otro" hidden></span>
-                                <span class="contador cero">
-                                    <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
-                                    <span class="n">0</span>
-                                    <button type="button" data-mas aria-label="Sumar uno">+</button>
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="sello">Sin stock</span>
-                            }
-                        </li>
-                    }
-                </ol>
-            }
+                    <ol class="gustos">
+                        @foreach (var g in Model.Gustos)
+                        {
+                            @* el gusto no lleva la clave escrita: depende del tamaño elegido,
+                               así que la pone el navegador cada vez que se pinta *@
+                            <li class="@(g.Activo ? null : "agotada")" data-gusto="@g.IdProducto">
+                                <p class="nom">@g.Nombre</p>
+                                @if (g.Activo)
+                                {
+                                    <span class="otro" hidden></span>
+                                    <span class="contador cero">
+                                        <button type="button" data-menos disabled aria-label="Sacar uno">−</button>
+                                        <span class="n">0</span>
+                                        <button type="button" data-mas aria-label="Sumar uno">+</button>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="sello">Sin stock</span>
+                                }
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+            <div data-familia="focaccias" hidden>@{ Renglones(Model.Focaccias); }</div>
+        </main>
+
+        @* Arranca en alto cero y crece al sumar algo. No flota por encima de la
+           lista: le saca alto, así el último renglón nunca queda tapado *@
+        <div class="pedido" id="pedido">
+            <span class="cuenta" id="cuenta-n">0 cosas</span>
+            <b class="cuenta-total" id="cuenta-t">$0</b>
+            <a class="ver" asp-action="Checkout">Ver pedido</a>
         </div>
-        <div data-familia="focaccias" hidden>@{ Renglones(Model.Focaccias); }</div>
-    </main>
-
-    @* Arranca en alto cero y crece al sumar algo. No flota por encima de la
-       lista: le saca alto, así el último renglón nunca queda tapado.
-       El botón todavía no lleva a ningún lado: el checkout entra en el 24 *@
-    <div class="pedido" id="pedido">
-        <span class="cuenta" id="cuenta-n">0 cosas</span>
-        <b class="cuenta-total" id="cuenta-t">$0</b>
-        <a class="ver" asp-action="Checkout">Ver pedido</a>
-    </div>
+    }
 
 </div>
