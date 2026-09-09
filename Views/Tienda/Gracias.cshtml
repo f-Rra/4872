@@ -1,0 +1,31 @@
+@model int
+@{
+    ViewData["Title"] = "Pedido realizado";
+    ViewData["Cuerpo"] = "final";
+    Layout = "_Tienda";
+}
+
+@* Sin botón de salida, y es la decisión menos obvia de las cuatro pantallas:
+   volver a la carta desde acá armaría un segundo pedido separado para la misma
+   persona, y el vendedor recibiría dos avisos que tiene que juntar a mano. El
+   que quiera pedir más entra de nuevo. *@
+<div class="tienda">
+    <div class="listo">
+        <h1>¡Pedido realizado!</h1>
+
+        @* lo único que el cliente puede necesitar repetir, así que va suelto y
+           en la dirección: esta pantalla se puede volver a abrir *@
+        <span class="num">Nro @Model.ToString("0000")</span>
+
+        @* El saludo con el nombre lo reescribe el navegador; ver gracias.js. El
+           texto que está acá es el que se lee si no hay nombre guardado, y es
+           el que ve un buscador o alguien con el JavaScript apagado. *@
+        <p id="saludo">Gracias. Te escribimos por WhatsApp para coordinar la entrega.</p>
+
+        <p class="marca">48·72</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/gracias.js" asp-append-version="true"></script>
+}

@@ -148,4 +148,22 @@ public class TiendaController : Controller
             return BadRequest(new { error = e.Message });
         }
     }
+
+    // La confirmacion. El numero va en la direccion a proposito: es lo unico
+    // que el cliente puede necesitar repetir, y asi la pantalla se puede volver
+    // a abrir.
+    //
+    // No devuelve nada del pedido salvo que existe. El saludo con el nombre lo
+    // pone el navegador: los numeros son correlativos, y un nombre que saliera
+    // de aca convertiria /gracias/1, /gracias/2 en una lista de clientes.
+    [HttpGet("gracias/{id:int}")]
+    public async Task<IActionResult> Gracias(int id)
+    {
+        if (!await _contexto.Pedidos.AnyAsync(x => x.IdPedido == id))
+        {
+            return NotFound();
+        }
+
+        return View(id);
+    }
 }

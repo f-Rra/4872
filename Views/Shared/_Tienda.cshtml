@@ -15,7 +15,8 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/tienda.css" asp-append-version="true" />
 </head>
-<body>
+@* la confirmación pinta la ventana entera de verde, no solo la columna *@
+<body class="@ViewData["Cuerpo"]">
     @RenderBody()
     <script src="~/js/tienda.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

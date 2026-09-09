@@ -75,6 +75,10 @@ body{
   font-family:var(--ui);
 }
 
+/* la columna mide 520 px, pero el verde de la confirmación tiene que llegar al
+   borde de la ventana: si no, en una pantalla ancha queda una franja */
+body.final{background:var(--verde)}
+
 a{color:var(--verde)}
 
 .cara{font-family:var(--cara)}

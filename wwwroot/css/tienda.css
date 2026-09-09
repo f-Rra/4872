@@ -619,3 +619,38 @@ ol.gustos li::after{opacity:.35}
   mask:var(--confirmar-hueca) center/100% 100% no-repeat;
 }
 .confirmar:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+
+/* el aviso de que algo no salio: mismo dibujo que la nota del WhatsApp, pero
+   macizo y al reves. No hay rojo en la paleta, y no hace falta: lo que separa
+   un aviso de una nota es el contraste, no el color */
+.aviso{
+  position:relative;z-index:0;margin:0 0 .85rem;padding:.6rem .7rem;
+  font-size:.82rem;font-weight:700;line-height:1.45;color:var(--papel);text-align:center;
+}
+.aviso::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background-color:var(--verde);pointer-events:none;
+  -webkit-mask:var(--frase) center/100% 100% no-repeat;
+  mask:var(--frase) center/100% 100% no-repeat;
+}
+
+/* ---------- la confirmación ----------
+   La única pantalla de la tienda con el fondo verde. Marca el final del
+   recorrido sin necesitar un cartel que lo diga. */
+.listo{
+  flex:1;background:var(--verde);color:var(--papel);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;padding:2rem 1.2rem;text-align:center;
+}
+.listo h1{
+  margin:0;font-family:var(--cara);font-size:2.15rem;line-height:1.02;
+  letter-spacing:-.03em;max-width:11ch;
+}
+/* el número, suelto. Con cifras tabulares para que no baile el día que el
+   pedido 1000 tenga una cifra más que el 999 */
+.listo .num{
+  font-family:var(--ui);font-weight:800;font-size:1.05rem;letter-spacing:.14em;
+  font-variant-numeric:tabular-nums;
+}
+.listo p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:29ch}
+.listo .marca{margin-top:1rem;font-size:1.1rem}

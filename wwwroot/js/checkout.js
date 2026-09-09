@@ -123,6 +123,73 @@
     revisar();
   }
 
+  // ---------- mandarlo ----------
+
+  function avisar(texto) {
+    var aviso = document.getElementById("aviso");
+    if (!aviso) return;
+    aviso.textContent = texto || "";
+    aviso.hidden = !texto;
+  }
+
+  // El pedido no existe hasta que el servidor contesta con un número. Por eso
+  // el carrito se borra recién ahí: si se borrara antes y la respuesta no
+  // llegara, la persona se queda sin pedido y sin carrito.
+  //
+  // Se manda lo mismo que hay guardado, sin precios. Los pone el servidor: ver
+  // Services/PedidoService.cs.
+  function enviar() {
+    var boton = document.getElementById("confirmar");
+    if (!boton || boton.disabled) return;
+
+    avisar("");
+    boton.disabled = true;
+    var dice = boton.textContent;
+    boton.textContent = "Enviando";
+
+    function fallar(texto) {
+      boton.textContent = dice;
+      avisar(texto);
+      revisar();
+    }
+
+    fetch("/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cliente: document.getElementById("nom").value,
+        direccion: document.getElementById("dir").value,
+        telefono: document.getElementById("wa").value,
+        items: leer()
+      })
+    })
+      .then(function (r) {
+        // por texto y no por r.json(): si el servidor se cae de verdad, lo que
+        // vuelve es una pantalla de error en HTML y el parseo tira una excepción
+        // que taparía el problema real
+        return r.text().then(function (crudo) {
+          var cuerpo = {};
+          try { cuerpo = JSON.parse(crudo); } catch (e) { /* no vino JSON */ }
+          if (!r.ok || !cuerpo.id) {
+            throw new Error(cuerpo.error || "No se pudo enviar el pedido. Probá de nuevo.");
+          }
+          return cuerpo.id;
+        });
+      })
+      .then(function (id) {
+        // el pedido ya está en la base: si además quedara en el navegador, la
+        // próxima visita lo mostraría como si no se hubiera mandado nunca. Lo
+        // tipeado sí queda, que es para la próxima vez
+        try { localStorage.removeItem(LLAVE); } catch (e) { /* sin guardar */ }
+        location.href = "/gracias/" + id;
+      })
+      .catch(function (e) {
+        fallar(e.message || "No se pudo enviar el pedido. Probá de nuevo.");
+      });
+  }
+
   pintar();
   engancharDatos();
+  var boton = document.getElementById("confirmar");
+  if (boton) boton.addEventListener("click", enviar);
 })();

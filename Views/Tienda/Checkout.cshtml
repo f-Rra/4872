@@ -42,8 +42,12 @@
             </div>
         </div>
 
-        @* el botón todavía no guarda nada: eso entra en el commit que sigue *@
         <div class="accion">
+            @* lo que puede fallar al confirmar no es culpa de quien pide —algo
+               se acabó, se cortó la conexión— así que el aviso va pegado al
+               botón, que es lo que acaba de tocar. role=alert para que un lector
+               de pantalla lo diga sin que haga falta ir a buscarlo *@
+            <p class="aviso" id="aviso" role="alert" hidden></p>
             <button class="confirmar" type="button" id="confirmar" disabled>Realizar pedido</button>
         </div>
     </main>
