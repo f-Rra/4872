@@ -1,6 +1,7 @@
 using System.Globalization;
 using f4872.Data;
 using f4872.Helpers;
+using f4872.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -37,6 +38,7 @@ if (string.IsNullOrWhiteSpace(conexion.Password))
 }
 
 builder.Services.AddDbContext<Contexto>(opciones => opciones.UseNpgsql(conexion.ConnectionString));
+builder.Services.AddScoped<PedidoService>();
 
 var app = builder.Build();
 

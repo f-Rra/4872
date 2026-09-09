@@ -1,5 +1,6 @@
 using f4872.Data;
 using f4872.Models;
+using f4872.Services;
 using f4872.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,12 @@ namespace f4872.Controllers;
 public class TiendaController : Controller
 {
     private readonly Contexto _contexto;
+    private readonly PedidoService _pedidos;
 
-    public TiendaController(Contexto contexto)
+    public TiendaController(Contexto contexto, PedidoService pedidos)
     {
         _contexto = contexto;
+        _pedidos = pedidos;
     }
 
     // el inicio: existe para el que llega de cero, porque el nombre no dice que
@@ -82,7 +85,7 @@ public class TiendaController : Controller
     // el resumen del pedido. La pantalla no recibe el pedido: lo lee del
     // navegador, que es donde vive hasta que se confirma. Lo que sí recibe es
     // la carta, para poder traducir esas claves a nombres y precios
-    [Route("checkout")]
+    [HttpGet("checkout")]
     public async Task<IActionResult> Checkout()
     {
         var productos = await _contexto.Productos
@@ -123,5 +126,26 @@ public class TiendaController : Controller
             Packs = packs,
             Ingredientes = ingredientes
         });
+    }
+
+    // Confirmar el pedido. Recibe las mismas claves que guarda el navegador y
+    // nada mas: el servicio les vuelve a poner precio leyendo la base.
+    //
+    // Sin antiforgery a proposito: el token protege de que otro sitio use la
+    // sesion de alguien, y aca no hay sesion ni nada que robar. Cuando exista
+    // el panel, ese si lo lleva.
+    [HttpPost("checkout")]
+    public async Task<IActionResult> Confirmar([FromBody] PedidoNuevo datos)
+    {
+        try
+        {
+            return Ok(new { id = await _pedidos.Confirmar(datos) });
+        }
+        catch (InvalidOperationException e)
+        {
+            // el mensaje esta escrito para que lo lea una persona, asi que sale
+            // tal cual a la pantalla
+            return BadRequest(new { error = e.Message });
+        }
     }
 }
