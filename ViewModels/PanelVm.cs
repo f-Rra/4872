@@ -19,6 +19,29 @@ public class InicioVm : PanelVm
 {
     // las cinco tarjetas del tablero, ya resueltas: la vista no calcula nada
     public IReadOnlyList<Cifra> Cifras { get; set; } = [];
+
+    // qué hay que hornear, agrupado por familia
+    public IReadOnlyList<GrupoHornear> Hornear { get; set; } = [];
+}
+
+// Una familia de la lista de hornear. Va agrupada y no en una lista sola porque
+// son tres trabajos distintos: las pizzas y las focaccias se estiran y se
+// hornean, las empanadas se arman.
+public class GrupoHornear
+{
+    public string Familia { get; set; } = null!;
+
+    // las empanadas se cuentan en unidades y llevan «u.» al lado del número;
+    // las otras dos son piezas y no necesitan aclaración
+    public bool PorUnidad { get; set; }
+
+    public IReadOnlyList<RenglonHornear> Renglones { get; set; } = [];
+}
+
+public class RenglonHornear
+{
+    public string Nombre { get; set; } = null!;
+    public int Cuantas { get; set; }
 }
 
 // Una tarjeta del tablero. Tres textos y nada más: el título, el número grande

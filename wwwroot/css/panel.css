@@ -127,5 +127,30 @@
   font-variant-numeric:tabular-nums;line-height:1.1;
 }
 .card .n{font-size:.74rem;font-weight:600;opacity:.72}
-/* provisorio: se va cuando entren las cifras */
-.porAhora{margin:auto;padding:2rem;color:var(--piedra);font-size:.86rem;font-weight:600}
+/* ---------- hornear y comprar ----------
+   Las dos mitades del pie del Inicio. Todos los renglones miden lo mismo,
+   encabezados de familia incluidos, para que cada linea de una mitad caiga a la
+   misma altura que la de la otra. No es ojo: es la unica manera de que
+   coincidan cuando la izquierda tiene encabezados que la derecha no. */
+.hornear{--fila:30px;display:flex;align-items:stretch;flex:1;min-height:0}
+.hornear > .mitad-h{flex:1;padding:.95rem 1.1rem 1.2rem;min-width:0;overflow-y:auto}
+.hornear > .mitad-h + .mitad-h{border-left:1.5px solid rgba(30,82,69,.28)}
+.hornear h2{
+  margin:0 0 .55rem;font-size:.66rem;font-weight:800;
+  letter-spacing:.15em;text-transform:uppercase;opacity:.8;
+}
+.corrida{list-style:none;margin:0;padding:0}
+.corrida li{
+  display:flex;align-items:center;gap:.6rem;height:var(--fila);padding:0;
+  border-bottom:1px solid rgba(30,82,69,.18);font-size:.93rem;font-weight:600;
+}
+.corrida li.cabeza{
+  align-items:flex-end;padding-bottom:.28rem;
+  border-bottom:1.4px solid rgba(30,82,69,.4);
+  font-size:.63rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.62;
+}
+/* el nombre cede y se corta con puntos; el numero nunca se achica */
+.corrida .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.corrida .cu{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
+.corrida .cu em{font-style:normal;font-size:.76rem;font-weight:600;opacity:.6}
+.nada-h{margin:.5rem 0 0;font-size:.84rem;font-weight:600;opacity:.6}

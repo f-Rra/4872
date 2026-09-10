@@ -47,6 +47,43 @@
         }
     </dl>
 
-    @* Hornear y Comprar, las dos listas de abajo, entran en las tandas que siguen *@
-    <p class="porAhora">Hornear y Comprar entran en las tandas que siguen.</p>
+    @* Las dos preguntas de la tanda, y las dos salen de los mismos pedidos sin
+       entregar: qué hay que hornear y qué falta comprar. *@
+    <div class="hornear">
+
+        <div class="mitad-h">
+            <h2>Hornear</h2>
+
+            @if (Model.Hornear.Count == 0)
+            {
+                <p class="nada-h">Nada pendiente.</p>
+            }
+            else
+            {
+                <ul class="corrida">
+                    @foreach (var grupo in Model.Hornear)
+                    {
+                        <li class="cabeza">@grupo.Familia</li>
+
+                        @foreach (var r in grupo.Renglones)
+                        {
+                            <li>
+                                <span class="qn">@r.Nombre</span>
+                                <span class="cu">
+                                    @r.Cuantas@if (grupo.PorUnidad) { <em>u.</em> }
+                                </span>
+                            </li>
+                        }
+                    }
+                </ul>
+            }
+        </div>
+
+        @* Comprar entra en la tanda que sigue: necesita las recetas y el stock *@
+        <div class="mitad-h">
+            <h2>Comprar</h2>
+            <p class="nada-h">Entra en la tanda que sigue.</p>
+        </div>
+
+    </div>
 </div>

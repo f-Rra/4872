@@ -41,8 +41,60 @@ public class PanelController : Controller
         {
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
-            Cifras = await Cifras()
+            Cifras = await Cifras(),
+            Hornear = await Hornear()
         });
+    }
+
+    // Que hay que hornear: todos los pedidos sin entregar sumados por producto.
+    //
+    // Las combinaciones se juntan a proposito. Tres margaritas son tres
+    // margaritas aunque una vaya sin albahaca: al horno entran las tres igual, y
+    // lo que se le saca a cada una se lee en el pedido, no aca.
+    private async Task<IReadOnlyList<GrupoHornear>> Hornear()
+    {
+        var renglones = await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+            .GroupBy(x => new { x.Producto.Familia, x.IdProducto, x.Producto.Nombre })
+            .Select(g => new
+            {
+                g.Key.Familia,
+                g.Key.IdProducto,
+                g.Key.Nombre,
+                // Cantidad por las unidades del pack, o por una si no es pack.
+                // Asi un pack de doce cuenta doce empanadas, que es lo que hay
+                // que armar; el panel cuenta piezas, no cajas.
+                Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1))
+            })
+            .ToListAsync();
+
+        // el orden de la carta, para poder cotejarlo contra la pantalla
+        (string Nombre, Familia Familia, bool PorUnidad)[] familias =
+        [
+            ("Pizzas", Familia.Pizza, false),
+            ("Focaccias", Familia.Focaccia, false),
+            ("Empanadas", Familia.Empanada, true)
+        ];
+
+        return
+        [
+            .. familias
+                .Select(f => new GrupoHornear
+                {
+                    Familia = f.Nombre,
+                    PorUnidad = f.PorUnidad,
+                    Renglones =
+                    [
+                        .. renglones
+                            .Where(x => x.Familia == f.Familia)
+                            .OrderBy(x => x.IdProducto)
+                            .Select(x => new RenglonHornear { Nombre = x.Nombre, Cuantas = x.Piezas })
+                    ]
+                })
+                // una familia sin nada no se muestra: un titulo con nada abajo
+                // se lee como que falta algo
+                .Where(x => x.Renglones.Count > 0)
+        ];
     }
 
     // Las cinco tarjetas del tablero.
