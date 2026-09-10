@@ -103,5 +103,29 @@
 .banda.cerrada{background:var(--verde);color:var(--papel);border-bottom-color:var(--verde)}
 
 .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
+
+/* ---------- el tablero ----------
+   Cinco columnas iguales y una sola linea abajo. El separador entre tarjetas es
+   mas fino que el marco: agrupa sin cortar la fila en cinco cajas. */
+/* minmax(0,1fr) y no 1fr a secas: un 1fr no baja del ancho de su contenido, y
+   con un total de seis cifras la fila empujaba la pagina entera a scrollear de
+   costado. Asi las columnas ceden y lo que se achica es el numero. */
+.tarjetas-ini{
+  margin:0;flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  border-bottom:2px solid var(--verde);
+}
+.card{padding:1rem .95rem;display:flex;flex-direction:column;gap:.12rem;min-width:0}
+.card + .card{border-left:1px solid rgba(30,82,69,.25)}
+.card dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+/* tabular para que las cinco cifras queden en la misma reja, aunque una diga
+   $108.800 y la de al lado diga 4 */
+/* 1.75rem es la medida de la maqueta y se respeta de 1273 px de ventana para
+   arriba, que es cualquier laptop. Debajo de eso el numero se achica en vez de
+   desbordar: el 2.2vw esta elegido para tocar los 28 px justo ahi. */
+.card dd{
+  margin:0;font-size:clamp(1.1rem, 2.2vw, 1.75rem);font-weight:800;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.card .n{font-size:.74rem;font-weight:600;opacity:.72}
 /* provisorio: se va cuando entren las cifras */
 .porAhora{margin:auto;padding:2rem;color:var(--piedra);font-size:.86rem;font-weight:600}

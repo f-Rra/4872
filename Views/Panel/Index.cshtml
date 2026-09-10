@@ -1,4 +1,4 @@
-@model f4872.ViewModels.PanelVm
+@model f4872.ViewModels.InicioVm
 @{
     ViewData["Title"] = "Inicio";
     ViewData["Seccion"] = "inicio";
@@ -30,7 +30,23 @@
     </div>
 }
 
-@* Acá van las cifras del día y lo que hay que hornear: es la tanda que sigue *@
 <div class="ini">
-    <p class="porAhora">Las cifras del día entran en la próxima tanda.</p>
+
+    @* Cinco tarjetas y nada más. Salieron de un catálogo de veintiséis cifras
+       que el panel sabe calcular; estas son las que hoy salen solo de los
+       pedidos. Las otras tres que trae la maqueta —Falta comprar, Producción y
+       Costo— necesitan las recetas y el stock. *@
+    <dl class="tarjetas-ini">
+        @foreach (var c in Model.Cifras)
+        {
+            <div class="card">
+                <dt>@c.Titulo</dt>
+                <dd>@c.Valor</dd>
+                <span class="n">@c.Nota</span>
+            </div>
+        }
+    </dl>
+
+    @* Hornear y Comprar, las dos listas de abajo, entran en las tandas que siguen *@
+    <p class="porAhora">Hornear y Comprar entran en las tandas que siguen.</p>
 </div>
