@@ -88,6 +88,7 @@ builder.Services.AddHttpClient(nameof(TelegramService), c => c.Timeout = TimeSpa
     });
 builder.Services.AddScoped<TelegramService>();
 builder.Services.AddScoped<PedidoService>();
+builder.Services.AddScoped<RecetaService>();
 
 var app = builder.Build();
 

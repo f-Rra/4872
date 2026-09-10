@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Models;
+using f4872.Services;
 using f4872.ViewModels;
 
 namespace f4872.Controllers;
@@ -21,15 +22,17 @@ namespace f4872.Controllers;
 public class PanelController : Controller
 {
     private readonly Contexto _contexto;
+    private readonly RecetaService _recetas;
     private readonly string? _clave;
 
     // Un segundo de espera cuando la clave está mal. No molesta al que se
     // equivoca una vez y le arruina el día al que quiere probar de a miles.
     private static readonly TimeSpan Castigo = TimeSpan.FromSeconds(1);
 
-    public PanelController(Contexto contexto, IConfiguration configuracion)
+    public PanelController(Contexto contexto, RecetaService recetas, IConfiguration configuracion)
     {
         _contexto = contexto;
+        _recetas = recetas;
         _clave = configuracion["Panel:Clave"];
     }
 
@@ -42,7 +45,8 @@ public class PanelController : Controller
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
             Cifras = await Cifras(),
-            Hornear = await Hornear()
+            Hornear = await Hornear(),
+            Comprar = await _recetas.FaltaComprar()
         });
     }
 

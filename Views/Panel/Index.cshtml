@@ -79,10 +79,37 @@
             }
         </div>
 
-        @* Comprar entra en la tanda que sigue: necesita las recetas y el stock *@
         <div class="mitad-h">
             <h2>Comprar</h2>
-            <p class="nada-h">Entra en la tanda que sigue.</p>
+
+            @if (Model.Comprar.Renglones.Count == 0)
+            {
+                <p class="nada-h">Alcanza con lo que hay.</p>
+            }
+            else
+            {
+                <ul class="corrida">
+                    @foreach (var r in Model.Comprar.Renglones)
+                    {
+                        <li>
+                            <span class="qn">@r.Nombre</span>
+                            <span class="cu">
+                                @r.Cuanto@if (r.Flojo) { <span class="asterisco" title="Falta cargar la medida en algún producto que lo lleva">*</span> }
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (Model.Comprar.SinMedida > 0)
+            {
+                @* no es un detalle: son ingredientes de los que no se puede decir
+                   nada, ni que falta ni que alcanza *@
+                <p class="nada-h">
+                    @Model.Comprar.SinMedida
+                    @(Model.Comprar.SinMedida == 1 ? "ingrediente sin medida cargada" : "ingredientes sin medida cargada").
+                </p>
+            }
         </div>
 
     </div>

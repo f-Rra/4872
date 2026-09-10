@@ -154,3 +154,6 @@
 .corrida .cu{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
 .corrida .cu em{font-style:normal;font-size:.76rem;font-weight:600;opacity:.6}
 .nada-h{margin:.5rem 0 0;font-size:.84rem;font-weight:600;opacity:.6}
+/* el numero de al lado es un piso y no el total: falta cargar la medida de
+   algun producto que lo lleva */
+.asterisco{margin-left:.1rem;font-weight:800;opacity:.55;cursor:help}

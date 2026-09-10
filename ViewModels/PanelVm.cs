@@ -22,6 +22,30 @@ public class InicioVm : PanelVm
 
     // qué hay que hornear, agrupado por familia
     public IReadOnlyList<GrupoHornear> Hornear { get; set; } = [];
+
+    // qué falta comprar para poder hornearlo
+    public ListaDeCompras Comprar { get; set; } = new();
+}
+
+public class ListaDeCompras
+{
+    public IReadOnlyList<RenglonComprar> Renglones { get; set; } = [];
+
+    // cuántos ingredientes entran en algún pedido y no tienen ninguna medida
+    // cargada: de esos no se puede decir ni que falta ni que alcanza
+    public int SinMedida { get; set; }
+}
+
+public class RenglonComprar
+{
+    public string Nombre { get; set; } = null!;
+
+    // ya formateado con su unidad: «2,5 kg», «300 g», «12 u»
+    public string Cuanto { get; set; } = null!;
+
+    // algún producto que lo lleva no tiene la medida cargada, así que el número
+    // es un piso y no el total. Se marca con un asterisco
+    public bool Flojo { get; set; }
 }
 
 // Una familia de la lista de hornear. Va agrupada y no en una lista sola porque
