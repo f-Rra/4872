@@ -14,15 +14,17 @@ namespace f4872.Services;
 public class PedidoService
 {
     private readonly Contexto _contexto;
+    private readonly TelegramService _telegram;
 
     // Nadie pide noventa y nueve pizzas iguales. El tope no está para el que
     // compra: está para que un renglón manoteado no deje un pedido absurdo
     // esperando en el panel.
     private const int TopePorRenglon = 99;
 
-    public PedidoService(Contexto contexto)
+    public PedidoService(Contexto contexto, TelegramService telegram)
     {
         _contexto = contexto;
+        _telegram = telegram;
     }
 
     // un renglón del pedido ya leído: qué producto, cuántos, de qué pack si es
@@ -114,7 +116,38 @@ public class PedidoService
         _contexto.Pedidos.Add(pedido);
         await _contexto.SaveChangesAsync();
 
+        // Recién acá, con el pedido ya guardado. Se espera a que salga en vez
+        // de largarlo por atrás: son unos 600 ms y a cambio queda registrado en
+        // el log si falló. Y aunque falle, no se cae nada: eso lo resuelve el
+        // servicio adentro.
+        await _telegram.Avisar(Aviso(pedido, productos));
+
         return pedido.IdPedido;
+    }
+
+    // El mensaje que le llega al teléfono. Lleva lo que hace falta para saber
+    // si hay que ponerse a amasar y para poder escribirle sin abrir el panel:
+    // qué se pidió, cuánto es, y a quién y dónde.
+    private static string Aviso(Pedido pedido, IReadOnlyDictionary<int, Carta> productos)
+    {
+        var renglones = pedido.Items
+            // el mismo orden que la carta, para poder compararlos de un vistazo
+            .OrderBy(x => productos[x.IdProducto].Familia)
+            .ThenBy(x => x.IdProducto)
+            .Select(x =>
+            {
+                var nombre = TelegramService.Escapar(productos[x.IdProducto].Nombre);
+                var pack = x.UnidadesPorPack is int u ? $" · x{u}" : "";
+                var sin = x.Sin.Length == 0 ? "" : $" — {TelegramService.Escapar(x.Sin)}";
+                return $"{x.Cantidad}× {nombre}{pack}{sin}";
+            });
+
+        return $"<b>Pedido {pedido.IdPedido:0000}</b>\n\n" +
+               string.Join("\n", renglones) +
+               $"\n\n<b>Total {pedido.Total:C}</b>\n\n" +
+               $"{TelegramService.Escapar(pedido.Cliente)}\n" +
+               $"{TelegramService.Escapar(pedido.Direccion)}\n" +
+               TelegramService.Escapar(pedido.Telefono);
     }
 
     // Las claves las escribe tienda.js y son tres formas:

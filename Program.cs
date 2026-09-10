@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Sockets;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Services;
@@ -38,6 +39,36 @@ if (string.IsNullOrWhiteSpace(conexion.Password))
 }
 
 builder.Services.AddDbContext<Contexto>(opciones => opciones.UseNpgsql(conexion.ConnectionString));
+// El timeout corto es a proposito: el cliente esta esperando la respuesta de su
+// pedido y el aviso no puede hacerlo esperar mas que eso.
+//
+// El socket va forzado a IPv4, y no es un capricho. api.telegram.org resuelve
+// primero a una direccion v6; en una red con IPv6 habilitado pero sin ruta que
+// funcione, el cliente de .NET se queda esperando en esa y nunca prueba la v4.
+// Medido: sin esto no entra ni en 30 segundos, con esto tarda 600 ms.
+builder.Services.AddHttpClient(nameof(TelegramService), c => c.Timeout = TimeSpan.FromSeconds(8))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        ConnectCallback = async (contexto, corte) =>
+        {
+            var enchufe = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true
+            };
+
+            try
+            {
+                await enchufe.ConnectAsync(contexto.DnsEndPoint, corte);
+                return new NetworkStream(enchufe, ownsSocket: true);
+            }
+            catch
+            {
+                enchufe.Dispose();
+                throw;
+            }
+        }
+    });
+builder.Services.AddScoped<TelegramService>();
 builder.Services.AddScoped<PedidoService>();
 
 var app = builder.Build();
