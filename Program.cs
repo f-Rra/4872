@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net.Sockets;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Services;
@@ -16,6 +17,23 @@ CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.DefaultThreadCurrentCult
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+
+// El panel lo usa una persona: una clave y una cookie, sin ASP.NET Identity.
+// La cookie es persistente y dura un mes, porque es su computadora y tener que
+// escribir la clave cada sabado a la manana no protege de nada.
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(opciones =>
+    {
+        opciones.Cookie.Name = "4872.panel";
+        opciones.Cookie.HttpOnly = true;
+        opciones.Cookie.SameSite = SameSiteMode.Lax;
+        opciones.LoginPath = "/panel/entrar";
+        opciones.LogoutPath = "/panel/salir";
+        opciones.AccessDeniedPath = "/panel/entrar";
+        opciones.ReturnUrlParameter = "volverA";
+        opciones.ExpireTimeSpan = TimeSpan.FromDays(30);
+        opciones.SlidingExpiration = true;
+    });
 
 // la cadena vive en appsettings sin la clave, y la clave viaja aparte por los
 // secretos de usuario para que no termine en el repositorio. En produccion la
@@ -91,6 +109,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapStaticAssets();
 

@@ -1,0 +1,30 @@
+/* ============================================================
+   El panel
+
+   Las piezas —campos, botón, aviso— salen de site.css, que las
+   comparte con la tienda. Acá va dónde se acomodan.
+   ============================================================ */
+
+*{box-sizing:border-box}
+
+/* ---------- la entrada ----------
+   Columna angosta y centrada en la ventana. Es la única pantalla del panel sin
+   barra lateral: todavía no hay a dónde ir. */
+.entrar{
+  max-width:340px;margin:0 auto;
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1.5rem;padding:2rem 1.2rem;
+}
+.entrar .logo{display:block;width:104px;height:104px;flex:none}
+.entrar form{width:100%;display:flex;flex-direction:column;gap:1.5rem}
+
+/* el aviso trae su propio margen para separarse del botón en el checkout; acá
+   el hueco lo pone el gap y ese margen sobra */
+.entrar .aviso{margin:0}
+.entrar .aviso code{
+  display:block;margin-top:.4rem;font-size:.74rem;font-weight:600;
+  word-break:break-all;opacity:.9;
+}
+
+.entrar .dice{margin:0;font-size:.98rem;font-weight:600}

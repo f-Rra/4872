@@ -11,7 +11,9 @@ Tienda web y panel de vendedor para una pizzería napoletana de una sola sucursa
 
 Los dos archivos **se explican solos**: cada pantalla trae al costado por qué quedó así, qué se descartó y sus medidas cerradas. Son la especificación; ante una duda de diseño, se miran primero.
 
-**Sin decidir todavía:** cómo se pide la dirección en el checkout (tres versiones armadas) y cómo se ve la tienda cerrada (tres versiones armadas).
+**Ya decididas** las dos que estaban abiertas: la dirección se pide **en un solo renglón** —lo que falte se arregla por WhatsApp, que es la conversación que va a haber igual— y cerrada se muestra la **versión C**, el cartel «Cerrado por esta semana» en lugar de la carta y de las solapas. Las variantes descartadas siguen en las maquetas.
+
+**Lo que no está diseñado:** el panel no tiene pantalla de entrada. La clave y la cookie están decididas acá abajo, el aspecto no.
 
 ## Stack
 

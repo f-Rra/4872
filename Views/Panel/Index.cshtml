@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Panel";
+    Layout = "_Panel";
+}
+
+@* Provisorio. Acá va el Inicio del panel —las cifras del día y el interruptor
+   de la tienda—, que es la tanda que sigue. Por ahora solo prueba que la
+   cookie funciona y da por dónde salir. *@
+<main class="entrar">
+
+    <img class="logo" src="~/img/logo.png" alt="48·72" width="240" height="240" />
+
+    <p class="dice">Estás adentro.</p>
+
+    <form method="post" asp-action="Salir">
+        <button class="confirmar" type="submit">Salir</button>
+    </form>
+
+</main>

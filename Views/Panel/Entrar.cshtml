@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Entrar";
+    Layout = "_Panel";
+    var sinClave = ViewData["SinClave"] is true;
+}
+
+@* La puerta. No dice «panel de administración» ni tiene campo de usuario: el
+   que llega acá sabe qué es y es uno solo. El logo alcanza para saber que no
+   te equivocaste de sitio. *@
+<main class="entrar">
+
+    <img class="logo" src="~/img/logo.png" alt="48·72" width="240" height="240" />
+
+    @if (sinClave)
+    {
+        @* cerrado, no abierto: sin clave configurada no se entra *@
+        <p class="aviso" role="alert">
+            Falta la clave del panel. Corré esto y reiniciá:
+            <code>dotnet user-secrets set "Panel:Clave" "la-que-quieras"</code>
+        </p>
+    }
+    else
+    {
+        <form method="post" asp-action="Entrar">
+            <input type="hidden" name="volverA" value="@ViewData["VolverA"]" />
+
+            @if (ViewData["Error"] is string error)
+            {
+                <p class="aviso" role="alert">@error</p>
+            }
+
+            <div class="campo">
+                <label for="clave">Clave</label>
+                @* autofocus porque no hay nada más que hacer en esta pantalla *@
+                <input id="clave" name="clave" type="password" autocomplete="current-password"
+                       maxlength="120" autofocus required />
+            </div>
+
+            <button class="confirmar" type="submit">Entrar</button>
+        </form>
+    }
+
+</main>

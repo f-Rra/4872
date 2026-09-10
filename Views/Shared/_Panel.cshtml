@@ -1,0 +1,24 @@
+@*
+    El marco del vendedor. Comparte site.css con la tienda —los colores, las
+    tipografías, los dibujos y los formularios son los mismos— pero no carga
+    tienda.css: son otras pantallas. Tampoco carga tienda.js, que es del carrito.
+*@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is null ? "Panel · 48·72" : ViewData["Title"] + " · 48·72")</title>
+    @* el panel no lo indexa nadie: es la trastienda *@
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@@400;500;600;700;800&family=Bowlby+One&display=swap" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" />
+</head>
+<body>
+    @RenderBody()
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
