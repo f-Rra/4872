@@ -1,0 +1,108 @@
+@using f4872.Models
+@model f4872.ViewModels.PedidosVm
+@{
+    ViewData["Title"] = "Pedidos";
+    ViewData["Seccion"] = "pedidos";
+    Layout = "_Marco";
+
+    // el chip y la etiqueta del estado salen del mismo lugar para que no puedan
+    // decir cosas distintas
+    string Clase(EstadoPedido e) => "e-" + e.ToString().ToLowerInvariant();
+    string Etiqueta(EstadoPedido e) => e switch
+    {
+        EstadoPedido.Nuevo => "Nuevo",
+        EstadoPedido.Preparando => "Preparando",
+        EstadoPedido.Entregado => "Entregado",
+        _ => "Cancelado"
+    };
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Pedidos</h1>
+        <span class="sub">@Model.SinAbrir sin abrir · @Model.EnTotal en total</span>
+    </span>
+
+    @* Los filtros son enlaces y no botones: cambian qué se está mirando, así que
+       cambian la dirección. Se puede recargar, marcar y volver atrás. *@
+    <div class="filtros">
+        @foreach (var (clave, nombre) in f4872.ViewModels.Filtros.Todo)
+        {
+            <a asp-action="Pedidos" asp-route-filtro="@clave"
+               aria-pressed="@((clave == Model.Filtro).ToString().ToLowerInvariant())">@nombre</a>
+        }
+    </div>
+</div>
+
+@* Lista ancha a la izquierda para barrer, y el pedido entero a la derecha *@
+<div class="doble">
+
+    <div class="columna">
+        @if (Model.Lista.Count == 0)
+        {
+            <p class="placeholder">No hay pedidos con ese filtro.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var p in Model.Lista)
+                {
+                    <li class="@(p.IdPedido == Model.Elegido?.IdPedido ? "elegido" : null)">
+                        <a asp-action="Pedidos" asp-route-filtro="@Model.Filtro" asp-route-pedido="@p.IdPedido">
+                            <span class="izq">
+                                <span class="fila-1">
+                                    <span class="num">@p.Numero</span>
+                                    <span class="quien">@p.Cliente</span>
+                                </span>
+                                <span class="fila-2">
+                                    <span class="estado @Clase(p.Estado)">@Etiqueta(p.Estado)</span>
+                                    <span class="hora">@p.Hora</span>
+                                </span>
+                            </span>
+                            <span class="plata">@p.Total.ToString("C")</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="detalle">
+        @if (Model.Elegido is null)
+        {
+            <p class="placeholder">No hay pedidos con ese filtro.</p>
+        }
+        else
+        {
+            <div class="det-tope">
+                <h2>Pedido @Model.Elegido.Numero</h2>
+                <span class="estado @Clase(Model.Elegido.Estado)">@Etiqueta(Model.Elegido.Estado)</span>
+            </div>
+
+            <p class="det-meta">@Model.Elegido.Cliente · @Model.Elegido.Telefono · @Model.Elegido.Cuando</p>
+            <p class="det-meta">@Model.Elegido.Direccion</p>
+
+            <ul class="det-items">
+                @foreach (var i in Model.Elegido.Items)
+                {
+                    <li>
+                        <span class="c">@i.Cantidad×</span>
+                        <span class="q">
+                            @i.Nombre@if (i.Sin.Length > 0) { <span class="sin">@i.Sin</span> }
+                        </span>
+                        <span class="p">@i.Total.ToString("C")</span>
+                    </li>
+                }
+            </ul>
+
+            <dl class="det-total">
+                <dt>Total</dt>
+                <dd>@Model.Elegido.Total.ToString("C")</dd>
+            </dl>
+
+            @* Avanzar, cancelar y escribirle por WhatsApp entran en la tanda que
+               sigue: son las tres que cambian algo. *@
+        }
+    </div>
+
+</div>

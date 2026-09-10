@@ -157,3 +157,75 @@
 /* el numero de al lado es un piso y no el total: falta cargar la medida de
    algun producto que lo lleva */
 .asterisco{margin-left:.1rem;font-weight:800;opacity:.55;cursor:help}
+
+
+/* ---------- los filtros de la cabecera ----------
+   Son enlaces y no botones: cambian que se mira, asi que cambian la direccion */
+.filtros{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:auto}
+.filtros a{
+  font-size:.74rem;font-weight:700;text-decoration:none;
+  background:transparent;color:var(--verde);border:1.4px solid rgba(30,82,69,.45);
+  border-radius:999px;padding:.26rem .62rem;
+}
+.filtros a:hover{background:rgba(30,82,69,.08)}
+.filtros a[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+
+/* ---------- pedidos: lista y detalle ---------- */
+.doble{flex:1;display:flex;min-height:0}
+.columna{width:326px;flex:none;border-right:1.5px solid rgba(30,82,69,.28);overflow-y:auto}
+.columna ul{list-style:none;margin:0;padding:0}
+.columna li{border-bottom:1px solid rgba(30,82,69,.22)}
+.columna a{
+  text-decoration:none;color:var(--verde);
+  padding:.72rem .9rem;display:flex;align-items:center;gap:.8rem;
+}
+.columna .izq{flex:1;min-width:0;display:flex;flex-direction:column;gap:.3rem}
+.columna a:hover{background:rgba(30,82,69,.07)}
+/* el elegido se invierte entero, chip incluido: si no, la pastilla verde sobre
+   verde desaparece */
+.columna li.elegido a{background:var(--verde);color:var(--papel)}
+.columna li.elegido .estado{background:var(--papel);color:var(--verde);box-shadow:none}
+.fila-1{display:flex;align-items:baseline;gap:.5rem;width:100%;min-width:0}
+.fila-1 .num{font-weight:800;font-size:.86rem;font-variant-numeric:tabular-nums;opacity:.75}
+.fila-1 .quien{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.columna .plata{flex:none;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.fila-2{display:flex;align-items:center;gap:.5rem;width:100%}
+.fila-2 .hora{font-size:.75rem;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
+
+.estado{
+  font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  border-radius:999px;padding:.2rem .52rem;white-space:nowrap;flex:none;
+}
+.e-nuevo{background:var(--verde);color:var(--papel)}
+.e-preparando{background:transparent;color:var(--verde);box-shadow:inset 0 0 0 1.5px var(--verde)}
+.e-entregado{background:transparent;color:var(--piedra);box-shadow:inset 0 0 0 1.5px var(--piedra)}
+/* tachado: salio de todos los calculos pero sigue en el historial */
+.e-cancelado{
+  background:transparent;color:var(--piedra);box-shadow:inset 0 0 0 1.5px var(--piedra);
+  text-decoration:line-through;
+}
+
+.detalle{flex:1;overflow-y:auto;min-width:0;padding:1.1rem 1.2rem}
+.det-tope{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.25rem}
+.det-tope h2{margin:0;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;line-height:1}
+.det-meta{font-size:.85rem;font-weight:600;opacity:.8;margin:0 0 .3rem;font-variant-numeric:tabular-nums}
+.det-meta:last-of-type{margin-bottom:1rem}
+.det-items{list-style:none;margin:0 0 1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
+.det-items li{display:flex;align-items:baseline;gap:.6rem;padding:.55rem 0;border-bottom:1px solid rgba(30,82,69,.22)}
+.det-items .c{font-weight:800;font-size:.88rem;flex:none;min-width:1.7rem;font-variant-numeric:tabular-nums;opacity:.8}
+.det-items .q{flex:1;font-size:.95rem;font-weight:600}
+.det-items .p{font-weight:700;font-size:.9rem;font-variant-numeric:tabular-nums}
+/* lo que se saco va pegado al nombre y no en otro renglon: es parte de que
+   pizza es, no un comentario al costado */
+.sin{
+  font-size:.72rem;font-weight:700;border:1.2px solid rgba(30,82,69,.45);
+  border-radius:999px;padding:.02rem .38rem;margin-left:.25rem;white-space:nowrap;
+}
+.det-total{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:.7rem 0;border-bottom:2px solid var(--verde);margin-bottom:1.2rem;
+}
+.det-total dt{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.det-total dd{margin:0;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+.placeholder{margin:1.2rem;color:var(--piedra);font-size:.86rem;font-weight:600}

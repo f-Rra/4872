@@ -50,6 +50,125 @@ public class PanelController : Controller
         });
     }
 
+    // La lista de pedidos y el que se este mirando.
+    //
+    // El filtro y el elegido viajan por la direccion y no por sesion: asi cada
+    // pantalla se puede compartir, marcar y recargar, y el boton de atras
+    // vuelve a lo que se estaba mirando.
+    [HttpGet("pedidos")]
+    public async Task<IActionResult> Pedidos(string? filtro = null, int? pedido = null)
+    {
+        filtro = Filtros.Todo.Any(x => x.Clave == filtro) ? filtro! : Filtros.Activos;
+
+        var todos = _contexto.Pedidos.AsQueryable();
+        var vistos = filtro switch
+        {
+            Filtros.Activos => todos.Where(x => x.Estado == EstadoPedido.Nuevo || x.Estado == EstadoPedido.Preparando),
+            Filtros.Nuevos => todos.Where(x => x.Estado == EstadoPedido.Nuevo),
+            Filtros.Preparando => todos.Where(x => x.Estado == EstadoPedido.Preparando),
+            Filtros.Entregados => todos.Where(x => x.Estado == EstadoPedido.Entregado),
+            _ => todos
+        };
+
+        var lista = await vistos
+            // el ultimo arriba: lo que entro recien es lo que se esta mirando
+            .OrderByDescending(x => x.FechaPedido)
+            .Select(x => new FilaPedido
+            {
+                IdPedido = x.IdPedido,
+                Cliente = x.Cliente,
+                Estado = x.Estado,
+                FechaPedido = x.FechaPedido,
+                Total = x.Items.Sum(i => i.Cantidad * i.PrecioUnitario)
+            })
+            .ToListAsync();
+
+        // El pedido pedido por direccion puede no estar en la lista que se ve
+        // -se filtro por entregados y viene el numero de uno nuevo-. En ese caso
+        // se muestra el primero, que es lo que la persona esta mirando igual.
+        var elegido = lista.FirstOrDefault(x => x.IdPedido == pedido) ?? lista.FirstOrDefault();
+
+        var marco = await Marco();
+
+        return View(new PedidosVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Filtro = filtro,
+            Lista = lista,
+            Elegido = elegido is null ? null : await Detalle(elegido.IdPedido),
+            SinAbrir = await _contexto.Pedidos.CountAsync(x => x.Estado == EstadoPedido.Nuevo),
+            EnTotal = await _contexto.Pedidos.CountAsync()
+        });
+    }
+
+    private async Task<DetallePedido?> Detalle(int id)
+    {
+        var pedido = await _contexto.Pedidos
+            .Where(x => x.IdPedido == id)
+            .Select(x => new
+            {
+                x.IdPedido,
+                x.Cliente,
+                x.Telefono,
+                x.Direccion,
+                x.FechaPedido,
+                x.Estado,
+                Items = x.Items
+                    .Select(i => new
+                    {
+                        i.Cantidad,
+                        i.Producto.Nombre,
+                        i.Producto.Familia,
+                        i.IdProducto,
+                        i.UnidadesPorPack,
+                        Total = i.Cantidad * i.PrecioUnitario,
+                        // los nombres copiados al confirmar, no los de hoy
+                        Sacados = i.Quitados.Select(q => q.Ingrediente).OrderBy(q => q).ToList()
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (pedido is null)
+        {
+            return null;
+        }
+
+        return new DetallePedido
+        {
+            IdPedido = pedido.IdPedido,
+            Cliente = pedido.Cliente,
+            Telefono = pedido.Telefono,
+            Direccion = pedido.Direccion,
+            FechaPedido = pedido.FechaPedido,
+            Estado = pedido.Estado,
+            Total = pedido.Items.Sum(x => x.Total),
+            Items =
+            [
+                // El orden se pone aca y no en la consulta. Familia se guarda
+                // como texto, asi que un ORDER BY en la base sale alfabetico
+                // -Empanada, Focaccia, Pizza- y la carta va al reves. En memoria
+                // ordena por el valor del enum, que es el orden de la carta y el
+                // mismo que usa el aviso de Telegram.
+                .. pedido.Items
+                    .OrderBy(x => x.Familia)
+                    .ThenBy(x => x.IdProducto)
+                    .Select(x => new ItemDelDetalle
+                {
+                    Cantidad = x.Cantidad,
+                    // el pack se nombra por lo que es: una caja de doce de un
+                    // solo gusto, y no doce empanadas sueltas
+                    Nombre = x.UnidadesPorPack is int u
+                        ? $"Pack de {u} · {x.Nombre.ToLowerInvariant()}"
+                        : x.Nombre,
+                    Sin = x.Sacados.Count == 0 ? "" : "sin " + string.Join(", ", x.Sacados),
+                    Total = x.Total
+                })
+            ]
+        };
+    }
+
     // Que hay que hornear: todos los pedidos sin entregar sumados por producto.
     //
     // Las combinaciones se juntan a proposito. Tres margaritas son tres
