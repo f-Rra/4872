@@ -1,19 +1,36 @@
+@model f4872.ViewModels.PanelVm
 @{
-    ViewData["Title"] = "Panel";
-    Layout = "_Panel";
+    ViewData["Title"] = "Inicio";
+    ViewData["Seccion"] = "inicio";
+    Layout = "_Marco";
 }
 
-@* Provisorio. Acá va el Inicio del panel —las cifras del día y el interruptor
-   de la tienda—, que es la tanda que sigue. Por ahora solo prueba que la
-   cookie funciona y da por dónde salir. *@
-<main class="entrar">
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Inicio</h1>
+        <span class="sub">@Model.SinEntregar @(Model.SinEntregar == 1 ? "pedido sin entregar" : "pedidos sin entregar")</span>
+    </span>
 
-    <img class="logo" src="~/img/logo.png" alt="48·72" width="240" height="240" />
-
-    <p class="dice">Estás adentro.</p>
-
-    <form method="post" asp-action="Salir">
-        <button class="confirmar" type="submit">Salir</button>
+    @* El interruptor va por formulario y no por JavaScript: es un botón que
+       cambia algo en la base, y así funciona igual si el script no cargó.
+       Vuelve acá mismo, que es donde se ve el efecto. *@
+    <form class="llave-tienda" method="post" asp-action="Llave">
+        <span class="et-t">La tienda</span>
+        <button class="llave" type="submit" aria-pressed="@Model.Abierta.ToString().ToLowerInvariant()">
+            @(Model.Abierta ? "Abierta" : "Cerrada")
+        </button>
     </form>
+</div>
 
-</main>
+@if (!Model.Abierta)
+{
+    <div class="banda cerrada">
+        <b>La tienda está cerrada</b>
+        <span>· no entran pedidos nuevos hasta que la abras</span>
+    </div>
+}
+
+@* Acá van las cifras del día y lo que hay que hornear: es la tanda que sigue *@
+<div class="ini">
+    <p class="porAhora">Las cifras del día entran en la próxima tanda.</p>
+</div>

@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using f4872.Data;
+using f4872.Models;
+using f4872.ViewModels;
 
 namespace f4872.Controllers;
 
@@ -15,22 +19,47 @@ namespace f4872.Controllers;
 [Route("panel")]
 public class PanelController : Controller
 {
+    private readonly Contexto _contexto;
     private readonly string? _clave;
 
     // Un segundo de espera cuando la clave está mal. No molesta al que se
     // equivoca una vez y le arruina el día al que quiere probar de a miles.
     private static readonly TimeSpan Castigo = TimeSpan.FromSeconds(1);
 
-    public PanelController(IConfiguration configuracion)
+    public PanelController(Contexto contexto, IConfiguration configuracion)
     {
+        _contexto = contexto;
         _clave = configuracion["Panel:Clave"];
     }
 
-    [Authorize]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        return View(await Marco());
     }
+
+    // El interruptor. Por POST porque cambia algo, y volviendo a Inicio para que
+    // recargar la pagina no lo vuelva a tocar.
+    [HttpPost("llave")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Llave()
+    {
+        var tienda = await _contexto.Tienda.SingleOrDefaultAsync()
+            ?? throw new InvalidOperationException(
+                "Falta la fila de la tienda. Corre dotnet ef database update.");
+
+        tienda.Abierta = !tienda.Abierta;
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    // Lo que necesita el marco, que se dibuja en todas las pantallas del panel
+    private async Task<PanelVm> Marco() => new()
+    {
+        Abierta = await _contexto.Tienda.AnyAsync(x => x.Abierta),
+        SinEntregar = await _contexto.Pedidos
+            .CountAsync(x => x.Estado == EstadoPedido.Nuevo || x.Estado == EstadoPedido.Preparando)
+    };
 
     [AllowAnonymous]
     [HttpGet("entrar")]
