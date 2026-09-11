@@ -20,6 +20,96 @@ public class RecetaService
         _contexto = contexto;
     }
 
+    // Lo que hay que hacer, juntando todos los pedidos sin entregar.
+    //
+    // Devuelve el desglose entero -que se le saco a cada producto y de que packs
+    // salieron las empanadas- y cada pantalla usa lo que le sirve: el Inicio
+    // muestra los totales, Produccion abre el detalle. Una sola consulta y una
+    // sola manera de contar, para que las dos no puedan decir cosas distintas.
+    public async Task<Consolidado> Consolidar()
+    {
+        var items = await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+            .Select(x => new
+            {
+                x.IdProducto,
+                x.Producto.Nombre,
+                x.Producto.Familia,
+                x.Cantidad,
+                x.UnidadesPorPack,
+                Sacados = x.Quitados.Select(q => q.Ingrediente).ToList()
+            })
+            .ToListAsync();
+
+        var productos = items
+            .GroupBy(x => new { x.IdProducto, x.Nombre, x.Familia })
+            .Select(g => new ProductoPedido
+            {
+                IdProducto = g.Key.IdProducto,
+                Nombre = g.Key.Nombre,
+                Familia = g.Key.Familia,
+                // un pack de doce son doce empanadas: se cocinan unidades
+                Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)),
+                // en cuantas piezas se saco cada ingrediente, no en cuantos
+                // renglones: dos margaritas sin albahaca son dos, no una
+                Sin = g.SelectMany(x => x.Sacados.Select(i => new { Ingrediente = i, x.Cantidad }))
+                    .GroupBy(x => x.Ingrediente)
+                    .ToDictionary(x => x.Key, x => x.Sum(y => y.Cantidad)),
+                Packs = g.Where(x => x.UnidadesPorPack is not null)
+                    .GroupBy(x => x.UnidadesPorPack!.Value)
+                    .ToDictionary(x => x.Key, x => x.Sum(y => y.Cantidad))
+            })
+            // el orden de la carta. Familia se guarda como texto, asi que este
+            // OrderBy tiene que ser en memoria: en SQL saldria alfabetico
+            .OrderBy(x => x.Familia)
+            .ThenBy(x => x.IdProducto)
+            .ToList();
+
+        return new Consolidado { Productos = productos };
+    }
+
+    // Cuantas tandas de masa hay que amasar. La receta de la base se carga por
+    // tanda entera con su rinde -1 kg de harina da 6 bollos- asi que el numero
+    // que sirve en la mesada es cuantas tandas, no cuantos gramos de harina.
+    //
+    // Se redondea para arriba: media tanda no se amasa.
+    public async Task<string> Amasado(IReadOnlyList<ProductoPedido> productos)
+    {
+        var piezas = productos
+            .Where(x => x.Familia != Familia.Empanada)
+            .ToDictionary(x => x.IdProducto, x => x.Piezas);
+
+        if (piezas.Count == 0)
+        {
+            return "nada que amasar";
+        }
+
+        var ids = piezas.Keys.ToList();
+        var bases = await _contexto.Productos
+            .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null && x.Base!.Rinde > 0)
+            .Select(x => new { x.IdProducto, x.Base!.Rinde })
+            .ToListAsync();
+
+        if (bases.Count == 0)
+        {
+            return "sin base cargada";
+        }
+
+        // agrupado por rinde y no por base: dos bases que rinden seis se amasan
+        // igual, y lo que se lee en la mesada es «cuatro tandas de seis»
+        var porRinde = bases
+            .GroupBy(x => x.Rinde)
+            .Select(g => new
+            {
+                Rinde = g.Key,
+                Tandas = (int)Math.Ceiling(g.Sum(x => piezas[x.IdProducto]) / (double)g.Key)
+            })
+            .OrderByDescending(x => x.Tandas);
+
+        return string.Join(" · ", porRinde.Select(x =>
+            $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {x.Rinde}"));
+    }
+
     public async Task<ListaDeCompras> FaltaComprar()
     {
         // cuántas piezas de cada producto hay que hacer. Un pack de doce son

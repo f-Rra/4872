@@ -253,3 +253,43 @@
 .enlace:hover{text-decoration:underline}
 .enlace.verde{color:var(--verde)}
 .enlace:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+
+
+/* ---------- produccion ----------
+   Tres titulares arriba y las tres familias abajo. Es la pantalla que se lee de
+   parado y con las manos ocupadas, asi que la cantidad va primera y grande. */
+.prod{flex:1;overflow-y:auto;min-width:0}
+.titulares{display:flex;border-bottom:2px solid var(--verde)}
+.titular{flex:1;min-width:0;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.15rem}
+.titular + .titular{border-left:1px solid rgba(30,82,69,.25)}
+.titular dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+.titular dd{
+  margin:0;font-size:clamp(1.1rem, 2.1vw, 1.7rem);font-weight:800;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.titular .nota{font-size:.74rem;font-weight:600;opacity:.72}
+
+.grupo-prod{padding:0 0 .4rem}
+.grupo-prod > h2{
+  margin:0;padding:.6rem 1.1rem;font-size:.66rem;font-weight:800;
+  letter-spacing:.18em;text-transform:uppercase;background:rgba(30,82,69,.09);
+}
+.prod-lista{list-style:none;margin:0;padding:0}
+.prod-lista li{
+  display:flex;align-items:flex-start;gap:.9rem;
+  padding:.7rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.22);
+}
+.prod-cant{
+  flex:none;min-width:2.6rem;font-size:1.15rem;font-weight:800;
+  font-variant-numeric:tabular-nums;line-height:1.2;
+}
+.prod-cuerpo{flex:1;min-width:0}
+.prod-nom{margin:0;font-size:1rem;font-weight:700;line-height:1.25}
+.prod-detalle{margin:.22rem 0 0;font-size:.82rem;font-weight:600;opacity:.8;line-height:1.4}
+/* el «sin» va en pastilla y el desglose de packs no: uno es una instruccion de
+   armado que hay que ver de lejos, el otro es de donde salio el numero */
+.prod-detalle .marca-sin{
+  display:inline-block;border:1.2px solid rgba(30,82,69,.45);border-radius:999px;
+  padding:.02rem .4rem;margin-right:.3rem;font-weight:700;
+}
+.prod-unidad{flex:none;font-size:.78rem;font-weight:700;opacity:.7;padding-top:.28rem;white-space:nowrap}

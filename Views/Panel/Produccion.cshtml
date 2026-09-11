@@ -1,0 +1,74 @@
+@model f4872.ViewModels.ProduccionVm
+@{
+    ViewData["Title"] = "Producción";
+    ViewData["Seccion"] = "produccion";
+    Layout = "_Marco";
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Producción</h1>
+        <span class="sub">@Model.SinEntregar @(Model.SinEntregar == 1 ? "pedido sin entregar" : "pedidos sin entregar")</span>
+    </span>
+</div>
+
+@* Consolida los pedidos sin entregar: nuevos y preparando, no el historial.
+   Cancelá uno en Pedidos y sale del cálculo, porque no hay copias. *@
+<div class="prod">
+
+    <dl class="titulares">
+        @foreach (var t in Model.Titulares)
+        {
+            <div class="titular">
+                <dt>@t.Titulo</dt>
+                <dd>@t.Valor</dd>
+                <span class="nota">@t.Nota</span>
+            </div>
+        }
+    </dl>
+
+    @if (Model.Grupos.Count == 0)
+    {
+        <p class="placeholder">Nada pendiente de producir.</p>
+    }
+
+    @foreach (var g in Model.Grupos)
+    {
+        <div class="grupo-prod">
+            <h2>@g.Familia · @g.Total</h2>
+
+            <ul class="prod-lista">
+                @foreach (var r in g.Renglones)
+                {
+                    <li>
+                        <span class="prod-cant">@r.Cuantas</span>
+
+                        <span class="prod-cuerpo">
+                            <p class="prod-nom">@r.Nombre</p>
+
+                            @if (r.Detalle.Count > 0)
+                            {
+                                <p class="prod-detalle">
+                                    @if (r.EnPastilla)
+                                    {
+                                        @foreach (var d in r.Detalle)
+                                        {
+                                            <span class="marca-sin">@d</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @string.Join(" · ", r.Detalle)
+                                    }
+                                </p>
+                            }
+                        </span>
+
+                        <span class="prod-unidad">@g.Unidad</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+</div>

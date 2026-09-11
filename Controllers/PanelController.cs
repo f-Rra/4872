@@ -39,14 +39,100 @@ public class PanelController : Controller
     public async Task<IActionResult> Index()
     {
         var marco = await Marco();
+        var consolidado = await _recetas.Consolidar();
 
         return View(new InicioVm
         {
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
             Cifras = await Cifras(),
-            Hornear = await Hornear(),
+            Hornear = Hornear(consolidado),
             Comprar = await _recetas.FaltaComprar()
+        });
+    }
+
+    // Produccion: lo mismo que Hornear pero con el desglose abierto. Es la
+    // pantalla del sabado a la manana -que hay que hacer, todo junto- y por eso
+    // los «sin» van desglosados: no alcanza con el total cuando dos de esas
+    // cinco margaritas se arman distinto.
+    [HttpGet("produccion")]
+    public async Task<IActionResult> Produccion()
+    {
+        var marco = await Marco();
+        var consolidado = await _recetas.Consolidar();
+
+        var masVieja = await _contexto.Pedidos
+            .Where(x => x.Estado == EstadoPedido.Nuevo || x.Estado == EstadoPedido.Preparando)
+            .OrderBy(x => x.FechaPedido)
+            .Select(x => (DateTime?)x.FechaPedido)
+            .FirstOrDefaultAsync();
+
+        (string Nombre, Familia Familia, string Unidad)[] familias =
+        [
+            ("Pizzas", Familia.Pizza, "bollos"),
+            ("Focaccias", Familia.Focaccia, "bollos"),
+            ("Empanadas", Familia.Empanada, "unidades")
+        ];
+
+        return View(new ProduccionVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Titulares =
+            [
+                new Titular
+                {
+                    Titulo = "Producción",
+                    Valor = $"{consolidado.Bollos} bollos",
+                    Nota = await _recetas.Amasado(consolidado.Productos)
+                },
+                new Titular
+                {
+                    Titulo = "Empanadas",
+                    Valor = consolidado.Empanadas.ToString(),
+                    Nota = $"{consolidado.Gustos} {(consolidado.Gustos == 1 ? "gusto" : "gustos")}"
+                },
+                new Titular
+                {
+                    Titulo = "Pedidos a cubrir",
+                    Valor = marco.SinEntregar.ToString(),
+                    // el pie no repite el numero: dice de cuando es el mas viejo,
+                    // que es el dato que avisa si algo se quedo atras
+                    Nota = masVieja is DateTime cuando
+                        ? $"el más viejo, de las {Reloj.EnBuenosAires(cuando):HH:mm}"
+                        : "no hay pedidos abiertos"
+                }
+            ],
+            Grupos =
+            [
+                .. familias
+                    .Select(f => new GrupoProduccion
+                    {
+                        Familia = f.Nombre,
+                        Unidad = f.Unidad,
+                        Total = consolidado.Productos.Where(x => x.Familia == f.Familia).Sum(x => x.Piezas),
+                        Renglones =
+                        [
+                            .. consolidado.Productos
+                                .Where(x => x.Familia == f.Familia)
+                                .Select(x => new RenglonProduccion
+                                {
+                                    Cuantas = x.Piezas,
+                                    Nombre = x.Nombre,
+                                    EnPastilla = f.Familia != Familia.Empanada,
+                                    Detalle = f.Familia == Familia.Empanada
+                                        ? [.. x.Packs
+                                            .OrderByDescending(p => p.Key)
+                                            .Select(p => $"{p.Value} {(p.Value == 1 ? "pack" : "packs")} de {p.Key}")]
+                                        : [.. x.Sin
+                                            .OrderByDescending(p => p.Value)
+                                            .ThenBy(p => p.Key)
+                                            .Select(p => $"{p.Value} sin {p.Key.ToLowerInvariant()}")]
+                                })
+                        ]
+                    })
+                    .Where(x => x.Renglones.Count > 0)
+            ]
         });
     }
 
@@ -209,29 +295,14 @@ public class PanelController : Controller
         };
     }
 
-    // Que hay que hornear: todos los pedidos sin entregar sumados por producto.
+    // Que hay que hornear, agrupado por familia. El desglose lo arma el
+    // servicio; aca solo se junta en las tres familias y se le pone nombre.
     //
     // Las combinaciones se juntan a proposito. Tres margaritas son tres
     // margaritas aunque una vaya sin albahaca: al horno entran las tres igual, y
-    // lo que se le saca a cada una se lee en el pedido, no aca.
-    private async Task<IReadOnlyList<GrupoHornear>> Hornear()
+    // lo que se le saca a cada una se lee en Produccion, no aca.
+    private static IReadOnlyList<GrupoHornear> Hornear(Consolidado consolidado)
     {
-        var renglones = await _contexto.ItemPedidos
-            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
-            .GroupBy(x => new { x.Producto.Familia, x.IdProducto, x.Producto.Nombre })
-            .Select(g => new
-            {
-                g.Key.Familia,
-                g.Key.IdProducto,
-                g.Key.Nombre,
-                // Cantidad por las unidades del pack, o por una si no es pack.
-                // Asi un pack de doce cuenta doce empanadas, que es lo que hay
-                // que armar; el panel cuenta piezas, no cajas.
-                Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1))
-            })
-            .ToListAsync();
-
-        // el orden de la carta, para poder cotejarlo contra la pantalla
         (string Nombre, Familia Familia, bool PorUnidad)[] familias =
         [
             ("Pizzas", Familia.Pizza, false),
@@ -248,9 +319,8 @@ public class PanelController : Controller
                     PorUnidad = f.PorUnidad,
                     Renglones =
                     [
-                        .. renglones
+                        .. consolidado.Productos
                             .Where(x => x.Familia == f.Familia)
-                            .OrderBy(x => x.IdProducto)
                             .Select(x => new RenglonHornear { Nombre = x.Nombre, Cuantas = x.Piezas })
                     ]
                 })
