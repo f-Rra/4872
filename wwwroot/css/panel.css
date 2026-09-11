@@ -243,6 +243,9 @@
 }
 .btn:hover{background:rgba(30,82,69,.86);border-color:rgba(30,82,69,.86)}
 .btn:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+/* perfilado: guardar y marcar agotado no pesan lo mismo */
+.btn.flaco{background:transparent;color:var(--verde)}
+.btn.flaco:hover{background:rgba(30,82,69,.1);border-color:var(--verde);color:var(--verde)}
 
 .secundarias{display:flex;gap:1.1rem;justify-content:center;align-items:baseline}
 .secundarias form{display:contents}
@@ -293,3 +296,66 @@
   padding:.02rem .4rem;margin-right:.3rem;font-weight:700;
 }
 .prod-unidad{flex:none;font-size:.78rem;font-weight:700;opacity:.7;padding-top:.28rem;white-space:nowrap}
+
+
+/* ---------- productos: la lista ---------- */
+/* el alta queda fija abajo mientras la lista scrollea */
+.columna.con-pie{display:flex;flex-direction:column;overflow:hidden}
+.columna .rollo{flex:1;overflow-y:auto;min-height:0}
+.fila-p{display:flex;align-items:baseline;gap:.55rem;width:100%;min-width:0}
+.fila-p .nom{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila-p .fam{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.fila-p .plata{margin-left:auto;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.fila-p .plata.packs-dos{font-size:.86rem;letter-spacing:-.01em}
+.agotado{
+  font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;flex:none;
+  border-radius:999px;padding:.14rem .48rem;box-shadow:inset 0 0 0 1.5px var(--piedra);color:var(--piedra);
+}
+.columna li.elegido .agotado{box-shadow:inset 0 0 0 1.5px var(--papel);color:var(--papel)}
+.alta{
+  flex:none;display:flex;align-items:center;gap:.55rem;width:100%;cursor:pointer;text-decoration:none;
+  font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.03em;color:var(--verde);
+  background:transparent;border:0;border-top:1.5px solid rgba(30,82,69,.32);padding:.75rem .9rem;
+}
+.alta svg{width:17px;height:17px;flex:none}
+.alta:hover{background:rgba(30,82,69,.09)}
+.alta[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+
+/* ---------- productos: la ficha ----------
+   Renglon etiquetado: etiqueta a la izquierda, valor a la derecha, un filete
+   entre cada uno. Como una planilla: todo alineado en una sola columna y el ojo
+   baja comparando. */
+.renglones{border-top:1.5px solid rgba(30,82,69,.3);margin-bottom:1.3rem}
+.reng{display:flex;align-items:baseline;gap:1rem;padding:.62rem 0;border-bottom:1px solid rgba(30,82,69,.22)}
+.reng > .et{
+  flex:none;width:7.6rem;font-size:.66rem;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;opacity:.8;
+}
+.reng > .va{flex:1;min-width:0}
+/* el campo no se ve como un campo hasta que pasas el mouse: es a proposito, y
+   el costo es que hay que aprenderlo una vez */
+.reng input[type="text"],
+.reng input[type="number"]{
+  font-family:var(--ui);font-size:.98rem;font-weight:600;color:var(--verde);
+  background:transparent;border:0;border-bottom:1.4px dashed transparent;
+  padding:0 0 .1rem;width:100%;font-variant-numeric:tabular-nums;
+}
+.reng input[type="text"]:hover,
+.reng input[type="number"]:hover{border-bottom-color:rgba(30,82,69,.35)}
+.reng input[type="text"]:focus,
+.reng input[type="number"]:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+
+.chips-fam{display:flex;gap:.3rem;flex-wrap:wrap}
+.chip-fam input{position:absolute;opacity:0;pointer-events:none}
+.chip-fam span{
+  display:inline-block;cursor:pointer;
+  font-size:.74rem;font-weight:700;color:var(--verde);
+  border:1.4px solid rgba(30,82,69,.45);border-radius:999px;padding:.26rem .62rem;
+}
+.chip-fam span:hover{background:rgba(30,82,69,.08)}
+.chip-fam input:checked + span{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+.chip-fam input:focus-visible + span{outline:2px solid var(--verde);outline-offset:2px}
+
+.nota-f{margin:-.9rem 0 1.3rem;font-size:.8rem;font-weight:600;opacity:.72}
+.acciones-aparte{margin-top:.6rem}
+.detalle .aviso{margin:0 0 1rem}

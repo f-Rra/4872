@@ -1,0 +1,184 @@
+@using f4872.Models
+@model f4872.ViewModels.ProductosVm
+@{
+    ViewData["Title"] = "Productos";
+    ViewData["Seccion"] = "productos";
+    Layout = "_Marco";
+
+    string Fam(Familia f) => f switch
+    {
+        Familia.Pizza => "Pizza",
+        Familia.Focaccia => "Focaccia",
+        _ => "Empanada"
+    };
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Productos</h1>
+        <span class="sub">@Model.Resumen</span>
+    </span>
+
+    <div class="filtros">
+        @foreach (var (clave, nombre) in f4872.ViewModels.ProductosVm.Chips)
+        {
+            <a asp-action="Productos" asp-route-familia="@clave"
+               aria-pressed="@((clave == Model.Familia).ToString().ToLowerInvariant())">@nombre</a>
+        }
+    </div>
+</div>
+
+<div class="doble">
+
+    @* El alta queda fija abajo aunque la lista scrollee, y abre la misma ficha
+       en blanco: no hay una pantalla de alta distinta de la de edición. *@
+    <div class="columna con-pie">
+        <div class="rollo">
+            <ul>
+                @foreach (var p in Model.Lista)
+                {
+                    <li class="@(!Model.EsNuevo && p.IdProducto == Model.Ficha.IdProducto ? "elegido" : null)">
+                        <a asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-producto="@p.IdProducto">
+                            <span class="izq">
+                                <span class="fila-p">
+                                    <span class="nom">@p.Nombre</span>
+                                    @if (!p.Activo)
+                                    {
+                                        <span class="agotado">Agotado</span>
+                                    }
+                                </span>
+                                <span class="fila-p">
+                                    <span class="fam">@Fam(p.Familia)</span>
+                                    @if (p.Precio is decimal plata)
+                                    {
+                                        <span class="plata">@plata.ToString("C")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="plata packs-dos">
+                                            @string.Join(" / ", Model.Ficha.Packs.Select(x => x.Precio.ToString("C")))
+                                        </span>
+                                    }
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <a class="alta" asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-nuevo="true"
+           aria-pressed="@Model.EsNuevo.ToString().ToLowerInvariant()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Producto nuevo
+        </a>
+    </div>
+
+    @* Renglón etiquetado: etiqueta a la izquierda, valor a la derecha, un filete
+       entre cada uno. Todo alineado en una sola columna y el ojo baja
+       comparando. El costo es que los campos no parecen editables hasta que
+       pasás el mouse; se aprende una vez. *@
+    <div class="detalle">
+        <form method="post" asp-action="GuardarProducto"
+              asp-route-familia="@Model.Familia" asp-route-nuevo="@Model.EsNuevo">
+
+            <input type="hidden" asp-for="Ficha.IdProducto" />
+
+            @if (Model.EsNuevo)
+            {
+                <div class="det-tope"><h2>Producto nuevo</h2></div>
+                <p class="det-meta">Se agrega a la carta apenas lo crees.</p>
+            }
+            else
+            {
+                <div class="det-tope">
+                    <h2>@Model.Titulo</h2>
+                    <span class="estado @(Model.ActivoGuardado ? "e-nuevo" : "e-entregado")">
+                        @(Model.ActivoGuardado ? "En la carta" : "Agotado")
+                    </span>
+                </div>
+                <p class="det-meta">@Model.Subtitulo</p>
+            }
+
+            @if (Model.Error is string error)
+            {
+                <p class="aviso" role="alert">@error</p>
+            }
+
+            <div class="renglones">
+
+                <div class="reng">
+                    <span class="et">Nombre</span>
+                    <span class="va"><input asp-for="Ficha.Nombre" maxlength="60" autocomplete="off" /></span>
+                </div>
+
+                <div class="reng">
+                    <span class="et">Tipo</span>
+                    <span class="va">
+                        <span class="chips-fam">
+                            @foreach (var f in new[] { Familia.Pizza, Familia.Focaccia, Familia.Empanada })
+                            {
+                                <label class="chip-fam">
+                                    <input type="radio" asp-for="Ficha.Familia" value="@f" />
+                                    <span>@Fam(f)</span>
+                                </label>
+                            }
+                        </span>
+                    </span>
+                </div>
+
+                @if (Model.Ficha.SeCobraPorPack)
+                {
+                    @for (var i = 0; i < Model.Ficha.Packs.Count; i++)
+                    {
+                        var j = i;
+                        <div class="reng">
+                            @* con parentesis: pegado a la x, Razor lee el @@ como literal *@
+                            <span class="et">Pack x@(Model.Ficha.Packs[j].Unidades)</span>
+                            <span class="va">
+                                <input type="hidden" asp-for="Ficha.Packs[j].Unidades" />
+                                @* sin decimales: ningun precio de la carta los tiene *@
+                                <input asp-for="Ficha.Packs[j].Precio" asp-format="{0:0}" type="number" min="1" step="1" />
+                            </span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="reng">
+                        <span class="et">Precio</span>
+                        <span class="va"><input asp-for="Ficha.Precio" asp-format="{0:0}" type="number" min="1" step="1" /></span>
+                    </div>
+                }
+
+            </div>
+
+            @if (Model.Ficha.SeCobraPorPack)
+            {
+                <p class="nota-f">Los dos precios valen para todos los gustos.</p>
+            }
+
+            @* La receta entra en la tanda que sigue *@
+
+            <div class="acciones">
+                <button class="btn" type="submit">@(Model.EsNuevo ? "Crear producto" : "Guardar cambios")</button>
+            </div>
+        </form>
+
+        @if (!Model.EsNuevo)
+        {
+            @* No hay botón de borrar: un producto puede estar nombrado en pedidos
+               viejos, y borrarlo dejaría el historial hablando de algo que no
+               existe. Marcarlo agotado lo saca de la carta y lo deja vivo acá. *@
+            <div class="acciones acciones-aparte">
+                <form method="post" asp-action="Agotar"
+                      asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia">
+                    <button class="btn flaco" type="submit">
+                        @(Model.ActivoGuardado ? "Marcar agotado" : "Volver a la carta")
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+
+</div>

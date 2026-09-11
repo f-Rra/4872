@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Models;
@@ -49,6 +50,176 @@ public class PanelController : Controller
             Hornear = Hornear(consolidado),
             Comprar = await _recetas.FaltaComprar()
         });
+    }
+
+    // Productos: la lista a la izquierda y la ficha a la derecha.
+    //
+    // No hay pantalla de alta distinta de la de edicion: con ?nuevo=1 se dibuja
+    // la misma ficha en blanco.
+    [HttpGet("productos")]
+    public async Task<IActionResult> Productos(string? familia = null, int? producto = null, bool nuevo = false)
+    {
+        return View(await Catalogo(familia, producto, nuevo));
+    }
+
+    // Guardar la ficha, de alta o de edicion. Es un solo camino porque es una
+    // sola pantalla; lo unico que cambia es si hay id.
+    [HttpPost("productos")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarProducto(FichaProducto ficha, string? familia = null, bool nuevo = false)
+    {
+        var nombre = (ficha.Nombre ?? "").Trim();
+
+        if (nombre.Length < 2)
+        {
+            return await Volver(familia, ficha, nuevo, "Falta el nombre del producto.");
+        }
+
+        // Las empanadas no tienen precio propio: se cobran por pack. Guardar un
+        // numero ahi seria guardar un precio que nadie cobra.
+        var precio = ficha.Familia == Familia.Empanada ? null : ficha.Precio;
+
+        if (precio is null && ficha.Familia != Familia.Empanada)
+        {
+            return await Volver(familia, ficha, nuevo, "Falta el precio.");
+        }
+
+        if (precio <= 0)
+        {
+            return await Volver(familia, ficha, nuevo, "El precio tiene que ser mayor que cero.");
+        }
+
+        var producto = nuevo
+            ? new Producto()
+            : await _contexto.Productos.FindAsync(ficha.IdProducto)
+                ?? throw new InvalidOperationException($"No existe el producto {ficha.IdProducto}.");
+
+        producto.Nombre = nombre;
+        producto.Familia = ficha.Familia;
+        producto.Precio = precio;
+
+        if (nuevo)
+        {
+            _contexto.Productos.Add(producto);
+        }
+
+        // Los dos precios de pack valen para todos los gustos, asi que se
+        // guardan desde la ficha de cualquiera. No son de este producto.
+        foreach (var pack in ficha.Packs ?? [])
+        {
+            var fila = await _contexto.Packs.FirstOrDefaultAsync(x => x.Unidades == pack.Unidades);
+            if (fila is not null && pack.Precio > 0)
+            {
+                fila.Precio = pack.Precio;
+            }
+        }
+
+        try
+        {
+            await _contexto.SaveChangesAsync();
+        }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: "23505" })
+        {
+            // el indice unico es (Familia, Nombre): dos productos con el mismo
+            // nombre en la misma familia son el mismo producto
+            return await Volver(familia, ficha, nuevo, $"Ya hay un/a {ficha.Familia.ToString().ToLowerInvariant()} que se llama «{nombre}».");
+        }
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = producto.IdProducto });
+    }
+
+    // Marcar agotado o devolverlo a la carta.
+    //
+    // No hay boton de borrar: un producto puede estar nombrado en pedidos
+    // viejos, y borrarlo dejaria el historial hablando de algo que no existe.
+    [HttpPost("productos/agotar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Agotar(int id, string? familia = null)
+    {
+        var producto = await _contexto.Productos.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el producto {id}.");
+
+        producto.Activo = !producto.Activo;
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    // vuelve a dibujar la pantalla con lo tipeado y el motivo, en vez de perderlo
+    private async Task<IActionResult> Volver(string? familia, FichaProducto ficha, bool nuevo, string error)
+    {
+        var vm = await Catalogo(familia, nuevo ? null : ficha.IdProducto, nuevo);
+        ficha.Packs = vm.Ficha.Packs;
+        vm.Ficha = ficha;
+        vm.EsNuevo = nuevo;
+        vm.Error = error;
+        return View(nameof(Productos), vm);
+    }
+
+    private async Task<ProductosVm> Catalogo(string? familia, int? producto, bool nuevo)
+    {
+        familia = ProductosVm.Chips.Any(x => x.Clave == familia) ? familia! : "todo";
+
+        var todos = _contexto.Productos.AsQueryable();
+        if (familia != "todo" && Enum.TryParse<Familia>(familia, out var cual))
+        {
+            todos = todos.Where(x => x.Familia == cual);
+        }
+
+        var lista = await todos
+            .Select(x => new FilaProducto
+            {
+                IdProducto = x.IdProducto,
+                Nombre = x.Nombre,
+                Familia = x.Familia,
+                Precio = x.Precio,
+                Activo = x.Activo
+            })
+            .ToListAsync();
+
+        // Familia se guarda como texto: ordenar en la base saldria alfabetico
+        lista = [.. lista.OrderBy(x => x.Familia).ThenBy(x => x.IdProducto)];
+
+        var packs = await _contexto.Packs
+            .OrderBy(x => x.Unidades)
+            .Select(x => new PrecioPack { Unidades = x.Unidades, Precio = x.Precio })
+            .ToListAsync();
+
+        var elegido = nuevo
+            ? null
+            : lista.FirstOrDefault(x => x.IdProducto == producto) ?? lista.FirstOrDefault();
+
+        var agotados = lista.Count(x => !x.Activo);
+        var marco = await Marco();
+
+        return new ProductosVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Familia = familia,
+            Lista = lista,
+            EsNuevo = nuevo || elegido is null,
+            Resumen = $"{lista.Count} · {(agotados == 0 ? "ninguno agotado" : agotados == 1 ? "1 agotado" : $"{agotados} agotados")}",
+            Titulo = elegido?.Nombre ?? "",
+            Subtitulo = elegido is null ? "" : elegido.Familia switch
+            {
+                Familia.Pizza => "Pizza",
+                Familia.Focaccia => "Focaccia",
+                _ => "Empanada"
+            },
+            ActivoGuardado = elegido?.Activo ?? true,
+            Ficha = elegido is null
+                ? new FichaProducto { Packs = packs }
+                : new FichaProducto
+                {
+                    IdProducto = elegido.IdProducto,
+                    Nombre = elegido.Nombre,
+                    Familia = elegido.Familia,
+                    Precio = elegido.Precio,
+                    Activo = elegido.Activo,
+                    Packs = packs
+                }
+        };
     }
 
     // Produccion: lo mismo que Hornear pero con el desglose abierto. Es la

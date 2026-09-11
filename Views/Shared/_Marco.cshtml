@@ -36,6 +36,10 @@
                 {
                     <a asp-action="Produccion" aria-current="@(id == seccion ? "page" : null)">@Icono(dibujo)@nombre@globo</a>
                 }
+                else if (id == "productos")
+                {
+                    <a asp-action="Productos" aria-current="@(id == seccion ? "page" : null)">@Icono(dibujo)@nombre@globo</a>
+                }
                 else
                 {
                     <span class="porVenir" title="Todavía no está hecha">@Icono(dibujo)@nombre@globo</span>
