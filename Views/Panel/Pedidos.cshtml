@@ -100,8 +100,42 @@
                 <dd>@Model.Elegido.Total.ToString("C")</dd>
             </dl>
 
-            @* Avanzar, cancelar y escribirle por WhatsApp entran en la tanda que
-               sigue: son las tres que cambian algo. *@
+            @* Una acción principal y dos enlaces. Escribirle y cancelar no son
+               botones del mismo peso: cancelar es destructiva y rara, y
+               escribirle se hace en el teléfono, no acá. *@
+            <div class="acciones">
+
+                @if (Model.Elegido.Accion is string accion)
+                {
+                    <form method="post" asp-action="Avanzar"
+                          asp-route-id="@Model.Elegido.IdPedido" asp-route-filtro="@Model.Filtro">
+                        <button class="btn" type="submit">@accion</button>
+                    </form>
+                }
+
+                <span class="secundarias">
+                    @if (Model.Elegido.Whatsapp is string wa)
+                    {
+                        @* target y rel: se abre la conversación sin perder el
+                           panel, y el rel evita que esa pestaña toque esta *@
+                        <a class="enlace verde" href="@wa" target="_blank" rel="noopener noreferrer">
+                            Escribirle por WhatsApp
+                        </a>
+                    }
+
+                    @if (Model.Elegido.SePuedeCancelar)
+                    {
+                        <form method="post" asp-action="Cancelar"
+                              asp-route-id="@Model.Elegido.IdPedido" asp-route-filtro="@Model.Filtro">
+                            <button class="enlace" type="submit"
+                                    data-confirmar="Cancelar el pedido @Model.Elegido.Numero, de @Model.Elegido.Cliente?">
+                                Cancelar pedido
+                            </button>
+                        </form>
+                    }
+                </span>
+
+            </div>
         }
     </div>
 

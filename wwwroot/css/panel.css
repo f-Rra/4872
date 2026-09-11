@@ -229,3 +229,27 @@
 .det-total dd{margin:0;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
 
 .placeholder{margin:1.2rem;color:var(--piedra);font-size:.86rem;font-weight:600}
+
+/* ---------- las acciones del pedido ----------
+   Una principal a todo el ancho y dos al pie. No son del mismo peso a proposito:
+   escribirle se hace igual desde el telefono, y cancelar es destructiva y rara.
+   Un boton grande y rojo para cancelar seria invitarlo a tocarlo. */
+.acciones{display:flex;flex-direction:column;align-items:stretch;gap:.6rem}
+.acciones form{display:contents}
+.btn{
+  font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.05em;
+  border-radius:999px;padding:.7rem 1rem;cursor:pointer;width:100%;text-align:center;
+  background:var(--verde);color:var(--papel);border:1.6px solid var(--verde);
+}
+.btn:hover{background:rgba(30,82,69,.86);border-color:rgba(30,82,69,.86)}
+.btn:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+
+.secundarias{display:flex;gap:1.1rem;justify-content:center;align-items:baseline}
+.secundarias form{display:contents}
+.enlace{
+  background:transparent;border:0;padding:.2rem 0;cursor:pointer;text-decoration:none;
+  font-family:var(--ui);font-weight:700;font-size:.8rem;color:var(--piedra);
+}
+.enlace:hover{text-decoration:underline}
+.enlace.verde{color:var(--verde)}
+.enlace:focus-visible{outline:2px solid var(--verde);outline-offset:2px}

@@ -102,6 +102,46 @@ public class PanelController : Controller
         });
     }
 
+    // Avanzar un pedido: nuevo va a preparando y preparando a entregado. El
+    // camino lo decide el modelo, no esta pantalla: aca no se puede saltear un
+    // paso ni volver atras porque no hay a donde mandarlo.
+    [HttpPost("pedidos/avanzar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Avanzar(int id, string? filtro = null)
+    {
+        var pedido = await _contexto.Pedidos.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el pedido {id}.");
+
+        // Si ya lo avanzo desde otra pestana, no pasa nada: el estado que hay es
+        // el que vale. Volver a apretar no lo manda a entregado de una.
+        if (pedido.Siguiente is EstadoPedido siguiente)
+        {
+            pedido.Estado = siguiente;
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Pedidos), new { filtro, pedido = id });
+    }
+
+    // Cancelar. Sale de todos los calculos pero no del historial: por eso se
+    // marca el estado y no se borra la fila.
+    [HttpPost("pedidos/cancelar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancelar(int id, string? filtro = null)
+    {
+        var pedido = await _contexto.Pedidos.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el pedido {id}.");
+
+        // uno entregado ya no se cancela: la pizza salio y se cobro
+        if (pedido.SinEntregar)
+        {
+            pedido.Estado = EstadoPedido.Cancelado;
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Pedidos), new { filtro, pedido = id });
+    }
+
     private async Task<DetallePedido?> Detalle(int id)
     {
         var pedido = await _contexto.Pedidos
