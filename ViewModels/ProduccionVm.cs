@@ -24,10 +24,14 @@ public class GrupoProduccion
     // el total de la familia, al lado del título: «Pizzas · 20»
     public int Total { get; set; }
 
-    // «bollos» en pizzas y focaccias, «unidades» en empanadas
-    public string Unidad { get; set; } = null!;
-
     public IReadOnlyList<RenglonProduccion> Renglones { get; set; } = [];
+}
+
+// una variante de un producto: qué se le saca y cuántas van así
+public class Combinacion
+{
+    public string Como { get; set; } = null!;
+    public int Piezas { get; set; }
 }
 
 public class RenglonProduccion
@@ -67,8 +71,14 @@ public class ProductoPedido
     // en empanadas son unidades, no packs: lo que se cocina
     public int Piezas { get; set; }
 
-    // ingrediente sacado → en cuántas piezas. Vacío en empanadas, que no se tocan
-    public IReadOnlyDictionary<string, int> Sin { get; set; } = new Dictionary<string, int>();
+    // Las variantes que hay que armar, y cuántas piezas de cada una. Las que van
+    // enteras no están: salen por resta contra el total del renglón.
+    //
+    // Van por combinación y no por ingrediente. Contar por ingrediente da un
+    // número que no se puede usar: si de cinco margaritas dos van sin albahaca y
+    // oliva y una sin albahaca, «3 sin albahaca · 2 sin oliva» cuenta dos pizzas
+    // dos veces. Acá cada renglón es una pizza distinta de verdad.
+    public IReadOnlyList<Combinacion> Combinaciones { get; set; } = [];
 
     // unidades del pack → cuántos packs. Vacío en pizzas y focaccias
     public IReadOnlyDictionary<int, int> Packs { get; set; } = new Dictionary<int, int>();

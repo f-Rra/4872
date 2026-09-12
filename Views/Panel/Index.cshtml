@@ -93,22 +93,10 @@
                     {
                         <li>
                             <span class="qn">@r.Nombre</span>
-                            <span class="cu">
-                                @r.Cuanto@if (r.Flojo) { <span class="asterisco" title="Falta cargar la medida en algún producto que lo lleva">*</span> }
-                            </span>
+                            <span class="cu">@r.Cuanto</span>
                         </li>
                     }
                 </ul>
-            }
-
-            @if (Model.Comprar.SinMedida > 0)
-            {
-                @* no es un detalle: son ingredientes de los que no se puede decir
-                   nada, ni que falta ni que alcanza *@
-                <p class="nada-h">
-                    @Model.Comprar.SinMedida
-                    @(Model.Comprar.SinMedida == 1 ? "ingrediente sin medida cargada" : "ingredientes sin medida cargada").
-                </p>
             }
         </div>
 

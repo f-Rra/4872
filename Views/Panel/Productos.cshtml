@@ -79,7 +79,11 @@
        comparando. El costo es que los campos no parecen editables hasta que
        pasás el mouse; se aprende una vez. *@
     <div class="detalle">
-        <form method="post" asp-action="GuardarProducto"
+        @* La ficha se cierra antes de la receta: los formularios de sumar y
+           quitar ingredientes son formularios propios, y un formulario no puede
+           ir adentro de otro. El botón de guardar los saltea con form="ficha",
+           así el orden de la pantalla queda como en la maqueta. *@
+        <form id="ficha" method="post" asp-action="GuardarProducto"
               asp-route-familia="@Model.Familia" asp-route-nuevo="@Model.EsNuevo">
 
             <input type="hidden" asp-for="Ficha.IdProducto" />
@@ -152,33 +156,108 @@
                 }
 
             </div>
-
-            @if (Model.Ficha.SeCobraPorPack)
-            {
-                <p class="nota-f">Los dos precios valen para todos los gustos.</p>
-            }
-
-            @* La receta entra en la tanda que sigue *@
-
-            <div class="acciones">
-                <button class="btn" type="submit">@(Model.EsNuevo ? "Crear producto" : "Guardar cambios")</button>
-            </div>
         </form>
+
+        @if (Model.Ficha.SeCobraPorPack)
+        {
+            <p class="nota-f">Los dos precios valen para todos los gustos.</p>
+        }
+
+        @* Qué lleva, no cuánto: la cantidad y el «se saca» se editan en
+           Ingredientes, que es donde se ve el número contra los demás productos
+           que llevan lo mismo. *@
+        <div class="renglones">
+            <div class="reng">
+                <span class="et">Ingredientes</span>
+                <span class="va">
+                    @if (Model.EsNuevo)
+                    {
+                        <span class="nota-f nota-suelta">Se cargan después de crearlo.</span>
+                    }
+                    else
+                    {
+                        @* En reposo solo el (+). El campo y la lista aparecen
+                           al tocarlo; ver panel.js. Van dibujados y visibles, y
+                           el script los esconde al cargar: sin JavaScript queda
+                           el campo siempre a la vista, que funciona igual. *@
+                        <span class="ingr">
+                            @foreach (var i in Model.Ficha.Receta)
+                            {
+                                <span>
+                                    @i.Nombre
+                                    <button class="quitar" type="submit" title="Quitar"
+                                            form="quitar-@i.IdIngrediente" aria-label="Quitar @i.Nombre">×</button>
+                                </span>
+                            }
+
+                            <button class="mas-ing" type="button" data-abrir-ingrediente
+                                    title="Sumar un ingrediente" aria-label="Sumar un ingrediente" hidden>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                                     stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                            </button>
+
+                            <input class="sumar" type="text" name="nombre" form="sumar-ingrediente"
+                                   data-buscar placeholder="Buscar…" autocomplete="off" />
+
+                            @* La cantidad se pide acá y no se deja para después:
+                               la tabla exige mayor que cero, porque un
+                               ingrediente en cero no es un ingrediente de la
+                               receta. El cuánto se corrige en Ingredientes. *@
+                            <input class="sumar cuanto" type="number" name="cantidad" form="sumar-ingrediente"
+                                   min="0.001" step="0.5" placeholder="cuánto" />
+                        </span>
+
+                        @* La lista propia y no un datalist del navegador: el del
+                           sistema se dibuja con los colores del sistema operativo
+                           y no con los de la pantalla. *@
+                        <ul class="candidatos" data-candidatos>
+                            @foreach (var n in Model.Ficha.Disponibles)
+                            {
+                                <li><button type="button" data-elegir="@n">@n</button></li>
+                            }
+                            <li class="nada" hidden>
+                                No hay ninguno con ese nombre. Los ingredientes se dan de alta en <b>Ingredientes</b>.
+                            </li>
+                        </ul>
+                    }
+                </span>
+            </div>
+        </div>
 
         @if (!Model.EsNuevo)
         {
-            @* No hay botón de borrar: un producto puede estar nombrado en pedidos
-               viejos, y borrarlo dejaría el historial hablando de algo que no
-               existe. Marcarlo agotado lo saca de la carta y lo deja vivo acá. *@
-            <div class="acciones acciones-aparte">
+            <form id="sumar-ingrediente" method="post" asp-action="SumarIngrediente"
+                  asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia"></form>
+
+            @foreach (var i in Model.Ficha.Receta)
+            {
+                <form id="quitar-@i.IdIngrediente" method="post" asp-action="QuitarIngrediente"
+                      asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@i.IdIngrediente"
+                      asp-route-familia="@Model.Familia"></form>
+            }
+        }
+
+        @* Los dos en la misma fila y del ancho de su texto: guardar es lo que se
+           toca siempre, pero marcar agotado no es una acción de otra pantalla
+           como para mandarla a un renglón aparte. *@
+        <div class="acciones en-fila">
+            <button class="btn" type="submit" form="ficha">@(Model.EsNuevo ? "Crear producto" : "Guardar cambios")</button>
+
+            @if (!Model.EsNuevo)
+            {
+                @* No hay botón de borrar: un producto puede estar nombrado en
+                   pedidos viejos, y borrarlo dejaría el historial hablando de
+                   algo que no existe. Marcarlo agotado lo saca de la carta y lo
+                   deja vivo acá. *@
                 <form method="post" asp-action="Agotar"
                       asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia">
                     <button class="btn flaco" type="submit">
                         @(Model.ActivoGuardado ? "Marcar agotado" : "Volver a la carta")
                     </button>
                 </form>
-            </div>
-        }
+            }
+        </div>
+
     </div>
 
 </div>

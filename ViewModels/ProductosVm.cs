@@ -62,6 +62,13 @@ public class FichaProducto
     // binder necesita poder agregarle elementos para armarla.
     public List<PrecioPack> Packs { get; set; } = [];
 
+    public IReadOnlyList<IngredienteDeLaReceta> Receta { get; set; } = [];
+
+    // Los que todavía no están en la receta. Solo se puede sumar uno que ya
+    // exista: escribir libre es como entraron «Oregano» y «Orégano» a la base
+    // de la maqueta como dos ingredientes distintos.
+    public IReadOnlyList<string> Disponibles { get; set; } = [];
+
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
     public string NombreDeFamilia => Familia switch
@@ -70,6 +77,14 @@ public class FichaProducto
         Familia.Focaccia => "Focaccia",
         _ => "Empanada"
     };
+}
+
+// un ingrediente de la receta. Solo cuáles: el cuánto y el «se saca» se editan
+// en Ingredientes, que es donde se ve la cantidad contra todos los productos
+public class IngredienteDeLaReceta
+{
+    public int IdIngrediente { get; set; }
+    public string Nombre { get; set; } = null!;
 }
 
 public class PrecioPack

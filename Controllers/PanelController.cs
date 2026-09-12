@@ -128,6 +128,76 @@ public class PanelController : Controller
         return RedirectToAction(nameof(Productos), new { familia, producto = producto.IdProducto });
     }
 
+    // Sumar un ingrediente a la receta.
+    //
+    // Solo se puede sumar uno que ya exista. Escribir libre es como entran
+    // «Oregano» y «Oregano» con acento a la base como dos ingredientes
+    // distintos, y despues la lista de compras los cuenta por separado.
+    [HttpPost("productos/receta/sumar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SumarIngrediente(int id, string? nombre, decimal? cantidad, string? familia = null)
+    {
+        var buscado = (nombre ?? "").Trim();
+
+        var ingrediente = await _contexto.Ingredientes
+            .FirstOrDefaultAsync(x => x.Nombre.ToLower() == buscado.ToLower());
+
+        if (ingrediente is null)
+        {
+            return await Volver(familia, id, buscado.Length == 0
+                ? "Escribí el nombre del ingrediente."
+                : $"No hay ningún ingrediente que se llame «{buscado}». Se dan de alta en Ingredientes.");
+        }
+
+        // La cantidad se pide acá y no se deja para despues: la tabla tiene un
+        // chequeo que exige mayor que cero, y esa decision esta escrita en el
+        // modelo con su motivo -un ingrediente con cantidad cero no es un
+        // ingrediente de la receta: o lleva algo o no esta-.
+        if (cantidad is not > 0)
+        {
+            return await Volver(familia, id,
+                $"Falta cuánto lleva de {ingrediente.Nombre.ToLowerInvariant()}, en {Cantidades.Abreviatura(ingrediente.Unidad)}.");
+        }
+
+        var fila = await _contexto.ProductoIngredientes
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == ingrediente.IdIngrediente);
+
+        if (fila is null)
+        {
+            _contexto.ProductoIngredientes.Add(new ProductoIngrediente
+            {
+                IdProducto = id,
+                IdIngrediente = ingrediente.IdIngrediente,
+                Cantidad = cantidad.Value
+            });
+        }
+        else
+        {
+            // ya estaba: sumarlo de nuevo corrige la cantidad en vez de rebotar
+            fila.Cantidad = cantidad.Value;
+        }
+
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    [HttpPost("productos/receta/quitar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarIngrediente(int id, int idIngrediente, string? familia = null)
+    {
+        var fila = await _contexto.ProductoIngredientes
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == idIngrediente);
+
+        if (fila is not null)
+        {
+            _contexto.ProductoIngredientes.Remove(fila);
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
     // Marcar agotado o devolverlo a la carta.
     //
     // No hay boton de borrar: un producto puede estar nombrado en pedidos
@@ -143,6 +213,15 @@ public class PanelController : Controller
         await _contexto.SaveChangesAsync();
 
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    // el error de la receta no tiene nada tipeado que conservar: alcanza con
+    // volver a la ficha del producto y decir que pasó
+    private async Task<IActionResult> Volver(string? familia, int producto, string error)
+    {
+        var vm = await Catalogo(familia, producto, false);
+        vm.Error = error;
+        return View(nameof(Productos), vm);
     }
 
     // vuelve a dibujar la pantalla con lo tipeado y el motivo, en vez de perderlo
@@ -189,6 +268,29 @@ public class PanelController : Controller
             ? null
             : lista.FirstOrDefault(x => x.IdProducto == producto) ?? lista.FirstOrDefault();
 
+        // La receta de este producto, y los que todavia no estan. Sin columna de
+        // orden, van por nombre: es el orden en que se busca uno en una lista.
+        var receta = elegido is null
+            ? []
+            : await _contexto.ProductoIngredientes
+                .Where(x => x.IdProducto == elegido.IdProducto)
+                .OrderBy(x => x.Ingrediente.Nombre)
+                .Select(x => new IngredienteDeLaReceta
+                {
+                    IdIngrediente = x.IdIngrediente,
+                    Nombre = x.Ingrediente.Nombre
+                })
+                .ToListAsync();
+
+        var puestos = receta.Select(x => x.IdIngrediente).ToList();
+        var disponibles = elegido is null
+            ? []
+            : await _contexto.Ingredientes
+                .Where(x => !puestos.Contains(x.IdIngrediente))
+                .OrderBy(x => x.Nombre)
+                .Select(x => x.Nombre)
+                .ToListAsync();
+
         var agotados = lista.Count(x => !x.Activo);
         var marco = await Marco();
 
@@ -217,7 +319,9 @@ public class PanelController : Controller
                     Familia = elegido.Familia,
                     Precio = elegido.Precio,
                     Activo = elegido.Activo,
-                    Packs = packs
+                    Packs = packs,
+                    Receta = receta,
+                    Disponibles = disponibles
                 }
         };
     }
@@ -238,11 +342,11 @@ public class PanelController : Controller
             .Select(x => (DateTime?)x.FechaPedido)
             .FirstOrDefaultAsync();
 
-        (string Nombre, Familia Familia, string Unidad)[] familias =
+        (string Nombre, Familia Familia)[] familias =
         [
-            ("Pizzas", Familia.Pizza, "bollos"),
-            ("Focaccias", Familia.Focaccia, "bollos"),
-            ("Empanadas", Familia.Empanada, "unidades")
+            ("Pizzas", Familia.Pizza),
+            ("Focaccias", Familia.Focaccia),
+            ("Empanadas", Familia.Empanada)
         ];
 
         return View(new ProduccionVm
@@ -280,7 +384,6 @@ public class PanelController : Controller
                     .Select(f => new GrupoProduccion
                     {
                         Familia = f.Nombre,
-                        Unidad = f.Unidad,
                         Total = consolidado.Productos.Where(x => x.Familia == f.Familia).Sum(x => x.Piezas),
                         Renglones =
                         [
@@ -295,10 +398,8 @@ public class PanelController : Controller
                                         ? [.. x.Packs
                                             .OrderByDescending(p => p.Key)
                                             .Select(p => $"{p.Value} {(p.Value == 1 ? "pack" : "packs")} de {p.Key}")]
-                                        : [.. x.Sin
-                                            .OrderByDescending(p => p.Value)
-                                            .ThenBy(p => p.Key)
-                                            .Select(p => $"{p.Value} sin {p.Key.ToLowerInvariant()}")]
+                                        // las combinaciones ya vienen ordenadas y suman las piezas
+                                        : [.. x.Combinaciones.Select(c => $"{c.Piezas} {c.Como}")]
                                 })
                         ]
                     })

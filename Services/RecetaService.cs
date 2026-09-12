@@ -50,11 +50,11 @@ public class RecetaService
                 Familia = g.Key.Familia,
                 // un pack de doce son doce empanadas: se cocinan unidades
                 Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)),
-                // en cuantas piezas se saco cada ingrediente, no en cuantos
-                // renglones: dos margaritas sin albahaca son dos, no una
-                Sin = g.SelectMany(x => x.Sacados.Select(i => new { Ingrediente = i, x.Cantidad }))
-                    .GroupBy(x => x.Ingrediente)
-                    .ToDictionary(x => x.Key, x => x.Sum(y => y.Cantidad)),
+                // Agrupado por combinacion y no por ingrediente. Una pizza sin
+                // albahaca y oliva es UNA manera de armarla, no dos: contarla en
+                // los dos ingredientes la cuenta dos veces y esconde las que van
+                // enteras. Asi los renglones suman exactamente las piezas.
+                Combinaciones = Variantes(g.Select(x => (x.Cantidad, x.Sacados))),
                 Packs = g.Where(x => x.UnidadesPorPack is not null)
                     .GroupBy(x => x.UnidadesPorPack!.Value)
                     .ToDictionary(x => x.Key, x => x.Sum(y => y.Cantidad))
@@ -66,6 +66,34 @@ public class RecetaService
             .ToList();
 
         return new Consolidado { Productos = productos };
+    }
+
+    // Las variantes de un producto: solo las que llevan algo sacado, con cuantas
+    // piezas van de cada una.
+    //
+    // Las que van enteras no se nombran. Si el renglon dice 5 y abajo hay «2 sin
+    // albahaca, oliva» y «1 sin albahaca», las 2 que faltan salen por resta, y
+    // un «2 con todo» seria un renglon mas para decir lo mismo.
+    private static IReadOnlyList<Combinacion> Variantes(IEnumerable<(int Cantidad, List<string> Sacados)> items)
+    {
+        var porComo = items
+            // los sacados van ordenados antes de juntarlos: «albahaca, oliva» y
+            // «oliva, albahaca» son la misma pizza y tienen que caer en el mismo
+            // grupo. El pedido ya los guarda ordenados, pero no depende de eso
+            .GroupBy(x => string.Join(", ", x.Sacados.OrderBy(i => i)))
+            // las que van enteras quedan afuera: son el resto
+            .Where(g => g.Key.Length > 0)
+            .Select(g => new Combinacion
+            {
+                Como = "sin " + g.Key.ToLowerInvariant(),
+                Piezas = g.Sum(x => x.Cantidad)
+            })
+            // de mayor a menor: es el orden en que se arma la tanda
+            .OrderByDescending(x => x.Piezas)
+            .ThenBy(x => x.Como)
+            .ToList();
+
+        return porComo;
     }
 
     // Cuantas tandas de masa hay que amasar. La receta de la base se carga por
@@ -146,23 +174,18 @@ public class RecetaService
             }))
             .ToListAsync();
 
-        // cuánto se necesita de cada ingrediente, y si esa cuenta está completa
+        // Cuánto se necesita de cada ingrediente.
+        //
+        // No hay caso de «está en la receta pero sin cantidad»: las dos tablas
+        // de receta tienen un chequeo de Cantidad > 0, así que una fila sin
+        // medida no puede existir. Lo único que puede faltar es el rinde.
         var necesita = new Dictionary<int, decimal>();
-        var conMedida = new HashSet<int>();
-        var sinMedida = new HashSet<int>();
 
         void Sumar(int idIngrediente, decimal porPieza, int cuantasPiezas)
         {
             if (porPieza > 0)
             {
-                conMedida.Add(idIngrediente);
                 necesita[idIngrediente] = necesita.GetValueOrDefault(idIngrediente) + porPieza * cuantasPiezas;
-            }
-            else
-            {
-                // está en la receta pero nadie cargó cuánto: el total que
-                // salga va a ser menor que el de verdad
-                sinMedida.Add(idIngrediente);
             }
         }
 
@@ -179,21 +202,21 @@ public class RecetaService
             Sumar(r.IdIngrediente, porUnidad, piezas[r.IdProducto]);
         }
 
+        var usados = necesita.Keys.ToList();
         var ingredientes = await _contexto.Ingredientes
-            .Where(x => necesita.Keys.Contains(x.IdIngrediente) || sinMedida.Contains(x.IdIngrediente))
+            .Where(x => usados.Contains(x.IdIngrediente))
             .Select(x => new { x.IdIngrediente, x.Nombre, x.Stock, x.Libre, x.Unidad })
             .ToListAsync();
 
         var faltan = ingredientes
             // el agua y la masa madre no se compran: contarlas seria mandarlo a
             // comprar algo que no se compra
-            .Where(x => !x.Libre && conMedida.Contains(x.IdIngrediente))
+            .Where(x => !x.Libre)
             .Select(x => new
             {
                 x.Nombre,
                 x.Unidad,
-                Falta = necesita[x.IdIngrediente] - x.Stock,
-                Flojo = sinMedida.Contains(x.IdIngrediente)
+                Falta = necesita[x.IdIngrediente] - x.Stock
             })
             .Where(x => x.Falta > 0)
             // primero lo que mas falta: es el orden en que se hace una compra
@@ -202,18 +225,10 @@ public class RecetaService
             .Select(x => new RenglonComprar
             {
                 Nombre = x.Nombre,
-                Cuanto = Cantidades.Bonito(x.Falta, x.Unidad),
-                Flojo = x.Flojo
+                Cuanto = Cantidades.Bonito(x.Falta, x.Unidad)
             })
             .ToList();
 
-        return new ListaDeCompras
-        {
-            Renglones = faltan,
-            // los que entran en algun pedido y no tienen ninguna medida cargada:
-            // de esos no se puede decir nada, ni que alcanza ni que falta
-            SinMedida = ingredientes.Count(x =>
-                !x.Libre && sinMedida.Contains(x.IdIngrediente) && !conMedida.Contains(x.IdIngrediente))
-        };
+        return new ListaDeCompras { Renglones = faltan };
     }
 }
