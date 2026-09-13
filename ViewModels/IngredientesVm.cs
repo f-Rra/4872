@@ -92,6 +92,15 @@ public class FichaIngrediente
     // la suma de los renglones de arriba, que es el «Necesito» de la grilla
     public string HaceFalta { get; set; } = "";
 
+    // En cuantas recetas esta, contando las bases. Decide si se puede borrar:
+    // sacarlo de abajo de una receta la dejaria rota, y la base lo prohibe con
+    // un FK restrict. Se cuenta antes para poder decirlo con palabras.
+    public int Usos { get; set; }
+
+    // El alta es la misma ficha en blanco: no hay una pantalla de alta distinta
+    // de la de edicion. Sin id todavia no existe.
+    public bool EsNuevo => IdIngrediente == 0;
+
     public static readonly (Medida Valor, string Nombre)[] Medidas =
     [
         (Medida.Gramo, "Gramos"),

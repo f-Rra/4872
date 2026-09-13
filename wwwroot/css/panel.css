@@ -525,6 +525,13 @@
   flex:none;display:flex;align-items:center;gap:.7rem;
   border-top:1.5px solid rgba(30,82,69,.32);padding:.62rem 1.1rem;
 }
+/* el alta a la izquierda del pie, y la cuenta empujada al otro extremo */
+.pie-tabla .abrir{
+  display:flex;align-items:center;gap:.5rem;cursor:pointer;text-decoration:none;
+  font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.03em;color:var(--verde);
+}
+.pie-tabla .abrir:hover{text-decoration:underline}
+.pie-tabla .abrir svg{width:15px;height:15px;flex:none}
 .pie-tabla .cuantos{
   margin-left:auto;font-size:.76rem;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums;
 }
@@ -588,6 +595,10 @@
 .modal .pastilla > input:focus{outline:0;border:0}
 .modal .pastilla > input::placeholder{font-weight:600;opacity:.42}
 .modal .reng > .va{display:flex;align-items:baseline;gap:.6rem}
+
+/* el borrado no esta: decir por que es mas util que no mostrar nada */
+.modal .secundarias{margin-top:.9rem}
+.noBorra{font-size:.78rem;font-weight:600;opacity:.55}
 
 /* ---------- ingredientes: el desglose ----------
    De donde sale el numero que muestra la grilla. Es de lectura: las cantidades

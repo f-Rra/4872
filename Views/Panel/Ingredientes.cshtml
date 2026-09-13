@@ -97,7 +97,12 @@
 </div>
 
 <div class="pie-tabla">
-    @* el alta entra en la tanda que sigue, con la ficha del ingrediente *@
+    @* abre la misma ficha en blanco: no hay una pantalla de alta distinta *@
+    <a class="abrir" asp-action="Ingredientes" asp-route-todos="@Model.Todos" asp-route-nuevo="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Ingrediente nuevo
+    </a>
+
     <span class="cuantos">
         @Model.Cuantos de @Model.EnTotal ingredientes
         <a asp-action="Ingredientes" asp-route-todos="@(!Model.Todos)">
@@ -116,9 +121,12 @@
         <a class="tapa" asp-action="Ingredientes" asp-route-todos="@Model.Todos"
            aria-label="Cerrar"></a>
 
-        <div class="modal" role="dialog" aria-label="@f.Titulo">
-            <div class="det-tope"><h2>@f.Titulo</h2></div>
-            <p class="det-meta">@f.Donde</p>
+        <div class="modal" role="dialog" aria-label="@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)">
+            <div class="det-tope"><h2>@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)</h2></div>
+            @if (!f.EsNuevo)
+            {
+                <p class="det-meta">@f.Donde</p>
+            }
 
             @if (Model.Error is string error)
             {
@@ -219,10 +227,37 @@
                 }
 
                 <div class="acciones en-fila">
-                    <button class="btn" type="submit">Guardar cambios</button>
+                    <button class="btn" type="submit">
+                        @(f.EsNuevo ? "Crear ingrediente" : "Guardar cambios")
+                    </button>
                     <a class="btn flaco" asp-action="Ingredientes" asp-route-todos="@Model.Todos">Cancelar</a>
                 </div>
             </form>
+
+            @* Afuera del formulario de arriba: un form adentro de otro no es
+               HTML válido. Y solo cuando no está en ninguna receta: borrarlo
+               dejaría esa receta rota, y la base lo prohibe. *@
+            @if (!f.EsNuevo)
+            {
+                <div class="secundarias">
+                    @if (f.Usos > 0)
+                    {
+                        <span class="noBorra">
+                            No se puede borrar: está en @f.Usos @(f.Usos == 1 ? "receta" : "recetas")
+                        </span>
+                    }
+                    else
+                    {
+                        <form method="post" asp-action="BorrarIngrediente"
+                              asp-route-id="@f.IdIngrediente" asp-route-todos="@Model.Todos">
+                            <button class="enlace" type="submit"
+                                    data-confirmar="¿Borrar @f.Titulo? No se puede deshacer.">
+                                Borrar ingrediente
+                            </button>
+                        </form>
+                    }
+                </div>
+            }
         </div>
     </div>
 }

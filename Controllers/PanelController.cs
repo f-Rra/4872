@@ -57,7 +57,7 @@ public class PanelController : Controller
     // Stock, Necesito y Falta, en el orden de la resta. El stock se edita en el
     // renglon; las otras dos salen solas de los pedidos.
     [HttpGet("ingredientes")]
-    public async Task<IActionResult> Ingredientes(bool todos = false, int? ingrediente = null)
+    public async Task<IActionResult> Ingredientes(bool todos = false, int? ingrediente = null, bool nuevo = false)
     {
         var marco = await Marco();
         var necesita = await _recetas.Necesita();
@@ -113,7 +113,10 @@ public class PanelController : Controller
             Pedidos = marco.SinEntregar,
             Faltantes = filas.Count(x => x.HayQueComprar),
             Todos = todos,
-            Ficha = ingrediente is int elegido ? await Ficha(elegido) : null,
+            // en blanco es el alta: la misma ficha sin nada cargado
+            Ficha = nuevo ? new FichaIngrediente()
+                : ingrediente is int elegido ? await Ficha(elegido)
+                : null,
             Cuantos = filas.Count,
             EnTotal = ingredientes.Count,
             EnRecetas = ingredientes.Count(x => x.EnProductos > 0 || x.Bases.Count > 0)
@@ -161,6 +164,7 @@ public class PanelController : Controller
             Precio = x.PrecioDeCompra,
             Titulo = x.Nombre,
             Donde = Donde(x.EnProductos, x.Bases),
+            Usos = x.EnProductos + x.Bases.Count,
             Desglose = [.. partes.Select(p => Renglon(p, x.Unidad))],
             HaceFalta = Cantidades.Bonito(partes.Sum(p => p.Total), x.Unidad)
         };
@@ -216,9 +220,6 @@ public class PanelController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GuardarIngrediente(FichaIngrediente ficha, bool todos = false)
     {
-        var ingrediente = await _contexto.Ingredientes.FindAsync(ficha.IdIngrediente)
-            ?? throw new InvalidOperationException($"No existe el ingrediente {ficha.IdIngrediente}.");
-
         var nombre = (ficha.Nombre ?? "").Trim();
 
         if (nombre.Length == 0)
@@ -259,6 +260,11 @@ public class PanelController : Controller
             }
         }
 
+        var ingrediente = ficha.EsNuevo
+            ? new Ingrediente()
+            : await _contexto.Ingredientes.FindAsync(ficha.IdIngrediente)
+                ?? throw new InvalidOperationException($"No existe el ingrediente {ficha.IdIngrediente}.");
+
         ingrediente.Nombre = nombre;
         ingrediente.Unidad = ficha.Unidad;
         // Libre no se toca: no viene del formulario, y el binder lo daria en
@@ -266,6 +272,41 @@ public class PanelController : Controller
         ingrediente.CantidadDeCompra = bulto;
         ingrediente.PrecioDeCompra = ficha.Precio > 0 ? ficha.Precio : null;
 
+        if (ficha.EsNuevo)
+        {
+            _contexto.Ingredientes.Add(ingrediente);
+        }
+
+        await _contexto.SaveChangesAsync();
+
+        // uno recien creado no esta en ninguna receta, asi que no entra en los
+        // del finde: sin esto se guarda y parece que no paso nada
+        return RedirectToAction(nameof(Ingredientes), new { todos = todos || ficha.EsNuevo });
+    }
+
+    // Borrar uno que este en alguna receta la dejaria rota, y las dos claves
+    // foraneas son ON DELETE RESTRICT. Se cuenta antes para decirlo con palabras
+    // y no reventar contra la base; el enlace ni siquiera se dibuja cuando tiene
+    // usos, asi que llegar aca con alguno es que la receta cambio mientras tanto.
+    [HttpPost("ingredientes/borrar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BorrarIngrediente(int id, bool todos = false)
+    {
+        var ingrediente = await _contexto.Ingredientes
+            .Include(x => x.UsosEnProductos)
+            .Include(x => x.UsosEnBases)
+            .FirstOrDefaultAsync(x => x.IdIngrediente == id)
+            ?? throw new InvalidOperationException($"No existe el ingrediente {id}.");
+
+        var usos = ingrediente.UsosEnProductos.Count + ingrediente.UsosEnBases.Count;
+
+        if (usos > 0)
+        {
+            throw new InvalidOperationException(
+                $"«{ingrediente.Nombre}» está en {usos} recetas: hay que sacarlo de ahí antes de borrarlo.");
+        }
+
+        _contexto.Ingredientes.Remove(ingrediente);
         await _contexto.SaveChangesAsync();
 
         return RedirectToAction(nameof(Ingredientes), new { todos });
@@ -276,13 +317,19 @@ public class PanelController : Controller
     // guardado: es la identidad de lo que estas editando, no lo que escribiste.
     private async Task<IActionResult> VolverAFicha(FichaIngrediente ficha, bool todos, string error)
     {
-        var vm = (IngredientesVm)((ViewResult)await Ingredientes(todos, ficha.IdIngrediente)).Model!;
+        var vm = (IngredientesVm)((ViewResult)await Ingredientes(
+            todos, ficha.EsNuevo ? null : ficha.IdIngrediente, ficha.EsNuevo)).Model!;
 
-        if (vm.Ficha is not null)
+        // en un alta no hay registro guardado del que sacarlos: la ficha es todo
+        // lo que hay
+        if (vm.Ficha is not null && !ficha.EsNuevo)
         {
             ficha.Titulo = vm.Ficha.Titulo;
             ficha.Donde = vm.Ficha.Donde;
             ficha.Libre = vm.Ficha.Libre;
+            ficha.Usos = vm.Ficha.Usos;
+            ficha.Desglose = vm.Ficha.Desglose;
+            ficha.HaceFalta = vm.Ficha.HaceFalta;
         }
 
         vm.Ficha = ficha;
