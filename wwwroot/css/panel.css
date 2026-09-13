@@ -244,6 +244,8 @@
   font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.05em;
   border-radius:999px;padding:.7rem 1rem;cursor:pointer;width:100%;text-align:center;
   background:var(--verde);color:var(--papel);border:1.6px solid var(--verde);
+  /* sin subrayado: cuando el boton es un enlace -Cancelar- lo hereda */
+  text-decoration:none;
 }
 .btn:hover{background:rgba(30,82,69,.86);border-color:rgba(30,82,69,.86)}
 .btn:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
@@ -531,3 +533,59 @@
   border-bottom:1.4px solid rgba(30,82,69,.5);margin-left:.5rem;
 }
 .pie-tabla .cuantos a:hover{border-bottom-color:var(--verde)}
+
+/* ---------- ingredientes: la ficha ----------
+   Un modal y no la ficha al costado como en Productos: la grilla ya usa todo
+   el ancho comparando cuatro columnas, y partirla en dos la rompe. */
+.grilla .abre{
+  font-family:var(--ui);font-size:.92rem;font-weight:700;color:var(--verde);
+  background:transparent;border:0;padding:0;cursor:pointer;text-align:left;text-decoration:none;
+}
+.grilla .abre:hover{text-decoration:underline}
+
+.telon{
+  position:absolute;inset:0;background:rgba(20,58,49,.38);
+  display:flex;align-items:center;justify-content:center;padding:1.4rem;z-index:5;
+}
+/* el telon entero es el enlace de cerrar, abajo del modal */
+.telon .tapa{position:absolute;inset:0}
+.modal{
+  position:relative;width:530px;max-width:100%;max-height:100%;overflow:hidden auto;
+  background:var(--papel);border:2px solid var(--verde);padding:1.15rem 1.25rem 1.25rem;
+}
+.modal .det-meta{margin-bottom:.9rem}
+.modal .aviso{margin:0 0 .9rem}
+/* el ultimo renglon no repite la linea: el aire de abajo lo pone .acciones */
+.modal .renglones .reng:last-child{border-bottom:0}
+/* La etiqueta del panel mide 7.6rem porque en la ficha de un producto tiene
+   que dar para «Pack x12». Aca quedan dos palabras cortas, y ese ancho deja un
+   hueco entre la etiqueta y la pastilla que no separa nada. */
+.modal .reng{gap:.7rem}
+/* justo lo que mide «Se mide en», que es la mas larga de las cuatro */
+.modal .reng > .et{width:5.5rem}
+/* la unica que queda cuelga del bloque, no de un renglon */
+.modal .nota-f{margin:.7rem 0 0}
+
+/* Pastilla, como el stock de la grilla y la cantidad de la receta: en el panel
+   lo que se puede tocar tiene borde redondo. Van en pastilla los dos numeros de
+   la compra y no el nombre: uno se escribe cifra por cifra y el otro es texto
+   comun, como en la ficha de un producto. */
+.modal .pastilla{
+  display:inline-flex;align-items:baseline;gap:.28rem;
+  border:1.4px solid rgba(30,82,69,.4);border-radius:999px;padding:.22rem .8rem;
+}
+.modal .pastilla:hover{border-color:rgba(30,82,69,.75)}
+.modal .pastilla:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+.modal .pastilla .signo{font-size:.92rem;font-weight:700;opacity:.5;flex:none}
+/* gana por ir despues: la regla de los campos de la ficha es «.reng input[type]»
+   y tiene el mismo peso, con el borde punteado y el ancho al 100% */
+.modal .pastilla > input{
+  font-family:var(--ui);font-size:.95rem;font-weight:700;color:var(--verde);
+  background:transparent;border:0;padding:0;width:6.5rem;
+  font-variant-numeric:tabular-nums;
+}
+.modal .pastilla > input:hover{border:0}
+.modal .pastilla > input:focus{outline:0;border:0}
+.modal .pastilla > input::placeholder{font-weight:600;opacity:.42}
+.modal .reng > .va{display:flex;align-items:baseline;gap:.6rem}
+

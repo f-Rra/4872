@@ -57,7 +57,7 @@ public class PanelController : Controller
     // Stock, Necesito y Falta, en el orden de la resta. El stock se edita en el
     // renglon; las otras dos salen solas de los pedidos.
     [HttpGet("ingredientes")]
-    public async Task<IActionResult> Ingredientes(bool todos = false)
+    public async Task<IActionResult> Ingredientes(bool todos = false, int? ingrediente = null)
     {
         var marco = await Marco();
         var necesita = await _recetas.Necesita();
@@ -95,7 +95,6 @@ public class PanelController : Controller
                     Stock = Cantidades.Bonito(x.Stock, x.Unidad, exacto: true),
                     Necesito = cuanto > 0 ? Cantidades.Bonito(cuanto, x.Unidad) : "—",
                     Falta = falta > 0 ? Cantidades.Bonito(falta, x.Unidad) : "—",
-                    Libre = x.Libre,
                     HayQueComprar = !x.Libre && falta > 0,
                     Donde = Donde(x.EnProductos, x.Bases)
                 };
@@ -114,10 +113,53 @@ public class PanelController : Controller
             Pedidos = marco.SinEntregar,
             Faltantes = filas.Count(x => x.HayQueComprar),
             Todos = todos,
+            Ficha = ingrediente is int elegido ? await Ficha(elegido) : null,
             Cuantos = filas.Count,
             EnTotal = ingredientes.Count,
             EnRecetas = ingredientes.Count(x => x.EnProductos > 0 || x.Bases.Count > 0)
         });
+    }
+
+    // La ficha de un ingrediente: como se llama, en que se mide y como se compra.
+    //
+    // Se arma aparte de la grilla porque son dos preguntas distintas -una es la
+    // compra del finde y la otra es la ficha de una cosa- y porque la grilla se
+    // dibuja igual con la ficha cerrada, que es el estado normal.
+    private async Task<FichaIngrediente?> Ficha(int id)
+    {
+        var x = await _contexto.Ingredientes
+            .Where(i => i.IdIngrediente == id)
+            .Select(i => new
+            {
+                i.IdIngrediente,
+                i.Nombre,
+                i.Unidad,
+                i.Libre,
+                i.CantidadDeCompra,
+                i.PrecioDeCompra,
+                i.PrecioPorMedida,
+                EnProductos = i.UsosEnProductos.Count,
+                Bases = i.UsosEnBases.Select(u => u.Base.Nombre).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (x is null)
+        {
+            return null;
+        }
+
+        return new FichaIngrediente
+        {
+            IdIngrediente = x.IdIngrediente,
+            Nombre = x.Nombre,
+            Unidad = x.Unidad,
+            Libre = x.Libre,
+            // pelado: la unidad se dibuja al lado y no adentro del campo
+            Bulto = x.CantidadDeCompra is decimal trae ? trae.ToString("0.###") : "",
+            Precio = x.PrecioDeCompra,
+            Titulo = x.Nombre,
+            Donde = Donde(x.EnProductos, x.Bases)
+        };
     }
 
     // Donde se usa un ingrediente. Las bases van nombradas cuando es una sola:
@@ -142,6 +184,92 @@ public class PanelController : Controller
         }
 
         return partes.Count == 0 ? "todavía en ninguna receta" : string.Join(" y ", partes);
+    }
+
+    // Guardar la ficha: nombre, medida y como se compra.
+    //
+    // Va entera y de una vez -y no campo por campo como el stock- porque los
+    // cuatro se leen juntos: cambiar la medida sin tocar el bulto deja «25 kg»
+    // queriendo decir otra cosa.
+    [HttpPost("ingredientes/guardar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarIngrediente(FichaIngrediente ficha, bool todos = false)
+    {
+        var ingrediente = await _contexto.Ingredientes.FindAsync(ficha.IdIngrediente)
+            ?? throw new InvalidOperationException($"No existe el ingrediente {ficha.IdIngrediente}.");
+
+        var nombre = (ficha.Nombre ?? "").Trim();
+
+        if (nombre.Length == 0)
+        {
+            return await VolverAFicha(ficha, todos, "Escribí cómo se llama.");
+        }
+
+        // el nombre es unico en la tabla: mejor decirlo con palabras que dejar
+        // que reviente el indice
+        var repetido = await _contexto.Ingredientes
+            .AnyAsync(x => x.IdIngrediente != ficha.IdIngrediente && x.Nombre.ToLower() == nombre.ToLower());
+
+        if (repetido)
+        {
+            return await VolverAFicha(ficha, todos, $"Ya hay un ingrediente que se llama «{nombre}».");
+        }
+
+        // Vacio quiere decir «todavia no se cuanto trae» y se guarda nulo. Lo
+        // que no se entiende es distinto: alguien quiso escribir algo, y
+        // borrarle el dato en silencio seria peor que rebotarlo.
+        decimal? bulto = null;
+
+        if (!string.IsNullOrWhiteSpace(ficha.Bulto))
+        {
+            bulto = Cantidades.Leer(ficha.Bulto, ficha.Unidad);
+
+            if (bulto is null)
+            {
+                return await VolverAFicha(ficha, todos,
+                    $"No entiendo «{ficha.Bulto.Trim()}» como cantidad. Escribí solo el número.");
+            }
+
+            // cero se entiende, pero un bulto que no trae nada no es un bulto
+            if (bulto == 0)
+            {
+                return await VolverAFicha(ficha, todos,
+                    "El bulto no puede ser cero: es cuánto trae la compra. Dejalo vacío si todavía no lo sabés.");
+            }
+        }
+
+        ingrediente.Nombre = nombre;
+        ingrediente.Unidad = ficha.Unidad;
+        // Libre no se toca: no viene del formulario, y el binder lo daria en
+        // false por no estar. Guardar la ficha del agua la volveria comprable.
+        ingrediente.CantidadDeCompra = bulto;
+        ingrediente.PrecioDeCompra = ficha.Precio > 0 ? ficha.Precio : null;
+
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Ingredientes), new { todos });
+    }
+
+    // Vuelve a dibujar la pantalla con la ficha abierta y el error puesto,
+    // conservando lo tipeado. El encabezado sigue saliendo del registro
+    // guardado: es la identidad de lo que estas editando, no lo que escribiste.
+    private async Task<IActionResult> VolverAFicha(FichaIngrediente ficha, bool todos, string error)
+    {
+        var vm = (IngredientesVm)((ViewResult)await Ingredientes(todos, ficha.IdIngrediente)).Model!;
+
+        if (vm.Ficha is not null)
+        {
+            ficha.Titulo = vm.Ficha.Titulo;
+            ficha.Donde = vm.Ficha.Donde;
+            ficha.Libre = vm.Ficha.Libre;
+        }
+
+        vm.Ficha = ficha;
+        vm.Error = error;
+
+        // con el nombre puesto: sin el, MVC busca la vista de la accion que se
+        // esta ejecutando -GuardarIngrediente- y no la que arma la pantalla
+        return View(nameof(Ingredientes), vm);
     }
 
     // El stock se edita en el renglon y se guarda solo ese renglon: son

@@ -51,7 +51,11 @@
             {
                 <tr>
                     <td class="g-nom">
-                        @i.Nombre
+                        @* el nombre abre la ficha. Es un enlace y no un botón:
+                           abrirla no cambia nada, y así se puede compartir y
+                           volver con el botón de atrás *@
+                        <a class="abre" asp-action="Ingredientes"
+                           asp-route-todos="@Model.Todos" asp-route-ingrediente="@i.IdIngrediente">@i.Nombre</a>
                         <span class="bajo">@i.Donde</span>
                     </td>
 
@@ -74,11 +78,10 @@
                     <td class="g-num g-flojo">@i.Necesito</td>
 
                     <td class="g-fin g-num">
-                        @if (i.Libre)
-                        {
-                            <span class="sinCargar">no se compra</span>
-                        }
-                        else if (i.HayQueComprar)
+                        @* el agua y la masa madre no se compran, así que nunca
+                           faltan. No hace falta decir por qué: son dos de
+                           cuarenta y el resto se compra todo *@
+                        @if (i.HayQueComprar)
                         {
                             <b class="urge">@i.Falta</b>
                         }
@@ -102,3 +105,96 @@
         </a>
     </span>
 </div>
+
+@* La ficha, encima de la grilla. Se dibuja en el servidor cuando viene un
+   ingrediente en la dirección, así que abre y cierra sin JavaScript. *@
+@if (Model.Ficha is f4872.ViewModels.FichaIngrediente f)
+{
+    <div class="telon">
+        @* el telón es un enlace: hacer clic afuera cierra, que es lo que
+           espera cualquiera, y sin depender de que corra un script *@
+        <a class="tapa" asp-action="Ingredientes" asp-route-todos="@Model.Todos"
+           aria-label="Cerrar"></a>
+
+        <div class="modal" role="dialog" aria-label="@f.Titulo">
+            <div class="det-tope"><h2>@f.Titulo</h2></div>
+            <p class="det-meta">@f.Donde</p>
+
+            @if (Model.Error is string error)
+            {
+                <p class="aviso" role="alert">@error</p>
+            }
+
+            <form method="post" asp-action="GuardarIngrediente" asp-route-todos="@Model.Todos">
+                <input type="hidden" asp-for="Ficha!.IdIngrediente" />
+
+                <div class="renglones">
+
+                    <div class="reng">
+                        <span class="et">Nombre</span>
+                        <span class="va">
+                            <input asp-for="Ficha!.Nombre" maxlength="60" autocomplete="off" />
+                        </span>
+                    </div>
+
+                    <div class="reng">
+                        <span class="et">Se mide en</span>
+                        <span class="va">
+                            <span class="chips-fam">
+                                @foreach (var (valor, nombre) in f4872.ViewModels.FichaIngrediente.Medidas)
+                                {
+                                    <label class="chip-fam">
+                                        <input type="radio" asp-for="Ficha!.Unidad" value="@valor" />
+                                        <span>@nombre</span>
+                                    </label>
+                                }
+                            </span>
+                        </span>
+                    </div>
+
+                    @* Los dos números de la compra van en pastilla: son lo único
+                       que se escribe a mano acá, y en el panel el borde redondo
+                       es lo que avisa que algo se toca. *@
+                    @if (!f.Libre)
+                    {
+                        <div class="reng">
+                            <span class="et">De a</span>
+                            <span class="va">
+                                <span class="pastilla">
+                                    @* adentro y a la izquierda, como el $ del precio:
+                                       no se escribe, sale de la medida de arriba. El
+                                       script la cambia al tocar otro chip *@
+                                    <span class="signo" data-uni>@f.UnidadCorta</span>
+                                    <input asp-for="Ficha!.Bulto" type="text" inputmode="decimal"
+                                           autocomplete="off" placeholder="0" />
+                                </span>
+                            </span>
+                        </div>
+
+                        <div class="reng">
+                            <span class="et">Precio</span>
+                            <span class="va">
+                                <span class="pastilla">
+                                    <span class="signo">$</span>
+                                    <input asp-for="Ficha!.Precio" asp-format="{0:0}"
+                                           type="number" min="1" step="1" />
+                                </span>
+                            </span>
+                        </div>
+                    }
+
+                </div>
+
+                @if (f.Libre)
+                {
+                    <p class="nota-f">El agua y la masa madre no se compran: no entran en la lista ni en los costos.</p>
+                }
+
+                <div class="acciones en-fila">
+                    <button class="btn" type="submit">Guardar cambios</button>
+                    <a class="btn flaco" asp-action="Ingredientes" asp-route-todos="@Model.Todos">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}

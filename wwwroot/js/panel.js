@@ -122,3 +122,19 @@
     });
   });
 })();
+
+// La unidad que va al lado del bulto en la ficha del ingrediente. Sale de la
+// medida elegida arriba, asi que tiene que cambiar al tocar otro chip y no
+// recien al guardar. Sin script la dibuja el servidor con la medida guardada.
+(function () {
+  var uni = document.querySelector("[data-uni]");
+  if (!uni) return;
+
+  var corto = { Gramo: "g", Mililitro: "ml", Unidad: "u" };
+
+  document.querySelectorAll("[name='Ficha.Unidad']").forEach(function (r) {
+    r.addEventListener("change", function () {
+      uni.textContent = corto[r.value] || r.value;
+    });
+  });
+})();
