@@ -62,12 +62,18 @@ public class FichaProducto
     // binder necesita poder agregarle elementos para armarla.
     public List<PrecioPack> Packs { get; set; } = [];
 
-    public IReadOnlyList<IngredienteDeLaReceta> Receta { get; set; } = [];
+    // List y no IReadOnlyList por lo mismo que los packs: las cantidades vuelven
+    // por el formulario de la ficha y el binder necesita poder armarla
+    public List<IngredienteDeLaReceta> Receta { get; set; } = [];
 
-    // Los que todavía no están en la receta. Solo se puede sumar uno que ya
-    // exista: escribir libre es como entraron «Oregano» y «Orégano» a la base
-    // de la maqueta como dos ingredientes distintos.
-    public IReadOnlyList<string> Disponibles { get; set; } = [];
+    // Los que todavía no están en la receta, con su unidad. Solo se puede sumar
+    // uno que ya exista: escribir libre es como entraron «Oregano» y «Orégano»
+    // a la base de la maqueta como dos ingredientes distintos.
+    public IReadOnlyList<IngredienteDisponible> Disponibles { get; set; } = [];
+
+    // El ingrediente ya elegido que está esperando la cantidad. Es el estado del
+    // renglón de arriba: nulo en reposo, con nombre mientras se carga.
+    public IngredienteDeLaReceta? Sumando { get; set; }
 
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
@@ -79,12 +85,31 @@ public class FichaProducto
     };
 }
 
-// un ingrediente de la receta. Solo cuáles: el cuánto y el «se saca» se editan
-// en Ingredientes, que es donde se ve la cantidad contra todos los productos
+// Un renglón de la receta: qué lleva, cuánto y si el cliente lo puede sacar.
+//
+// Los tres juntos acá y no repartidos entre dos pantallas: cuando estás cargando
+// una pizza la pregunta es «qué lleva y qué se le puede sacar», y tener que ir a
+// Ingredientes por el cuánto obliga a ir y volver por cada renglón.
 public class IngredienteDeLaReceta
 {
     public int IdIngrediente { get; set; }
+    public string Nombre { get; set; } = "";
+    public decimal Cantidad { get; set; }
+
+    // «g», «ml» o «u». Es del ingrediente, no del renglón: no se edita acá
+    public string Unidad { get; set; } = "";
+
+    // si el cliente puede pedir la pizza sin esto. Es del par producto-
+    // ingrediente: la muzzarella se saca de una fugazzeta y de una napolitana no
+    public bool Modificable { get; set; }
+}
+
+// la unidad viaja con el nombre para poder mostrarla al lado del campo de
+// cuánto apenas se elige, sin otro viaje al servidor
+public class IngredienteDisponible
+{
     public string Nombre { get; set; } = null!;
+    public string Unidad { get; set; } = null!;
 }
 
 public class PrecioPack

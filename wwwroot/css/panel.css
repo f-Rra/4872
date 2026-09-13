@@ -7,6 +7,10 @@
 
 *{box-sizing:border-box}
 
+/* el alto de renglon de las listas del panel */
+:root{--fila:34px}
+.hornear{--fila:30px}
+
 /* ---------- la entrada ----------
    Columna angosta y centrada en la ventana. Es la única pantalla del panel sin
    barra lateral: todavía no hay a dónde ir. */
@@ -132,7 +136,7 @@
    encabezados de familia incluidos, para que cada linea de una mitad caiga a la
    misma altura que la de la otra. No es ojo: es la unica manera de que
    coincidan cuando la izquierda tiene encabezados que la derecha no. */
-.hornear{--fila:30px;display:flex;align-items:stretch;flex:1;min-height:0}
+.hornear{display:flex;align-items:stretch;flex:1;min-height:0}
 .hornear > .mitad-h{flex:1;padding:.95rem 1.1rem 1.2rem;min-width:0;overflow-y:auto}
 .hornear > .mitad-h + .mitad-h{border-left:1.5px solid rgba(30,82,69,.28)}
 .hornear h2{
@@ -325,7 +329,17 @@
    Renglon etiquetado: etiqueta a la izquierda, valor a la derecha, un filete
    entre cada uno. Como una planilla: todo alineado en una sola columna y el ojo
    baja comparando. */
-.renglones{border-top:1.5px solid rgba(30,82,69,.3);margin-bottom:1.3rem}
+/* sin margen abajo: el aire antes de los botones lo pone .acciones. Si lo
+   pusiera el bloque, dos bloques seguidos quedarian separados por un hueco que
+   los renglones de adentro no tienen */
+.renglones{border-top:1.5px solid rgba(30,82,69,.3)}
+/* el bloque que sigue a otro no repite la linea: el renglon de arriba ya cierra
+   con la suya y las dos juntas se ven como un filete doble */
+.renglones.sigue{border-top:0}
+/* el signo del precio, afuera del campo: asi lo que se guarda sigue siendo un
+   numero y no hay que limpiarle nada al leerlo */
+.conplata{display:flex;align-items:baseline;gap:.22rem}
+.conplata .signo{font-size:.98rem;font-weight:700;opacity:.55;flex:none}
 .reng{display:flex;align-items:baseline;gap:1rem;padding:.62rem 0;border-bottom:1px solid rgba(30,82,69,.22)}
 .reng > .et{
   flex:none;width:7.6rem;font-size:.66rem;font-weight:800;
@@ -356,9 +370,162 @@
 .chip-fam input:checked + span{background:var(--verde);border-color:var(--verde);color:var(--papel)}
 .chip-fam input:focus-visible + span{outline:2px solid var(--verde);outline-offset:2px}
 
-.nota-f{margin:-.9rem 0 1.3rem;font-size:.8rem;font-weight:600;opacity:.72}
+/* la nota es un pie de los precios de pack, asi que va pegada a ellos y no a
+   mitad de camino entre los dos bloques */
+.nota-f{margin:.4rem 0 .85rem;font-size:.8rem;font-weight:600;opacity:.72}
 .acciones-aparte{margin-top:.6rem}
 .detalle .aviso{margin:0 0 1rem}
+
+
+/* ---------- la receta ----------
+   Un renglon por ingrediente: nombre, cuanto, si se puede sacar, y la x. Se lee
+   como una receta y el ojo baja comparando, igual que los campos de arriba. */
+.receta{list-style:none;margin:0;padding:0}
+.receta li{
+  display:flex;align-items:center;gap:.8rem;height:var(--fila);
+  border-bottom:1px solid rgba(30,82,69,.18);
+}
+.receta li:last-child{border-bottom:0}
+.receta .rn{flex:1;min-width:0;font-size:.93rem;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* la cantidad va en pastilla, como los demas chips de la pantalla, con la
+   unidad adentro: el numero y lo que mide son una sola cosa */
+.receta .rcaja{
+  flex:none;display:inline-flex;align-items:baseline;gap:.22rem;
+  border:1.3px solid rgba(30,82,69,.4);border-radius:999px;padding:.1rem .55rem;
+}
+.receta .rcaja:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+/* dos clases y no una: la regla de los campos de la ficha es
+   «.reng input[type=number]» y con una sola clase le ganaba, estirando la
+   pastilla al ancho del renglon */
+.receta .rcaja .rc{
+  width:2.9rem;text-align:right;font-size:.86rem;font-weight:800;
+  font-variant-numeric:tabular-nums;font-family:var(--ui);color:var(--verde);
+  background:transparent;border:0;padding:0;
+}
+.receta .rcaja .rc:hover{border:0}
+.receta .rcaja .rc:focus{outline:0;border:0}
+.receta .rcaja .rc::placeholder{font-weight:600;opacity:.4}
+.receta .ru{flex:none;font-size:.72rem;font-weight:700;opacity:.6;min-width:1.1rem}
+.receta .rx{
+  flex:none;background:transparent;border:0;cursor:pointer;color:var(--verde);
+  font-family:var(--ui);font-size:1rem;line-height:1;opacity:.4;padding:0 .1rem;width:1.1rem;
+}
+.receta .rx:hover{opacity:1}
+
+/* modificable va macizo y fijo perfilado: lo que se puede tocar pesa mas */
+.receta .saca{
+  flex:none;font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  border-radius:999px;padding:.16rem .5rem;min-width:6.2rem;text-align:center;cursor:pointer;
+  font-family:var(--ui);border:1.4px solid var(--verde);background:var(--verde);color:var(--papel);
+}
+.receta .saca[aria-pressed="false"]{background:transparent;color:var(--piedra);border-color:rgba(154,146,135,.85)}
+.receta .saca:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+.hueco{flex:none;min-width:6.2rem}
+
+/* El renglon de sumar va arriba y a la altura de la etiqueta: las dos cosas se
+   leen como una sola linea y la receta cuelga abajo. Esta siempre en el mismo
+   lugar, tenga la receta cuatro ingredientes o doce. */
+.reng.alto.receta-reng > .et{display:flex;align-items:center;height:var(--fila);padding-top:0}
+.tope li{border-bottom:1.4px solid rgba(30,82,69,.35);gap:.55rem}
+.mas{
+  flex:none;width:1.55rem;height:1.55rem;border-radius:50%;cursor:pointer;
+  background:transparent;border:1.4px solid rgba(30,82,69,.5);color:var(--verde);
+  display:grid;place-items:center;padding:0;
+}
+.mas svg{width:13px;height:13px}
+.mas:hover{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+.dice{flex:1;font-size:.8rem;font-weight:600;opacity:.55;cursor:pointer;text-align:left;
+  background:transparent;border:0;font-family:var(--ui);color:var(--verde);padding:0}
+/* el buscador ocupa el lugar del texto, en el mismo renglon */
+.buscar-linea{
+  flex:1;min-width:0;font-family:var(--ui);font-size:.9rem;font-weight:600;color:var(--verde);
+  background:transparent;border:0;border-bottom:1.3px dashed rgba(30,82,69,.45);padding:0 0 .12rem;
+}
+.buscar-linea::placeholder{opacity:.45;font-weight:600}
+.buscar-linea:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+.elegido{flex:1;min-width:0;font-size:.93rem;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* la lista propia y no el datalist del navegador, que se dibuja con los colores
+   del sistema operativo y no con los de la pantalla */
+.candidatos{
+  list-style:none;margin:0;padding:0;max-height:9.5rem;overflow-y:auto;
+  border-bottom:1.4px solid rgba(30,82,69,.35);background:rgba(30,82,69,.05);
+}
+.candidatos li{border-bottom:1px solid rgba(30,82,69,.12)}
+.candidatos li:last-child{border-bottom:0}
+.candidatos button{
+  width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+  font-family:var(--ui);font-size:.85rem;font-weight:600;color:var(--verde);padding:.38rem .6rem;
+}
+.candidatos button:hover{background:rgba(30,82,69,.12)}
+.candidatos .nada{padding:.5rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
+
+/* ---------- produccion ----------
+   Tres titulares arriba y las tres familias abajo. Es la pantalla que se lee de
+   parado y con las manos ocupadas, asi que la cantidad va primera y grande. */
+.prod{flex:1;overflow-y:auto;min-width:0}
+.titulares{display:flex;border-bottom:2px solid var(--verde)}
+.titular{flex:1;min-width:0;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.15rem}
+.titular + .titular{border-left:1px solid rgba(30,82,69,.25)}
+.titular dt{font-size:.66rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;opacity:.8}
+.titular dd{
+  margin:0;font-size:clamp(1.1rem, 2.1vw, 1.7rem);font-weight:800;
+  font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.titular .nota{font-size:.74rem;font-weight:600;opacity:.72}
+
+.grupo-prod{padding:0 0 .4rem}
+.grupo-prod > h2{
+  margin:0;padding:.6rem 1.1rem;font-size:.66rem;font-weight:800;
+  letter-spacing:.18em;text-transform:uppercase;background:rgba(30,82,69,.09);
+}
+.prod-lista{list-style:none;margin:0;padding:0}
+.prod-lista li{
+  display:flex;align-items:flex-start;gap:.9rem;
+  padding:.7rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.22);
+}
+.prod-cant{
+  flex:none;min-width:2.6rem;font-size:1.15rem;font-weight:800;
+  font-variant-numeric:tabular-nums;line-height:1.2;
+}
+.prod-cuerpo{flex:1;min-width:0}
+.prod-nom{margin:0;font-size:1rem;font-weight:700;line-height:1.25}
+.prod-detalle{margin:.22rem 0 0;font-size:.82rem;font-weight:600;opacity:.8;line-height:1.4}
+/* el «sin» va en pastilla y el desglose de packs no: uno es una instruccion de
+   armado que hay que ver de lejos, el otro es de donde salio el numero */
+.prod-detalle .marca-sin{
+  display:inline-block;border:1.2px solid rgba(30,82,69,.45);border-radius:999px;
+  padding:.02rem .4rem;margin-right:.3rem;font-weight:700;
+}
+.prod-unidad{flex:none;font-size:.78rem;font-weight:700;opacity:.7;padding-top:.28rem;white-space:nowrap}
+
+
+/* ---------- productos: la lista ---------- */
+/* el alta queda fija abajo mientras la lista scrollea */
+.columna.con-pie{display:flex;flex-direction:column;overflow:hidden}
+.columna .rollo{flex:1;overflow-y:auto;min-height:0}
+.fila-p{display:flex;align-items:baseline;gap:.55rem;width:100%;min-width:0}
+.fila-p .nom{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila-p .fam{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.fila-p .plata{margin-left:auto;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.fila-p .plata.packs-dos{font-size:.86rem;letter-spacing:-.01em}
+.agotado{
+  font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;flex:none;
+  border-radius:999px;padding:.14rem .48rem;box-shadow:inset 0 0 0 1.5px var(--piedra);color:var(--piedra);
+}
+.columna li.elegido .agotado{box-shadow:inset 0 0 0 1.5px var(--papel);color:var(--papel)}
+.alta{
+  flex:none;display:flex;align-items:center;gap:.55rem;width:100%;cursor:pointer;text-decoration:none;
+  font-family:var(--ui);font-weight:800;font-size:.82rem;letter-spacing:.03em;color:var(--verde);
+  background:transparent;border:0;border-top:1.5px solid rgba(30,82,69,.32);padding:.75rem .9rem;
+}
+.alta svg{width:17px;height:17px;flex:none}
+.alta:hover{background:rgba(30,82,69,.09)}
+.alta[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
+
 
 
 /* ---------- la receta ----------
@@ -412,6 +579,9 @@
 .candidatos .nada{padding:.5rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
 
 /* los dos botones en una fila, del ancho de su texto y centrados */
-.acciones.en-fila{flex-direction:row;justify-content:center;align-items:center;gap:.7rem;flex-wrap:wrap}
+.acciones.en-fila{
+  flex-direction:row;justify-content:center;align-items:center;gap:.7rem;flex-wrap:wrap;
+  margin-top:1.3rem;
+}
 .acciones.en-fila .btn{width:auto;min-width:11rem;padding-left:1.4rem;padding-right:1.4rem}
 .nota-suelta{display:inline-block;margin:0;opacity:.6}

@@ -57,9 +57,10 @@ public class PanelController : Controller
     // No hay pantalla de alta distinta de la de edicion: con ?nuevo=1 se dibuja
     // la misma ficha en blanco.
     [HttpGet("productos")]
-    public async Task<IActionResult> Productos(string? familia = null, int? producto = null, bool nuevo = false)
+    public async Task<IActionResult> Productos(string? familia = null, int? producto = null,
+        bool nuevo = false, int? sumando = null)
     {
-        return View(await Catalogo(familia, producto, nuevo));
+        return View(await Catalogo(familia, producto, nuevo, sumando));
     }
 
     // Guardar la ficha, de alta o de edicion. Es un solo camino porque es una
@@ -101,6 +102,25 @@ public class PanelController : Controller
         if (nuevo)
         {
             _contexto.Productos.Add(producto);
+        }
+
+        // Las cantidades de la receta viajan con la ficha: se editan en el
+        // renglon y se guardan con el mismo boton que el nombre y el precio.
+        foreach (var renglon in ficha.Receta ?? [])
+        {
+            if (renglon.Cantidad <= 0)
+            {
+                return await Volver(familia, ficha, nuevo,
+                    $"La cantidad de {renglon.Nombre.ToLowerInvariant()} tiene que ser mayor que cero.");
+            }
+
+            var fila = await _contexto.ProductoIngredientes
+                .FirstOrDefaultAsync(x => x.IdProducto == ficha.IdProducto && x.IdIngrediente == renglon.IdIngrediente);
+
+            if (fila is not null)
+            {
+                fila.Cantidad = renglon.Cantidad;
+            }
         }
 
         // Los dos precios de pack valen para todos los gustos, asi que se
@@ -149,14 +169,15 @@ public class PanelController : Controller
                 : $"No hay ningún ingrediente que se llame «{buscado}». Se dan de alta en Ingredientes.");
         }
 
-        // La cantidad se pide acá y no se deja para despues: la tabla tiene un
-        // chequeo que exige mayor que cero, y esa decision esta escrita en el
-        // modelo con su motivo -un ingrediente con cantidad cero no es un
-        // ingrediente de la receta: o lleva algo o no esta-.
+        // Sin cantidad no es un error: es el paso del medio. El renglon de
+        // arriba vuelve a dibujarse con el ingrediente ya elegido y el campo de
+        // cuanto esperando, que es como se carga con JavaScript en un solo
+        // viaje y sin el en dos. La tabla exige mayor que cero, asi que la
+        // cantidad no se puede dejar para despues.
         if (cantidad is not > 0)
         {
-            return await Volver(familia, id,
-                $"Falta cuánto lleva de {ingrediente.Nombre.ToLowerInvariant()}, en {Cantidades.Abreviatura(ingrediente.Unidad)}.");
+            return RedirectToAction(nameof(Productos),
+                new { familia, producto = id, sumando = ingrediente.IdIngrediente });
         }
 
         var fila = await _contexto.ProductoIngredientes
@@ -178,6 +199,25 @@ public class PanelController : Controller
         }
 
         await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    // Si el cliente puede pedir la pizza sin esto. Es del par producto-
+    // ingrediente y no del ingrediente: la muzzarella se saca de una fugazzeta
+    // y de una napolitana no.
+    [HttpPost("productos/receta/modificable")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Modificable(int id, int idIngrediente, string? familia = null)
+    {
+        var fila = await _contexto.ProductoIngredientes
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == idIngrediente);
+
+        if (fila is not null)
+        {
+            fila.Quitable = !fila.Quitable;
+            await _contexto.SaveChangesAsync();
+        }
 
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
@@ -235,7 +275,7 @@ public class PanelController : Controller
         return View(nameof(Productos), vm);
     }
 
-    private async Task<ProductosVm> Catalogo(string? familia, int? producto, bool nuevo)
+    private async Task<ProductosVm> Catalogo(string? familia, int? producto, bool nuevo, int? sumando = null)
     {
         familia = ProductosVm.Chips.Any(x => x.Clave == familia) ? familia! : "todo";
 
@@ -278,9 +318,25 @@ public class PanelController : Controller
                 .Select(x => new IngredienteDeLaReceta
                 {
                     IdIngrediente = x.IdIngrediente,
-                    Nombre = x.Ingrediente.Nombre
+                    Nombre = x.Ingrediente.Nombre,
+                    Cantidad = x.Cantidad,
+                    Unidad = Cantidades.Abreviatura(x.Ingrediente.Unidad),
+                    Modificable = x.Quitable
                 })
                 .ToListAsync();
+
+        // el que se eligio y esta esperando la cantidad, si hay alguno
+        var enEspera = sumando is null
+            ? null
+            : await _contexto.Ingredientes
+                .Where(x => x.IdIngrediente == sumando)
+                .Select(x => new IngredienteDeLaReceta
+                {
+                    IdIngrediente = x.IdIngrediente,
+                    Nombre = x.Nombre,
+                    Unidad = Cantidades.Abreviatura(x.Unidad)
+                })
+                .FirstOrDefaultAsync();
 
         var puestos = receta.Select(x => x.IdIngrediente).ToList();
         var disponibles = elegido is null
@@ -288,7 +344,7 @@ public class PanelController : Controller
             : await _contexto.Ingredientes
                 .Where(x => !puestos.Contains(x.IdIngrediente))
                 .OrderBy(x => x.Nombre)
-                .Select(x => x.Nombre)
+                .Select(x => new { x.Nombre, x.Unidad })
                 .ToListAsync();
 
         var agotados = lista.Count(x => !x.Activo);
@@ -321,7 +377,12 @@ public class PanelController : Controller
                     Activo = elegido.Activo,
                     Packs = packs,
                     Receta = receta,
-                    Disponibles = disponibles
+                    Disponibles = [.. disponibles.Select(x => new IngredienteDisponible
+                    {
+                        Nombre = x.Nombre,
+                        Unidad = Cantidades.Abreviatura(x.Unidad)
+                    })],
+                    Sumando = enEspera
                 }
         };
     }

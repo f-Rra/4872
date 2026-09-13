@@ -14,31 +14,35 @@
 
 // El buscador de ingredientes de la ficha de producto.
 //
-// El campo y la lista van dibujados y visibles en el HTML, y esto los esconde
-// al cargar: sin JavaScript queda el campo siempre a la vista, que funciona
-// igual porque el servidor valida el nombre. Con JavaScript se comporta como la
-// maqueta: en reposo un (+), y al tocarlo aparecen el campo y la lista.
+// El campo y la lista van dibujados y visibles en el HTML, y esto los esconde al
+// cargar: sin JavaScript el buscador queda siempre a la vista y la pantalla
+// funciona igual, en dos viajes al servidor en vez de uno. Con JavaScript se
+// comporta como se diseno: en reposo un (+), y al tocarlo aparecen los dos.
 (function () {
   var caja = document.querySelector("[data-candidatos]");
   var buscar = document.querySelector("[data-buscar]");
-  var mas = document.querySelector("[data-abrir-ingrediente]");
-  if (!caja || !buscar || !mas) return;
+  var abren = [].slice.call(document.querySelectorAll("[data-abrir-ingrediente]"));
+  if (!caja || !buscar || !abren.length) return;
 
-  var cuanto = document.querySelector(".ingr .cuanto");
   var nada = caja.querySelector(".nada");
   var opciones = [].slice.call(caja.querySelectorAll("[data-elegir]"));
+  var cuanto = null;
 
   function mostrar(abierto) {
-    mas.hidden = abierto;
+    // el (+) y su texto van juntos: los dos abren y los dos se van
+    abren.forEach(function (b) { b.hidden = abierto; });
     buscar.hidden = !abierto;
-    if (cuanto) cuanto.hidden = !abierto;
     caja.hidden = !abierto;
     if (abierto) buscar.focus();
   }
 
+  // sin acentos y sin mayusculas: buscar "oregano" tiene que encontrar
+  // "Oregano" con acento, que es justo el par que se duplica al escribir libre
+  function pelado(t) {
+    return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
   function filtrar() {
-    // sin acentos y sin mayúsculas: buscar "oregano" tiene que encontrar
-    // "Orégano", que es justo el par que se duplica cuando se escribe libre
     var texto = pelado(buscar.value);
     var quedan = 0;
 
@@ -51,24 +55,46 @@
     nada.hidden = quedan > 0;
   }
 
-  function pelado(t) {
-    return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  // Elegir uno no manda el formulario: completa el nombre y abre el campo de
+  // cuanto en el mismo renglon. Sin JavaScript el boton lo manda y el servidor
+  // devuelve la pantalla con el ingrediente ya elegido, que es el mismo paso.
+  function elegir(nombre) {
+    buscar.value = nombre;
+    caja.hidden = true;
+
+    if (!cuanto) {
+      cuanto = document.createElement("span");
+      cuanto.className = "rcaja";
+      cuanto.innerHTML =
+        '<input class="rc" type="text" name="cantidad" form="sumar-ingrediente" ' +
+        'inputmode="decimal" placeholder="0"><span class="ru"></span>';
+      buscar.parentElement.insertBefore(cuanto, buscar.nextSibling);
+    }
+
+    var unidad = opciones.filter(function (b) { return b.dataset.elegir === nombre; })[0];
+    cuanto.querySelector(".ru").textContent = unidad ? unidad.dataset.unidad || "" : "";
+    cuanto.hidden = false;
+    cuanto.querySelector(".rc").focus();
   }
 
-  mas.addEventListener("click", function () { mostrar(true); });
-  buscar.addEventListener("input", filtrar);
+  abren.forEach(function (b) {
+    b.addEventListener("click", function () { mostrar(true); });
+  });
+  buscar.addEventListener("input", function () {
+    if (cuanto) cuanto.hidden = true;
+    caja.hidden = false;
+    filtrar();
+  });
 
   caja.addEventListener("click", function (e) {
     var b = e.target.closest("[data-elegir]");
     if (!b) return;
-    buscar.value = b.dataset.elegir;
-    caja.hidden = true;
-    // elegido el ingrediente, lo único que falta es cuánto lleva
-    if (cuanto) cuanto.focus();
+    e.preventDefault();
+    elegir(b.dataset.elegir);
   });
 
   buscar.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { buscar.value = ""; mostrar(false); }
+    if (e.key === "Escape") { buscar.value = ""; if (cuanto) cuanto.hidden = true; mostrar(false); }
   });
 
   mostrar(false);

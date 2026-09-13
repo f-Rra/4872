@@ -139,8 +139,9 @@
                         <div class="reng">
                             @* con parentesis: pegado a la x, Razor lee el @@ como literal *@
                             <span class="et">Pack x@(Model.Ficha.Packs[j].Unidades)</span>
-                            <span class="va">
+                            <span class="va conplata">
                                 <input type="hidden" asp-for="Ficha.Packs[j].Unidades" />
+                                <span class="signo">$</span>
                                 @* sin decimales: ningun precio de la carta los tiene *@
                                 <input asp-for="Ficha.Packs[j].Precio" asp-format="{0:0}" type="number" min="1" step="1" />
                             </span>
@@ -151,7 +152,12 @@
                 {
                     <div class="reng">
                         <span class="et">Precio</span>
-                        <span class="va"><input asp-for="Ficha.Precio" asp-format="{0:0}" type="number" min="1" step="1" /></span>
+                        @* el signo va afuera del campo: asi lo que se guarda sigue
+                           siendo un numero y no hay que limpiarle nada al leerlo *@
+                        <span class="va conplata">
+                            <span class="signo">$</span>
+                            <input asp-for="Ficha.Precio" asp-format="{0:0}" type="number" min="1" step="1" />
+                        </span>
                     </div>
                 }
 
@@ -163,11 +169,15 @@
             <p class="nota-f">Los dos precios valen para todos los gustos.</p>
         }
 
-        @* Qué lleva, no cuánto: la cantidad y el «se saca» se editan en
-           Ingredientes, que es donde se ve el número contra los demás productos
-           que llevan lo mismo. *@
-        <div class="renglones">
-            <div class="reng">
+        @* La receta entera acá: qué lleva, cuánto y qué se le puede sacar. Los
+           tres juntos porque cuando cargás una pizza la pregunta es esa; ir a
+           Ingredientes por el cuánto obliga a ir y volver por cada renglón.
+
+           Las cantidades son campos de la ficha —se guardan con «Guardar
+           cambios»— y por eso llevan form="ficha". Quitar y marcar modificable
+           son formularios propios, que no pueden ir adentro de otro. *@
+        <div class="renglones sigue">
+            <div class="reng alto receta-reng">
                 <span class="et">Ingredientes</span>
                 <span class="va">
                     @if (Model.EsNuevo)
@@ -176,48 +186,99 @@
                     }
                     else
                     {
-                        @* En reposo solo el (+). El campo y la lista aparecen
-                           al tocarlo; ver panel.js. Van dibujados y visibles, y
-                           el script los esconde al cargar: sin JavaScript queda
-                           el campo siempre a la vista, que funciona igual. *@
-                        <span class="ingr">
-                            @foreach (var i in Model.Ficha.Receta)
-                            {
-                                <span>
-                                    @i.Nombre
-                                    <button class="quitar" type="submit" title="Quitar"
-                                            form="quitar-@i.IdIngrediente" aria-label="Quitar @i.Nombre">×</button>
-                                </span>
-                            }
+                        @* El renglón de arriba tiene tres estados y nunca se
+                           mueve de lugar: el (+) en reposo, el buscador cuando
+                           se abre, y el ingrediente elegido esperando el cuánto.
 
-                            <button class="mas-ing" type="button" data-abrir-ingrediente
-                                    title="Sumar un ingrediente" aria-label="Sumar un ingrediente" hidden>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
-                                     stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-                            </button>
+                           Va dibujado abierto y el script lo cierra al cargar:
+                           sin JavaScript el buscador queda siempre a la vista y
+                           la pantalla funciona igual, en dos viajes en vez de uno. *@
+                        <ul class="receta tope">
+                            <li>
+                                <button class="mas" type="button" data-abrir-ingrediente
+                                        title="Sumar un ingrediente" aria-label="Sumar un ingrediente" hidden>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                                         stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                                </button>
 
-                            <input class="sumar" type="text" name="nombre" form="sumar-ingrediente"
-                                   data-buscar placeholder="Buscar…" autocomplete="off" />
+                                @* el texto acompaña al (+) en reposo. Va escondido y
+                                   el script lo muestra: sin JavaScript lo que se ve
+                                   es el campo, que es lo que sirve *@
+                                <button class="dice" type="button" data-abrir-ingrediente hidden>
+                                    Sumar un ingrediente
+                                </button>
 
-                            @* La cantidad se pide acá y no se deja para después:
-                               la tabla exige mayor que cero, porque un
-                               ingrediente en cero no es un ingrediente de la
-                               receta. El cuánto se corrige en Ingredientes. *@
-                            <input class="sumar cuanto" type="number" name="cantidad" form="sumar-ingrediente"
-                                   min="0.001" step="0.5" placeholder="cuánto" />
-                        </span>
+                                @if (Model.Ficha.Sumando is null)
+                                {
+                                    <input class="buscar-linea" type="text" name="nombre" form="sumar-ingrediente"
+                                           data-buscar placeholder="Buscar…" autocomplete="off" />
+                                }
+                                else
+                                {
+                                    <span class="elegido">@Model.Ficha.Sumando.Nombre</span>
+                                    <input type="hidden" name="nombre" form="sumar-ingrediente"
+                                           value="@Model.Ficha.Sumando.Nombre" />
+                                    <span class="rcaja">
+                                        <input class="rc" type="text" name="cantidad" form="sumar-ingrediente"
+                                               inputmode="decimal" placeholder="0" autofocus />
+                                        <span class="ru">@Model.Ficha.Sumando.Unidad</span>
+                                    </span>
+                                }
 
-                        @* La lista propia y no un datalist del navegador: el del
-                           sistema se dibuja con los colores del sistema operativo
-                           y no con los de la pantalla. *@
-                        <ul class="candidatos" data-candidatos>
-                            @foreach (var n in Model.Ficha.Disponibles)
-                            {
-                                <li><button type="button" data-elegir="@n">@n</button></li>
-                            }
-                            <li class="nada" hidden>
-                                No hay ninguno con ese nombre. Los ingredientes se dan de alta en <b>Ingredientes</b>.
+                                <span class="hueco"></span><span class="rx"></span>
                             </li>
+                        </ul>
+
+                        @if (Model.Ficha.Sumando is null)
+                        {
+                            @* Lista propia y no un datalist: el del navegador se
+                               dibuja con los colores del sistema operativo. Los
+                               renglones son botones que mandan el formulario:
+                               sin JavaScript eligen, con JavaScript completan. *@
+                            <ul class="candidatos" data-candidatos>
+                                @foreach (var d in Model.Ficha.Disponibles)
+                                {
+                                    <li>
+                                        <button type="submit" name="nombre" value="@d.Nombre"
+                                                form="sumar-ingrediente"
+                                                data-elegir="@d.Nombre" data-unidad="@d.Unidad">@d.Nombre</button>
+                                    </li>
+                                }
+                                <li class="nada" hidden>
+                                    No hay ninguno con ese nombre. Los ingredientes se dan de alta en <b>Ingredientes</b>.
+                                </li>
+                            </ul>
+                        }
+
+                        <ul class="receta">
+                            @for (var i = 0; i < Model.Ficha.Receta.Count; i++)
+                            {
+                                var j = i;
+                                var r = Model.Ficha.Receta[j];
+
+                                <li>
+                                    <span class="rn">@r.Nombre</span>
+
+                                    <input type="hidden" form="ficha" asp-for="Ficha.Receta[j].IdIngrediente" />
+                                    <input type="hidden" form="ficha" asp-for="Ficha.Receta[j].Nombre" />
+
+                                    <span class="rcaja">
+                                        @* sin ceros al final: 120 y no 120,000 *@
+                                        <input class="rc" form="ficha" inputmode="decimal"
+                                               asp-for="Ficha.Receta[j].Cantidad" asp-format="{0:0.##}" />
+                                        <span class="ru">@r.Unidad</span>
+                                    </span>
+
+                                    <button class="saca" type="submit" form="modificable-@r.IdIngrediente"
+                                            aria-pressed="@r.Modificable.ToString().ToLowerInvariant()"
+                                            title="@(r.Modificable ? "El cliente lo puede sacar" : "No se puede sacar")">
+                                        @(r.Modificable ? "Modificable" : "Fijo")
+                                    </button>
+
+                                    <button class="rx" type="submit" form="quitar-@r.IdIngrediente"
+                                            title="Quitar" aria-label="Quitar @r.Nombre">×</button>
+                                </li>
+                            }
                         </ul>
                     }
                 </span>
@@ -229,10 +290,14 @@
             <form id="sumar-ingrediente" method="post" asp-action="SumarIngrediente"
                   asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia"></form>
 
-            @foreach (var i in Model.Ficha.Receta)
+            @foreach (var r in Model.Ficha.Receta)
             {
-                <form id="quitar-@i.IdIngrediente" method="post" asp-action="QuitarIngrediente"
-                      asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@i.IdIngrediente"
+                <form id="quitar-@r.IdIngrediente" method="post" asp-action="QuitarIngrediente"
+                      asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@r.IdIngrediente"
+                      asp-route-familia="@Model.Familia"></form>
+
+                <form id="modificable-@r.IdIngrediente" method="post" asp-action="Modificable"
+                      asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@r.IdIngrediente"
                       asp-route-familia="@Model.Familia"></form>
             }
         }
