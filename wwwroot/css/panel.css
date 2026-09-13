@@ -589,3 +589,32 @@
 .modal .pastilla > input::placeholder{font-weight:600;opacity:.42}
 .modal .reng > .va{display:flex;align-items:baseline;gap:.6rem}
 
+/* ---------- ingredientes: el desglose ----------
+   De donde sale el numero que muestra la grilla. Es de lectura: las cantidades
+   se cargan en la receta de cada producto, no aca. */
+.reparto{border-top:1.4px solid rgba(30,82,69,.3);margin-top:1.15rem}
+.reparto .fila{
+  display:flex;align-items:baseline;gap:.55rem;
+  padding:.4rem 0;border-bottom:1px solid rgba(30,82,69,.2);
+}
+.reparto .qn{
+  flex:1;min-width:0;font-size:.88rem;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* el rinde va pegado al nombre de la base: explica por que esa fila no multiplica */
+.reparto .rinde{
+  font-style:normal;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;opacity:.55;margin-left:.45rem;
+}
+.reparto .cu{
+  flex:none;min-width:6.2rem;text-align:right;
+  font-size:.8rem;font-weight:700;opacity:.55;font-variant-numeric:tabular-nums;
+}
+.reparto .sale{
+  flex:none;min-width:6.6rem;text-align:right;
+  font-size:.8rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums;
+}
+.reparto .total{border-bottom:0;border-top:1.4px solid var(--verde);padding-top:.55rem}
+.reparto .total .qn{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.reparto .total .sale{font-size:1rem;font-weight:800;opacity:1}
+

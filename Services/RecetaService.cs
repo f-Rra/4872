@@ -138,12 +138,13 @@ public class RecetaService
             $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {x.Rinde}"));
     }
 
-    // Cuanto se come de cada ingrediente lo que hay pedido.
+    // De donde sale cada parte de lo que hace falta: un renglon por producto que
+    // lleva el ingrediente, y uno por base.
     //
-    // Es la cuenta que ya hacia FaltaComprar, pero devuelta cruda -por id, sin
-    // formatear y sin filtrar- porque la pantalla de Ingredientes necesita
-    // mostrar tambien los que alcanzan y los que no se compran.
-    public async Task<IReadOnlyDictionary<int, decimal>> Necesita()
+    // Es la unica cuenta. Necesita() no es mas que esto sumado por ingrediente y
+    // la ficha lo muestra abierto, asi que el total de la ficha y el numero de
+    // la grilla no pueden discrepar: salen del mismo lugar.
+    private async Task<IReadOnlyList<ParteDeReceta>> Reparto()
     {
         // renglon por renglon y no agrupado por producto: lo que cada uno lleva
         // sacado es de ese renglon, y agrupando antes se pierde
@@ -159,7 +160,7 @@ public class RecetaService
 
         if (items.Count == 0)
         {
-            return new Dictionary<int, decimal>();
+            return [];
         }
 
         var piezas = items
@@ -168,30 +169,29 @@ public class RecetaService
 
         var ids = piezas.Keys.ToList();
 
-        // el nombre viene con la receta porque el quitado guarda el nombre y no
-        // una clave -asi el pedido se lee aunque el ingrediente ya no exista- y
-        // es por ahi por donde hay que cruzarlos
+        // el nombre del ingrediente viene con la receta porque el quitado guarda
+        // el nombre y no una clave -asi el pedido se lee aunque el ingrediente ya
+        // no exista- y es por ahi por donde hay que cruzarlos
         var deProducto = await _contexto.ProductoIngredientes
             .Where(x => ids.Contains(x.IdProducto))
-            .Select(x => new { x.IdProducto, x.IdIngrediente, x.Ingrediente.Nombre, x.Cantidad })
+            .Select(x => new
+            {
+                x.IdProducto,
+                Producto = x.Producto.Nombre,
+                x.IdIngrediente,
+                Ingrediente = x.Ingrediente.Nombre,
+                x.Cantidad
+            })
             .ToListAsync();
 
         var recetas = deProducto
             .GroupBy(x => x.IdProducto)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var deBase = await _contexto.Productos
-            .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null)
-            .SelectMany(p => p.Base!.Receta.Select(r => new
-            {
-                p.IdProducto,
-                r.IdIngrediente,
-                r.Cantidad,
-                p.Base.Rinde
-            }))
-            .ToListAsync();
-
-        var necesita = new Dictionary<int, decimal>();
+        // cuantas piezas de cada producto lo llevan de verdad: el que la pidio
+        // sin albahaca no se la come, y contarsela igual es mandarlo a comprar
+        // para cinco pizzas cuando la llevan dos
+        var llevan = new Dictionary<(int Producto, int Ingrediente), int>();
 
         foreach (var item in items)
         {
@@ -202,29 +202,81 @@ public class RecetaService
 
             foreach (var r in receta)
             {
-                // el que la pidio sin albahaca no se la come: contarsela igual
-                // es mandarlo a comprar para cinco pizzas cuando la llevan dos
-                if (item.Sacados.Contains(r.Nombre))
+                if (item.Sacados.Contains(r.Ingrediente))
                 {
                     continue;
                 }
 
-                necesita[r.IdIngrediente] = necesita.GetValueOrDefault(r.IdIngrediente) + r.Cantidad * item.Piezas;
+                var clave = (r.IdProducto, r.IdIngrediente);
+                llevan[clave] = llevan.GetValueOrDefault(clave) + item.Piezas;
             }
         }
 
-        // la base no se descuenta: una pizza sin albahaca se hace con el bollo
-        // entero igual, y de la masa no se saca nada
-        foreach (var r in deBase)
-        {
-            // el rinde no puede ser cero, pero si alguien lo carga en cero la
-            // division rompe la pantalla entera por un dato mal puesto
-            var porUnidad = r.Rinde > 0 ? r.Cantidad / r.Rinde : 0m;
-            necesita[r.IdIngrediente] = necesita.GetValueOrDefault(r.IdIngrediente) + porUnidad * piezas[r.IdProducto];
-        }
+        var partes = deProducto
+            .Where(x => llevan.ContainsKey((x.IdProducto, x.IdIngrediente)))
+            .Select(x => new ParteDeReceta
+            {
+                IdIngrediente = x.IdIngrediente,
+                Donde = x.Producto,
+                Cantidad = x.Cantidad,
+                Piezas = llevan[(x.IdProducto, x.IdIngrediente)],
+                Total = x.Cantidad * llevan[(x.IdProducto, x.IdIngrediente)]
+            })
+            .ToList();
 
-        return necesita;
+        var deBase = await _contexto.Productos
+            .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null)
+            .SelectMany(p => p.Base!.Receta.Select(r => new
+            {
+                p.IdProducto,
+                Base = p.Base.Nombre,
+                p.Base.Rinde,
+                r.IdIngrediente,
+                r.Cantidad
+            }))
+            .ToListAsync();
+
+        // Agrupado por base y no por producto: el bollo es uno solo y se amasa
+        // para todas las piezas que lo llevan juntas. La base tampoco se
+        // descuenta: una pizza sin albahaca se hace con el bollo entero igual.
+        partes.AddRange(deBase
+            .GroupBy(x => new { x.Base, x.Rinde, x.IdIngrediente, x.Cantidad })
+            .Select(g => new ParteDeReceta
+            {
+                IdIngrediente = g.Key.IdIngrediente,
+                Donde = g.Key.Base,
+                Cantidad = g.Key.Cantidad,
+                Rinde = g.Key.Rinde,
+                Piezas = g.Sum(x => piezas[x.IdProducto]),
+                // el rinde no puede ser cero, pero si alguien lo carga en cero
+                // la division rompe la pantalla entera por un dato mal puesto
+                Total = g.Key.Rinde > 0
+                    ? g.Key.Cantidad / g.Key.Rinde * g.Sum(x => piezas[x.IdProducto])
+                    : 0m
+            }));
+
+        return partes;
     }
+
+    // Cuanto se come de cada ingrediente lo que hay pedido.
+    //
+    // Devuelto crudo -por id, sin formatear y sin filtrar- porque la pantalla de
+    // Ingredientes necesita mostrar tambien los que alcanzan y los que no se
+    // compran.
+    public async Task<IReadOnlyDictionary<int, decimal>> Necesita() =>
+        (await Reparto())
+            .GroupBy(x => x.IdIngrediente)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Total));
+
+    // Lo mismo, abierto, para un solo ingrediente: de que producto sale cada
+    // parte del numero que muestra la grilla.
+    public async Task<IReadOnlyList<ParteDeReceta>> Desglose(int idIngrediente) =>
+        (await Reparto())
+            .Where(x => x.IdIngrediente == idIngrediente)
+            // lo que mas pesa primero: es el renglon que explica el total
+            .OrderByDescending(x => x.Total)
+            .ThenBy(x => x.Donde)
+            .ToList();
 
     // Que hay que ir a comprar: lo que se come menos lo que hay en stock.
     //

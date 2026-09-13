@@ -148,6 +148,8 @@ public class PanelController : Controller
             return null;
         }
 
+        var partes = await _recetas.Desglose(id);
+
         return new FichaIngrediente
         {
             IdIngrediente = x.IdIngrediente,
@@ -158,9 +160,28 @@ public class PanelController : Controller
             Bulto = x.CantidadDeCompra is decimal trae ? trae.ToString("0.###") : "",
             Precio = x.PrecioDeCompra,
             Titulo = x.Nombre,
-            Donde = Donde(x.EnProductos, x.Bases)
+            Donde = Donde(x.EnProductos, x.Bases),
+            Desglose = [.. partes.Select(p => Renglon(p, x.Unidad))],
+            HaceFalta = Cantidades.Bonito(partes.Sum(p => p.Total), x.Unidad)
         };
     }
+
+    // Como se lee un renglon del desglose.
+    //
+    // Una base no multiplica a la vista: su cantidad es de la tanda entera y lo
+    // que se come sale de dividirla por el rinde, asi que poner «x 12» al lado
+    // de los 700 ml invita a una cuenta que no cierra. El rinde lo explica.
+    private static RenglonDesglose Renglon(ParteDeReceta p, Medida unidad) => new()
+    {
+        Donde = p.Donde,
+        Rinde = p.EsBase ? $"rinde {p.Rinde}" : null,
+        Cuanto = p.EsBase
+            ? $"{Cantidades.Bonito(p.Cantidad, unidad)} la tanda"
+            : Cantidades.Bonito(p.Cantidad, unidad),
+        Sale = p.EsBase
+            ? Cantidades.Bonito(p.Total, unidad)
+            : $"× {p.Piezas} = {Cantidades.Bonito(p.Total, unidad)}"
+    };
 
     // Donde se usa un ingrediente. Las bases van nombradas cuando es una sola:
     // «en el bollo de masa» dice mas que «en 1 base», y son dos en todo el

@@ -85,10 +85,59 @@ public class FichaIngrediente
     // la que se dibuja al lado de la pastilla: g, ml o u
     public string UnidadCorta => Cantidades.Abreviatura(Unidad);
 
+    // De donde sale el numero que muestra la grilla, abierto por producto. Va
+    // vacio cuando el ingrediente no entra en ningun pedido sin entregar.
+    public IReadOnlyList<RenglonDesglose> Desglose { get; set; } = [];
+
+    // la suma de los renglones de arriba, que es el «Necesito» de la grilla
+    public string HaceFalta { get; set; } = "";
+
     public static readonly (Medida Valor, string Nombre)[] Medidas =
     [
         (Medida.Gramo, "Gramos"),
         (Medida.Mililitro, "Mililitros"),
         (Medida.Unidad, "Unidades")
     ];
+}
+
+// De dónde sale una parte de lo que hace falta: el renglón de un producto que
+// lleva el ingrediente, o el de una base.
+//
+// Es lo que devuelve RecetaService y de lo que sale, sumado, el número de la
+// grilla. No está formateado: la ficha decide cómo se lee cada renglón.
+public class ParteDeReceta
+{
+    public int IdIngrediente { get; set; }
+
+    // el nombre del producto, o el de la base: «Margarita», «Bollo de masa»
+    public string Donde { get; set; } = null!;
+
+    // Cuánto lleva. De un producto es por pieza; de una base es de la TANDA
+    // ENTERA, que es como se carga la receta del bollo. Por eso viaja el rinde.
+    public decimal Cantidad { get; set; }
+
+    public int? Rinde { get; set; }
+
+    // cuántas piezas lo llevan de verdad: las que lo pidieron sin no cuentan
+    public int Piezas { get; set; }
+
+    public decimal Total { get; set; }
+
+    public bool EsBase => Rinde is not null;
+}
+
+// Un renglón del desglose, ya formateado. La vista no hace cuentas ni decide
+// unidades: solo dibuja lo que le llega.
+public class RenglonDesglose
+{
+    public string Donde { get; set; } = null!;
+
+    // «rinde 6», solo en las bases
+    public string? Rinde { get; set; }
+
+    // «4 u», o «700 ml la tanda» si es una base
+    public string Cuanto { get; set; } = null!;
+
+    // «× 2 = 8 u», o el total pelado si es una base
+    public string Sale { get; set; } = null!;
 }

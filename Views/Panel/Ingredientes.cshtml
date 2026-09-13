@@ -185,6 +185,34 @@
 
                 </div>
 
+                @* De donde sale el número de la grilla. Es de lectura: las
+                   cantidades se cargan en la receta de cada producto, que es
+                   donde estás pensando en ese producto. *@
+                @if (f.Desglose.Count > 0)
+                {
+                    <div class="reparto">
+                        @foreach (var d in f.Desglose)
+                        {
+                            <div class="fila">
+                                <span class="qn">
+                                    @d.Donde
+                                    @if (d.Rinde is string cada)
+                                    {
+                                        <em class="rinde">@cada</em>
+                                    }
+                                </span>
+                                <span class="cu">@d.Cuanto</span>
+                                <span class="sale">@d.Sale</span>
+                            </div>
+                        }
+
+                        <div class="fila total">
+                            <span class="qn">Hace falta</span>
+                            <span class="sale">@f.HaceFalta</span>
+                        </div>
+                    </div>
+                }
+
                 @if (f.Libre)
                 {
                     <p class="nota-f">El agua y la masa madre no se compran: no entran en la lista ni en los costos.</p>
