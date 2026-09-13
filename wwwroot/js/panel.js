@@ -99,3 +99,26 @@
 
   mostrar(false);
 })();
+
+// El campo de stock, renglon por renglon.
+(function () {
+  document.querySelectorAll("[data-medida]").forEach(function (c) {
+    // crece y se achica con lo que se escribe adentro. Sin esto el ancho lo fija
+    // el servidor con el valor guardado y tipear «11,543 kg» sobre «0 g»
+    // escribe afuera de la pastilla
+    c.addEventListener("input", function () {
+      c.style.width = Math.max(6, c.value.length) + "ch";
+    });
+
+    // Se guarda al salir del campo y no solo con Enter: cargar una compra es
+    // escribir un numero y seguir al de abajo, y quedarse pensando cual es la
+    // tecla que guarda no es parte de eso. Sin JavaScript el Enter igual manda
+    // el formulario, que es un post comun.
+    var mandado = false;
+    c.addEventListener("change", function () {
+      if (mandado) return;
+      mandado = true;
+      c.form.submit();
+    });
+  });
+})();

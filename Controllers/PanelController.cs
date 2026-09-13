@@ -52,6 +52,121 @@ public class PanelController : Controller
         });
     }
 
+    // Ingredientes: la lista de compras abierta en columnas.
+    //
+    // Stock, Necesito y Falta, en el orden de la resta. El stock se edita en el
+    // renglon; las otras dos salen solas de los pedidos.
+    [HttpGet("ingredientes")]
+    public async Task<IActionResult> Ingredientes(bool todos = false)
+    {
+        var marco = await Marco();
+        var necesita = await _recetas.Necesita();
+
+        var ingredientes = await _contexto.Ingredientes
+            .Select(x => new
+            {
+                x.IdIngrediente,
+                x.Nombre,
+                x.Stock,
+                x.Libre,
+                x.Unidad,
+                // en cuantas recetas aparece. Las bases cuentan: la harina esta
+                // en el bollo y en ninguna pizza, y decir «todavia en ninguna
+                // receta» al lado de «necesito 2 kg» seria falso
+                EnProductos = x.UsosEnProductos.Count,
+                Bases = x.UsosEnBases.Select(u => u.Base.Nombre).ToList()
+            })
+            .ToListAsync();
+
+        var filas = ingredientes
+            // de fabrica solo los que entran en algun pedido sin entregar: la
+            // pantalla es la lista de compras, no el inventario
+            .Where(x => todos || necesita.ContainsKey(x.IdIngrediente))
+            .Select(x =>
+            {
+                var cuanto = necesita.GetValueOrDefault(x.IdIngrediente);
+                var falta = cuanto - x.Stock;
+
+                return new FilaIngrediente
+                {
+                    IdIngrediente = x.IdIngrediente,
+                    Nombre = x.Nombre,
+                    // exacto: este es el que se edita y tiene que volver entero
+                    Stock = Cantidades.Bonito(x.Stock, x.Unidad, exacto: true),
+                    Necesito = cuanto > 0 ? Cantidades.Bonito(cuanto, x.Unidad) : "—",
+                    Falta = falta > 0 ? Cantidades.Bonito(falta, x.Unidad) : "—",
+                    Libre = x.Libre,
+                    HayQueComprar = !x.Libre && falta > 0,
+                    Donde = Donde(x.EnProductos, x.Bases)
+                };
+            })
+            // primero lo que mas falta, y despues por nombre: es el orden en que
+            // se hace una compra
+            .OrderByDescending(x => x.HayQueComprar)
+            .ThenBy(x => x.Nombre)
+            .ToList();
+
+        return View(new IngredientesVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Lista = filas,
+            Pedidos = marco.SinEntregar,
+            Faltantes = filas.Count(x => x.HayQueComprar),
+            Todos = todos,
+            Cuantos = filas.Count,
+            EnTotal = ingredientes.Count,
+            EnRecetas = ingredientes.Count(x => x.EnProductos > 0 || x.Bases.Count > 0)
+        });
+    }
+
+    // Donde se usa un ingrediente. Las bases van nombradas cuando es una sola:
+    // «en el bollo de masa» dice mas que «en 1 base», y son dos en todo el
+    // sistema. Con mas de una se cuentan, para no armar un renglon largo.
+    private static string Donde(int productos, IReadOnlyList<string> bases)
+    {
+        var partes = new List<string>();
+
+        if (productos > 0)
+        {
+            partes.Add($"en {productos} {(productos == 1 ? "producto" : "productos")}");
+        }
+
+        if (bases.Count == 1)
+        {
+            partes.Add($"en {bases[0].ToLowerInvariant()}");
+        }
+        else if (bases.Count > 1)
+        {
+            partes.Add($"en {bases.Count} bases");
+        }
+
+        return partes.Count == 0 ? "todavía en ninguna receta" : string.Join(" y ", partes);
+    }
+
+    // El stock se edita en el renglon y se guarda solo ese renglon: son
+    // treinta y siete, y mandar la tabla entera para cambiar un numero seria
+    // pisar lo que otro pudo haber tocado mientras tanto.
+    [HttpPost("ingredientes/stock")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Stock(int id, string? stock, bool todos = false)
+    {
+        var ingrediente = await _contexto.Ingredientes.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el ingrediente {id}.");
+
+        // Texto y no decimal porque el campo viene con la unidad escrita y hay
+        // que leerla para saber si «2» son dos gramos o dos kilos. Lo que no se
+        // entiende vuelve nulo y el stock queda como estaba: el cero si es un
+        // valor -quedarse sin algo es un estado normal- pero un campo vacio no.
+        if (Cantidades.Leer(stock, ingrediente.Unidad) is decimal leido)
+        {
+            ingrediente.Stock = leido;
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Ingredientes), new { todos });
+    }
+
     // Productos: la lista a la izquierda y la ficha a la derecha.
     //
     // No hay pantalla de alta distinta de la de edicion: con ?nuevo=1 se dibuja

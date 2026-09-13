@@ -138,30 +138,47 @@ public class RecetaService
             $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {x.Rinde}"));
     }
 
-    public async Task<ListaDeCompras> FaltaComprar()
+    // Cuanto se come de cada ingrediente lo que hay pedido.
+    //
+    // Es la cuenta que ya hacia FaltaComprar, pero devuelta cruda -por id, sin
+    // formatear y sin filtrar- porque la pantalla de Ingredientes necesita
+    // mostrar tambien los que alcanzan y los que no se compran.
+    public async Task<IReadOnlyDictionary<int, decimal>> Necesita()
     {
-        // cuántas piezas de cada producto hay que hacer. Un pack de doce son
-        // doce empanadas: lo que se arma, no lo que se cobra
-        var piezas = await _contexto.ItemPedidos
+        // renglon por renglon y no agrupado por producto: lo que cada uno lleva
+        // sacado es de ese renglon, y agrupando antes se pierde
+        var items = await _contexto.ItemPedidos
             .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
-            .GroupBy(x => x.IdProducto)
-            .Select(g => new { IdProducto = g.Key, Cuantas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)) })
-            .ToDictionaryAsync(x => x.IdProducto, x => x.Cuantas);
+            .Select(x => new
+            {
+                x.IdProducto,
+                Piezas = x.Cantidad * (x.UnidadesPorPack ?? 1),
+                Sacados = x.Quitados.Select(q => q.Ingrediente).ToList()
+            })
+            .ToListAsync();
 
-        if (piezas.Count == 0)
+        if (items.Count == 0)
         {
-            return new ListaDeCompras();
+            return new Dictionary<int, decimal>();
         }
+
+        var piezas = items
+            .GroupBy(x => x.IdProducto)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Piezas));
 
         var ids = piezas.Keys.ToList();
 
-        // Lo que lleva cada producto por unidad, y lo que lleva su base por
-        // tanda. Van por separado porque se cuentan distinto: la receta del
-        // producto es de una pizza y la de la base es de la amasada entera.
+        // el nombre viene con la receta porque el quitado guarda el nombre y no
+        // una clave -asi el pedido se lee aunque el ingrediente ya no exista- y
+        // es por ahi por donde hay que cruzarlos
         var deProducto = await _contexto.ProductoIngredientes
             .Where(x => ids.Contains(x.IdProducto))
-            .Select(x => new { x.IdProducto, x.IdIngrediente, x.Cantidad })
+            .Select(x => new { x.IdProducto, x.IdIngrediente, x.Ingrediente.Nombre, x.Cantidad })
             .ToListAsync();
+
+        var recetas = deProducto
+            .GroupBy(x => x.IdProducto)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var deBase = await _contexto.Productos
             .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null)
@@ -174,32 +191,52 @@ public class RecetaService
             }))
             .ToListAsync();
 
-        // Cuánto se necesita de cada ingrediente.
-        //
-        // No hay caso de «está en la receta pero sin cantidad»: las dos tablas
-        // de receta tienen un chequeo de Cantidad > 0, así que una fila sin
-        // medida no puede existir. Lo único que puede faltar es el rinde.
         var necesita = new Dictionary<int, decimal>();
 
-        void Sumar(int idIngrediente, decimal porPieza, int cuantasPiezas)
+        foreach (var item in items)
         {
-            if (porPieza > 0)
+            if (!recetas.TryGetValue(item.IdProducto, out var receta))
             {
-                necesita[idIngrediente] = necesita.GetValueOrDefault(idIngrediente) + porPieza * cuantasPiezas;
+                continue;
+            }
+
+            foreach (var r in receta)
+            {
+                // el que la pidio sin albahaca no se la come: contarsela igual
+                // es mandarlo a comprar para cinco pizzas cuando la llevan dos
+                if (item.Sacados.Contains(r.Nombre))
+                {
+                    continue;
+                }
+
+                necesita[r.IdIngrediente] = necesita.GetValueOrDefault(r.IdIngrediente) + r.Cantidad * item.Piezas;
             }
         }
 
-        foreach (var r in deProducto)
-        {
-            Sumar(r.IdIngrediente, r.Cantidad, piezas[r.IdProducto]);
-        }
-
+        // la base no se descuenta: una pizza sin albahaca se hace con el bollo
+        // entero igual, y de la masa no se saca nada
         foreach (var r in deBase)
         {
             // el rinde no puede ser cero, pero si alguien lo carga en cero la
             // division rompe la pantalla entera por un dato mal puesto
             var porUnidad = r.Rinde > 0 ? r.Cantidad / r.Rinde : 0m;
-            Sumar(r.IdIngrediente, porUnidad, piezas[r.IdProducto]);
+            necesita[r.IdIngrediente] = necesita.GetValueOrDefault(r.IdIngrediente) + porUnidad * piezas[r.IdProducto];
+        }
+
+        return necesita;
+    }
+
+    // Que hay que ir a comprar: lo que se come menos lo que hay en stock.
+    //
+    // Se apoya en Necesita para que la cuenta viva en un solo lado: la pantalla
+    // de Ingredientes muestra la misma resta abierta en columnas.
+    public async Task<ListaDeCompras> FaltaComprar()
+    {
+        var necesita = await Necesita();
+
+        if (necesita.Count == 0)
+        {
+            return new ListaDeCompras();
         }
 
         var usados = necesita.Keys.ToList();
@@ -208,27 +245,26 @@ public class RecetaService
             .Select(x => new { x.IdIngrediente, x.Nombre, x.Stock, x.Libre, x.Unidad })
             .ToListAsync();
 
-        var faltan = ingredientes
-            // el agua y la masa madre no se compran: contarlas seria mandarlo a
-            // comprar algo que no se compra
-            .Where(x => !x.Libre)
-            .Select(x => new
-            {
-                x.Nombre,
-                x.Unidad,
-                Falta = necesita[x.IdIngrediente] - x.Stock
-            })
-            .Where(x => x.Falta > 0)
-            // primero lo que mas falta: es el orden en que se hace una compra
-            .OrderByDescending(x => x.Falta)
-            .ThenBy(x => x.Nombre)
-            .Select(x => new RenglonComprar
-            {
-                Nombre = x.Nombre,
-                Cuanto = Cantidades.Bonito(x.Falta, x.Unidad)
-            })
-            .ToList();
-
-        return new ListaDeCompras { Renglones = faltan };
+        return new ListaDeCompras
+        {
+            Renglones =
+            [
+                .. ingredientes
+                    // el agua y la masa madre no se compran: contarlas seria
+                    // mandarlo a comprar algo que no se compra
+                    .Where(x => !x.Libre)
+                    .Select(x => new { x.Nombre, x.Unidad, Falta = necesita[x.IdIngrediente] - x.Stock })
+                    .Where(x => x.Falta > 0)
+                    // primero lo que mas falta: es el orden en que se hace una compra
+                    .OrderByDescending(x => x.Falta)
+                    .ThenBy(x => x.Nombre)
+                    .Select(x => new RenglonComprar
+                    {
+                        Nombre = x.Nombre,
+                        Cuanto = Cantidades.Bonito(x.Falta, x.Unidad)
+                    })
+            ]
+        };
     }
+
 }

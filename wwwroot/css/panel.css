@@ -585,3 +585,64 @@
 }
 .acciones.en-fila .btn{width:auto;min-width:11rem;padding-left:1.4rem;padding-right:1.4rem}
 .nota-suelta{display:inline-block;margin:0;opacity:.6}
+
+
+/* ---------- ingredientes: la grilla ----------
+   Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
+   maneras de contarla -lo que queda despues de la tanda, una barra de consumo y
+   un semaforo- y gano la mas literal. */
+.rollo-ing{flex:1;overflow-y:auto;min-width:0}
+.grilla{width:100%;border-collapse:collapse}
+.grilla th{
+  text-align:left;font-size:.63rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  padding:.5rem 1.1rem;border-bottom:1.5px solid var(--verde);
+  /* pegado arriba: la tabla es larga y sin esto se scrollea a ciegas */
+  position:sticky;top:0;background:var(--papel);opacity:.85;
+}
+.grilla td{
+  padding:.46rem 1.1rem;border-bottom:1px solid rgba(30,82,69,.2);
+  font-size:.92rem;font-weight:600;
+}
+.grilla tr:hover td{background:rgba(30,82,69,.05)}
+.grilla .g-nom{font-weight:700}
+.grilla .g-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+.grilla .g-flojo{font-size:.8rem;font-weight:600;opacity:.62}
+.grilla .g-fin{white-space:nowrap;text-align:right}
+/* los numeros se achican hasta lo que dicen y el nombre se queda con el resto:
+   la comparacion es entre columnas vecinas -stock contra necesito contra falta-
+   y sueltas a lo ancho de la pantalla el ojo las cruza por el vacio */
+.grilla .g-num,.grilla .g-fin{width:1%;padding-left:.5rem;padding-right:.5rem}
+.grilla th:last-child,.grilla td:last-child{padding-right:1.1rem}
+.grilla .bajo{display:block;font-size:.72rem;font-weight:600;opacity:.58;font-variant-numeric:tabular-nums}
+.grilla .urge{font-weight:800}
+.sinCargar{font-size:.8rem;font-weight:600;opacity:.5;font-style:italic}
+
+/* el stock se edita en el renglon, en la misma pastilla que la cantidad en la
+   receta de un producto: es el mismo gesto en las dos pantallas, y en una tabla
+   donde todo lo demas es de solo lectura el borde redondo es lo que avisa cual
+   es la columna que se toca */
+.grilla form{
+  display:inline-flex;justify-content:flex-end;
+  border:1.3px solid rgba(30,82,69,.4);border-radius:999px;padding:.1rem .55rem;
+}
+.grilla form:hover{border-color:rgba(30,82,69,.75)}
+.grilla form:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+.grilla input{
+  font-family:var(--ui);font-size:.86rem;font-weight:800;color:var(--verde);text-align:right;
+  /* el ancho lo pone el renglon, en ch, segun lo que diga adentro */
+  background:transparent;border:0;padding:0;font-variant-numeric:tabular-nums;
+}
+.grilla input:focus{outline:0}
+
+.pie-tabla{
+  flex:none;display:flex;align-items:center;gap:.7rem;
+  border-top:1.5px solid rgba(30,82,69,.32);padding:.62rem 1.1rem;
+}
+.pie-tabla .cuantos{
+  margin-left:auto;font-size:.76rem;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums;
+}
+.pie-tabla .cuantos a{
+  font-weight:800;color:var(--verde);text-decoration:none;
+  border-bottom:1.4px solid rgba(30,82,69,.5);margin-left:.5rem;
+}
+.pie-tabla .cuantos a:hover{border-bottom-color:var(--verde)}

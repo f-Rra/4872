@@ -1,0 +1,104 @@
+@model f4872.ViewModels.IngredientesVm
+@{
+    ViewData["Title"] = "Ingredientes";
+    ViewData["Seccion"] = "ingredientes";
+    Layout = "_Marco";
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Ingredientes</h1>
+        <span class="sub">@Model.EnRecetas en las recetas</span>
+    </span>
+</div>
+
+@* Para cuántos pedidos es esta cuenta. Va arriba de todo porque es lo que le da
+   sentido a las tres columnas: no es el inventario, es lo que hace falta para
+   lo que hay pedido. *@
+<div class="banda">
+    <b>Para los @Model.Pedidos @(Model.Pedidos == 1 ? "pedido sin entregar" : "pedidos sin entregar")</b>
+    <span class="aparte">
+        @(Model.Faltantes == 0
+            ? "alcanza con lo que hay"
+            : $"hay que comprar {Model.Faltantes} {(Model.Faltantes == 1 ? "ingrediente" : "ingredientes")}")
+    </span>
+</div>
+
+@* Stock · Necesito · Falta, en el orden de la resta. El stock se edita en el
+   renglón; las otras dos salen solas de los pedidos. La última columna es la
+   lista: lo que hay que ir a buscar. *@
+<div class="rollo-ing">
+    <table class="grilla">
+        <thead>
+            <tr>
+                <th>Ingrediente</th>
+                <th class="g-num">Stock</th>
+                <th class="g-num">Necesito</th>
+                <th class="g-num">Falta</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Lista.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="sinCargar">
+                        Ningún ingrediente entra en los pedidos que hay. Probá «Ver todos».
+                    </td>
+                </tr>
+            }
+
+            @foreach (var i in Model.Lista)
+            {
+                <tr>
+                    <td class="g-nom">
+                        @i.Nombre
+                        <span class="bajo">@i.Donde</span>
+                    </td>
+
+                    <td class="g-num">
+                        @* un formulario por renglón: se guarda solo el número que
+                           se tocó y no la tabla entera *@
+                        <form method="post" asp-action="Stock"
+                              asp-route-id="@i.IdIngrediente" asp-route-todos="@Model.Todos">
+                            @* el campo lleva la unidad escrita —«11 kg», «24 u»—
+                               y crece con lo que diga. Con piso: casi todos los
+                               valores entran en seis caracteres y así la columna
+                               de pastillas queda pareja, sin dentar el borde
+                               izquierdo por un «0 u» *@
+                            <input name="stock" type="text" inputmode="decimal" data-medida
+                                   value="@i.Stock" style="width:@(Math.Max(6, i.Stock.Length))ch"
+                                   aria-label="Stock de @i.Nombre" />
+                        </form>
+                    </td>
+
+                    <td class="g-num g-flojo">@i.Necesito</td>
+
+                    <td class="g-fin g-num">
+                        @if (i.Libre)
+                        {
+                            <span class="sinCargar">no se compra</span>
+                        }
+                        else if (i.HayQueComprar)
+                        {
+                            <b class="urge">@i.Falta</b>
+                        }
+                        else
+                        {
+                            <span class="sinCargar">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="pie-tabla">
+    @* el alta entra en la tanda que sigue, con la ficha del ingrediente *@
+    <span class="cuantos">
+        @Model.Cuantos de @Model.EnTotal ingredientes
+        <a asp-action="Ingredientes" asp-route-todos="@(!Model.Todos)">
+            @(Model.Todos ? "Solo los del finde" : "Ver todos")
+        </a>
+    </span>
+</div>
