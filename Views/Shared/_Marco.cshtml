@@ -58,6 +58,7 @@
         @* el estado se ve desde cualquier pantalla. Es el error caro de este
            diseño: dejarla cerrada un martes sin darse cuenta *@
         <p class="pie @(Model.Abierta ? null : "pie-alerta")">
+            @Icono(Model.Abierta ? Persiana : PersianaBaja)
             @if (Model.Abierta)
             {
                 <text>Tienda abierta</text>
@@ -85,6 +86,12 @@
         ("ingredientes", "Ingredientes", "M8 3h8l-1 3H9ZM9 6h6l1.5 4v9a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-9ZM8 13h8"),
         ("costos", "Costos", "M3.5 12.2 12.2 3.5H20.5v8.3l-8.7 8.7Z")
     ];
+
+    // La persiana del local: levantada toma pedidos, baja no. Es el mismo
+    // dibujo con la línea de adentro arriba o abajo, así el cambio de estado se
+    // ve en la forma y no solo en el texto.
+    const string Persiana = "M3.5 8.5 5.5 4h13l2 4.5v11.5h-17ZM3.5 8.5h17M8 8.5v3.5h8V8.5";
+    const string PersianaBaja = "M3.5 8.5 5.5 4h13l2 4.5v11.5h-17ZM3.5 8.5h17M8 20v-8h8v8";
 
     static IHtmlContent Icono(string dibujo) => new HtmlString(
         $"""<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{dibujo}" /></svg>""");

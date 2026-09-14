@@ -52,7 +52,9 @@
   align-items:center;justify-content:center;
 }
 .lateral .marca img{display:block;width:76px;height:76px}
-.lateral nav{display:flex;flex-direction:column}
+/* con filete arriba: la franja del logo no lo lleva, asi que sin esto el
+   primer renglon arranca al aire */
+.lateral nav{display:flex;flex-direction:column;border-top:1px solid rgba(30,82,69,.2)}
 .lateral nav svg{width:17px;height:17px;flex:none}
 .lateral nav a,
 .lateral nav .porVenir{
@@ -72,7 +74,9 @@
 .lateral .pie{
   margin-top:auto;padding:.8rem .9rem;border-top:1px solid rgba(30,82,69,.2);
   font-size:.72rem;font-weight:600;opacity:.75;line-height:1.4;
+  display:flex;align-items:center;justify-content:center;gap:.45rem;
 }
+.lateral .pie svg{width:15px;height:15px;flex:none}
 /* cerrada deja de ser un dato al pie y pasa a ser un aviso */
 .lateral .pie-alerta{background:var(--verde);color:var(--papel);opacity:1}
 
@@ -247,7 +251,7 @@
   /* sin subrayado: cuando el boton es un enlace -Cancelar- lo hereda */
   text-decoration:none;
 }
-.btn:hover{background:rgba(30,82,69,.86);border-color:rgba(30,82,69,.86)}
+.btn:hover{background:var(--verde-hondo);border-color:var(--verde-hondo)}
 .btn:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
 /* perfilado: guardar y marcar agotado no pesan lo mismo */
 .btn.flaco{background:transparent;color:var(--verde)}
@@ -255,12 +259,16 @@
 
 .secundarias{display:flex;gap:1.1rem;justify-content:center;align-items:baseline}
 .secundarias form{display:contents}
+/* el subrayado va dibujado siempre y al pasar el mouse se pone verde, como el
+   resto de los trazos del panel: un subrayado que aparece de la nada se lee
+   como si el enlace recien ahi existiera */
 .enlace{
   background:transparent;border:0;padding:.2rem 0;cursor:pointer;text-decoration:none;
   font-family:var(--ui);font-weight:700;font-size:.8rem;color:var(--piedra);
+  border-bottom:1.5px solid rgba(154,146,135,.55);
 }
-.enlace:hover{text-decoration:underline}
-.enlace.verde{color:var(--verde)}
+.enlace:hover{color:var(--verde);border-bottom-color:var(--verde)}
+.enlace.verde{color:var(--verde);border-bottom-color:rgba(30,82,69,.5)}
 .enlace:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
 
 
@@ -374,7 +382,7 @@
 
 /* la nota es un pie de los precios de pack, asi que va pegada a ellos y no a
    mitad de camino entre los dos bloques */
-.nota-f{margin:.4rem 0 .85rem;font-size:.8rem;font-weight:600;opacity:.72}
+.nota-f{margin:.4rem 0 .85rem;font-size:.84rem;font-weight:600;opacity:.75;line-height:1.45}
 .acciones-aparte{margin-top:.6rem}
 .detalle .aviso{margin:0 0 1rem}
 
@@ -453,24 +461,25 @@
 /* la lista propia y no el datalist del navegador, que se dibuja con los colores
    del sistema operativo y no con los de la pantalla */
 .candidatos{
-  list-style:none;margin:0;padding:0;max-height:9.5rem;overflow-y:auto;
-  border-bottom:1.4px solid rgba(30,82,69,.35);background:rgba(30,82,69,.05);
+  list-style:none;margin:.45rem 0 0;padding:0;max-height:9.5rem;overflow-y:auto;
+  border:1.3px solid rgba(30,82,69,.3);
 }
 .candidatos li{border-bottom:1px solid rgba(30,82,69,.12)}
 .candidatos li:last-child{border-bottom:0}
 .candidatos button{
   width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
-  font-family:var(--ui);font-size:.85rem;font-weight:600;color:var(--verde);padding:.38rem .6rem;
+  font-family:var(--ui);font-size:.85rem;font-weight:600;color:var(--verde);padding:.34rem .6rem;
 }
-.candidatos button:hover{background:rgba(30,82,69,.12)}
-.candidatos .nada{padding:.5rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
+.candidatos button:hover{background:rgba(30,82,69,.1)}
+.candidatos .nada{padding:.45rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
 
 /* los dos botones de la ficha van juntos, no apilados y no a todo lo ancho */
 .acciones.en-fila{
   flex-direction:row;justify-content:center;align-items:center;gap:.7rem;flex-wrap:wrap;
   margin-top:1.3rem;
 }
-.acciones.en-fila .btn{width:auto;min-width:11rem;padding-left:1.4rem;padding-right:1.4rem}
+/* del ancho de su texto con un piso, para que tres no se coman el renglon */
+.acciones.en-fila .btn{width:auto;min-width:8.5rem;padding-left:1.2rem;padding-right:1.2rem}
 .nota-suelta{display:inline-block;margin:0;opacity:.6}
 
 
@@ -598,7 +607,7 @@
 
 /* el borrado no esta: decir por que es mas util que no mostrar nada */
 .modal .secundarias{margin-top:.9rem}
-.noBorra{font-size:.78rem;font-weight:600;opacity:.55}
+.noBorra{font-size:.78rem;font-weight:600;opacity:.6}
 
 /* ---------- ingredientes: el desglose ----------
    De donde sale el numero que muestra la grilla. Es de lectura: las cantidades
@@ -606,7 +615,7 @@
 .reparto{border-top:1.4px solid rgba(30,82,69,.3);margin-top:1.15rem}
 .reparto .fila{
   display:flex;align-items:baseline;gap:.55rem;
-  padding:.4rem 0;border-bottom:1px solid rgba(30,82,69,.2);
+  padding:.38rem 0;border-bottom:1px solid rgba(30,82,69,.2);
 }
 .reparto .qn{
   flex:1;min-width:0;font-size:.88rem;font-weight:600;
@@ -614,7 +623,7 @@
 }
 /* el rinde va pegado al nombre de la base: explica por que esa fila no multiplica */
 .reparto .rinde{
-  font-style:normal;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+  font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.08em;
   text-transform:uppercase;opacity:.55;margin-left:.45rem;
 }
 .reparto .cu{
@@ -622,11 +631,11 @@
   font-size:.8rem;font-weight:700;opacity:.55;font-variant-numeric:tabular-nums;
 }
 .reparto .sale{
-  flex:none;min-width:6.6rem;text-align:right;
-  font-size:.8rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums;
+  flex:none;min-width:5.4rem;text-align:right;
+  font-size:.78rem;font-weight:700;opacity:.72;font-variant-numeric:tabular-nums;
 }
-.reparto .total{border-bottom:0;border-top:1.4px solid var(--verde);padding-top:.55rem}
-.reparto .total .qn{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.reparto .total{border-bottom:0;border-top:1.4px solid var(--verde);padding-top:.5rem;margin-top:.1rem}
+.reparto .total .qn{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .reparto .total .sale{font-size:1rem;font-weight:800;opacity:1}
 
 /* ---------- costos ----------
@@ -638,20 +647,20 @@
 /* flojo es por debajo del minimo: se marca con color y no con un cartel, que
    en una lista de diecinueve seria diecinueve carteles */
 .columna .pct.flojo{color:#8C3B2E}
-.asterisco{font-weight:800;opacity:.75;margin-left:.1rem}
 
 /* El desglose: que lleva, cuanto, a cuanto se compra y cuanto sale. Cuatro
    columnas y no dos porque la pregunta no es solo cuanto sale: es de donde
    sale, para poder discutirlo con el almacen. */
-.desglose{list-style:none;margin:.2rem 0 0;padding:0;border-top:1.4px solid rgba(30,82,69,.3)}
+.desglose{list-style:none;margin:0 0 1.1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
 .desglose li{
-  display:flex;align-items:baseline;gap:.55rem;
-  padding:.34rem 0;border-bottom:1px solid rgba(30,82,69,.18);
+  display:flex;align-items:baseline;gap:.7rem;
+  padding:.4rem 0;border-bottom:1px solid rgba(30,82,69,.2);
+  font-size:.9rem;font-weight:600;
 }
-.desglose .qn{flex:1;min-width:0;font-size:.86rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desglose .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .desglose .cuanto{
   flex:none;min-width:3.4rem;text-align:right;
-  font-size:.78rem;font-weight:700;opacity:.6;font-variant-numeric:tabular-nums;
+  font-size:.82rem;opacity:.7;font-variant-numeric:tabular-nums;
 }
 /* medido: «$32.000 cada 25 kg» es el mas largo que puede aparecer y entra en
    estas 7,2rem. Lo que sobraba se lo estaba comiendo al nombre */
@@ -660,20 +669,27 @@
   font-size:.74rem;font-weight:600;opacity:.5;font-variant-numeric:tabular-nums;
 }
 .desglose .sub{
-  flex:none;min-width:4.6rem;text-align:right;
-  font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums;
+  flex:none;min-width:4.4rem;text-align:right;
+  font-weight:800;font-variant-numeric:tabular-nums;
 }
-/* la base pesa y lo suyo cuelga: el renglon de arriba es el que suma y los de
-   abajo son de donde salio, no cuatro costos mas */
-.desglose .fija .qn{font-weight:800}
-.desglose .sangria .qn{padding-left:1.1rem;opacity:.7;font-weight:600}
-.desglose .sangria .sub{opacity:.45;font-weight:600}
+/* La base pesa y lo suyo cuelga: el renglon de arriba es el que suma y los de
+   abajo son de donde salio, no cuatro costos mas. El filete punteado es lo que
+   dice que ese grupo es de adentro del anterior. */
+/* el ultimo no lleva filete: el de arriba de las cuentas ya cierra la lista */
+.desglose li:last-child{border-bottom:0}
+.desglose li.fija{background:rgba(30,82,69,.05)}
+.desglose li.sangria{border-bottom-style:dotted}
+.desglose li.sangria .qn{padding-left:1.1rem;font-size:.85rem;font-weight:600;opacity:.78}
+.desglose li.sangria .cuanto,
+.desglose li.sangria .bulto,
+.desglose li.sangria .sub{font-size:.8rem;opacity:.7}
+.desglose li.sangria .sub{font-weight:700}
 
 /* Las tres cuentas en una banda de tres columnas y no apiladas: se leen de un
    golpe y de izquierda a derecha, que es el orden de la resta. El filete de
    abajo es el grueso, porque cierra el bloque. */
 .cuentas{
-  display:flex;margin:1.1rem 0 0;
+  display:flex;margin:0 0 1rem;
   border-top:1.5px solid rgba(30,82,69,.3);border-bottom:2px solid var(--verde);
 }
 .cuentas > div{flex:1;padding:.7rem 0}

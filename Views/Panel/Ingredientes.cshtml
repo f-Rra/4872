@@ -16,11 +16,11 @@
    sentido a las tres columnas: no es el inventario, es lo que hace falta para
    lo que hay pedido. *@
 <div class="banda">
-    <b>Para los @Model.Pedidos @(Model.Pedidos == 1 ? "pedido sin entregar" : "pedidos sin entregar")</b>
-    <span class="aparte">
-        @(Model.Faltantes == 0
+    <b>@Model.Pedidos @(Model.Pedidos == 1 ? "pedido sin entregar" : "pedidos sin entregar")</b>
+    <span>
+        · @(Model.Faltantes == 0
             ? "alcanza con lo que hay"
-            : $"hay que comprar {Model.Faltantes} {(Model.Faltantes == 1 ? "ingrediente" : "ingredientes")}")
+            : $"comprar {Model.Faltantes} {(Model.Faltantes == 1 ? "ingrediente" : "ingredientes")}")
     </span>
 </div>
 
