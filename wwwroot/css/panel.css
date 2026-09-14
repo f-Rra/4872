@@ -669,15 +669,18 @@
 .desglose .sangria .qn{padding-left:1.1rem;opacity:.7;font-weight:600}
 .desglose .sangria .sub{opacity:.45;font-weight:600}
 
-/* las tres cuentas del final, alineadas en una sola columna a la derecha */
-.cuentas{margin:1.1rem 0 0;display:flex;flex-direction:column;gap:.3rem}
-.cuentas > div{display:flex;align-items:baseline;gap:.7rem}
-.cuentas dt{
-  flex:1;font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75;
+/* Las tres cuentas en una banda de tres columnas y no apiladas: se leen de un
+   golpe y de izquierda a derecha, que es el orden de la resta. El filete de
+   abajo es el grueso, porque cierra el bloque. */
+.cuentas{
+  display:flex;margin:1.1rem 0 0;
+  border-top:1.5px solid rgba(30,82,69,.3);border-bottom:2px solid var(--verde);
 }
-.cuentas dd{margin:0;font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums}
-.cuentas .fuerte{border-top:1.4px solid var(--verde);margin-top:.35rem;padding-top:.5rem}
-.cuentas .fuerte dt{opacity:1}
-.cuentas .fuerte dd{font-size:1.15rem;font-weight:800}
-.cuentas .fuerte em{font-style:normal;font-size:.8rem;font-weight:700;opacity:.6;margin-left:.4rem}
+.cuentas > div{flex:1;padding:.7rem 0}
+.cuentas > div + div{border-left:1px solid rgba(30,82,69,.22);padding-left:1rem}
+.cuentas dt{font-size:.63rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.cuentas dd{margin:.1rem 0 0;font-size:1.15rem;font-weight:700;font-variant-numeric:tabular-nums}
+/* lo que deja pesa mas, pero no lleva filete propio: la banda ya lo separa */
+.cuentas .fuerte dd{font-weight:800}
+.cuentas em{font-style:normal;font-size:.82rem;font-weight:700;opacity:.65;margin-left:.3rem}
 

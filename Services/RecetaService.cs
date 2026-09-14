@@ -409,6 +409,71 @@ public class RecetaService
         return [.. costos.OrderBy(x => x.Porcentaje ?? int.MinValue).ThenBy(x => x.Nombre)];
     }
 
+    // Lo cobrado contra lo que costo, mes por mes, de los pedidos entregados.
+    //
+    // Lo cobrado es historico de verdad: el precio se copia al item cuando se
+    // confirma el pedido. El costo NO lo es -sale de los precios de compra de
+    // hoy- porque el ingrediente guarda un solo precio y no una historia. Un
+    // mes viejo queda costeado a precios de hoy, y eso hay que decirlo.
+    public async Task<IReadOnlyList<MesDeCostos>> PorMes()
+    {
+        var pedidos = await _contexto.Pedidos
+            .Where(x => x.Estado == EstadoPedido.Entregado)
+            .Select(x => new { x.IdPedido, x.FechaPedido })
+            .ToListAsync();
+
+        if (pedidos.Count == 0)
+        {
+            return [];
+        }
+
+        var items = await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Entregado)
+            .Select(x => new
+            {
+                x.IdPedido,
+                x.IdProducto,
+                Piezas = x.Cantidad * (x.UnidadesPorPack ?? 1),
+                Cobrado = x.Cantidad * x.PrecioUnitario
+            })
+            .ToListAsync();
+
+        var cuestaCada = (await Costos()).ToDictionary(x => x.IdProducto, x => x.Costo);
+
+        // el mes es el de Buenos Aires y no el de UTC: un pedido de las nueve de
+        // la noche del treinta y uno cae en el mes que viene si se lo mira en UTC
+        var mesDe = pedidos.ToDictionary(
+            x => x.IdPedido,
+            x => new DateOnly(Reloj.EnBuenosAires(x.FechaPedido).Year, Reloj.EnBuenosAires(x.FechaPedido).Month, 1));
+
+        var ahora = Reloj.EnBuenosAires(DateTime.UtcNow);
+        var esteMes = new DateOnly(ahora.Year, ahora.Month, 1);
+
+        var porMes = items
+            .GroupBy(x => mesDe[x.IdPedido])
+            .ToDictionary(
+                g => g.Key,
+                g => (Cobro: g.Sum(x => x.Cobrado),
+                      Costo: g.Sum(x => cuestaCada.GetValueOrDefault(x.IdProducto) * x.Piezas)));
+
+        return
+        [
+            .. pedidos
+                .GroupBy(x => mesDe[x.IdPedido])
+                .Select(g => new MesDeCostos
+                {
+                    Mes = g.Key,
+                    Pedidos = g.Count(),
+                    Cobro = porMes.GetValueOrDefault(g.Key).Cobro,
+                    Costo = porMes.GetValueOrDefault(g.Key).Costo,
+                    // el mes en curso no esta cerrado: su margen todavia se mueve
+                    Abierto = g.Key == esteMes
+                })
+                // del mas viejo al mas nuevo, que es como se lee una evolucion
+                .OrderBy(x => x.Mes)
+        ];
+    }
+
     // Lo que sale esa cantidad de ese ingrediente. Nulo cuando no se puede
     // saber: sin el bulto o sin su precio no hay precio por gramo.
     //

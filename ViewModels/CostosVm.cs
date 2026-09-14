@@ -4,7 +4,15 @@ namespace f4872.ViewModels;
 
 public class CostosVm : PanelVm
 {
+    // "producto" o "mes", para marcar la solapa encendida
+    public string Vista { get; set; } = "producto";
+
+    public bool PorMes => Vista == "mes";
+
     public IReadOnlyList<CostoDeProducto> Lista { get; set; } = [];
+
+    // la otra vista: un renglón por mes con pedidos entregados
+    public IReadOnlyList<MesDeCostos> Meses { get; set; } = [];
 
     // el elegido de la derecha. Nulo solo si no hay ningún producto cargado
     public CostoDeProducto? Elegido { get; set; }
@@ -19,11 +27,23 @@ public class CostosVm : PanelVm
     // «2 productos bajo el 55%» o «3 sin terminar de cargar»
     public string Aparte { get; set; } = "";
 
+    // La banda de la vista por mes: el mes que está corriendo, cuánto hay
+    // todavía sin entregar, y el margen promedio de los meses ya cerrados.
+    public MesDeCostos? EnCurso { get; set; }
+    public string SinEntregarPlata { get; set; } = "";
+    public string? PromedioCerrados { get; set; }
+
     // Por debajo de esto el margen se marca flojo. Es una constante y no un
     // campo de la base por lo mismo que el texto de la tienda cerrada: la
     // pantalla de Configuración se descartó en el diseño, así que no hay dónde
     // editarlo. El día que haya, se muda.
     public const int MargenMinimo = 55;
+
+    public static readonly (string Clave, string Nombre)[] Solapas =
+    [
+        ("producto", "Por producto"),
+        ("mes", "Por mes")
+    ];
 }
 
 // Lo que cuesta hacer una unidad y lo que deja.
@@ -75,4 +95,27 @@ public class RenglonDeCosto
 
     // los ingredientes de la base, que cuelgan del anterior
     public bool DeLaBase { get; set; }
+}
+
+// Un mes del historial: lo que se cobró contra lo que costó.
+//
+// Lo cobrado es histórico de verdad, porque el precio se copia al item cuando
+// se confirma el pedido. El costo sale de los precios de compra de hoy: el
+// ingrediente guarda un precio, no una historia.
+public class MesDeCostos
+{
+    // el primero del mes, para ordenar y para nombrarlo
+    public DateOnly Mes { get; set; }
+
+    public int Pedidos { get; set; }
+    public decimal Cobro { get; set; }
+    public decimal Costo { get; set; }
+
+    public decimal Deja => Cobro - Costo;
+
+    public int? Porcentaje => Cobro > 0 ? (int)Math.Round(Deja / Cobro * 100) : null;
+
+    // el mes en curso: su margen todavía se mueve, así que no entra en el
+    // promedio de los cerrados
+    public bool Abierto { get; set; }
 }

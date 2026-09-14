@@ -61,10 +61,11 @@ public class PanelController : Controller
     // La lista va por margen de menor a mayor: la pantalla es para ver que
     // revisar, y lo primero que se mira es lo que menos deja.
     [HttpGet("costos")]
-    public async Task<IActionResult> Costos(int? producto = null)
+    public async Task<IActionResult> Costos(int? producto = null, string vista = "producto")
     {
         var marco = await Marco();
         var lista = await _recetas.Costos();
+        var meses = vista == "mes" ? await _recetas.PorMes() : [];
 
         // la banda es lo unico de la pantalla que mira los pedidos: el resto es
         // por unidad y no cambia de una semana a la otra
@@ -80,11 +81,24 @@ public class PanelController : Controller
         var incompletos = lista.Count(x => x.SinPrecio > 0);
         var flojos = lista.Count(x => x.Flojo);
 
+        // el promedio sale solo de los cerrados: el mes en curso todavia se
+        // mueve y arrastraria el numero para cualquier lado
+        var cerrados = meses.Where(x => !x.Abierto && x.Porcentaje is not null).ToList();
+
         return View(new CostosVm
         {
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
+            Vista = vista == "mes" ? "mes" : "producto",
             Lista = lista,
+            Meses = meses,
+            EnCurso = meses.FirstOrDefault(x => x.Abierto),
+            SinEntregarPlata = (await _contexto.ItemPedidos
+                .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+                .SumAsync(x => (decimal?)(x.Cantidad * x.PrecioUnitario)) ?? 0m).ToString("C"),
+            PromedioCerrados = cerrados.Count > 0
+                ? $"{Math.Round(cerrados.Average(x => (double)x.Porcentaje!.Value))}%"
+                : null,
             Elegido = producto is int elegido
                 ? lista.FirstOrDefault(x => x.IdProducto == elegido) ?? lista.FirstOrDefault()
                 : lista.FirstOrDefault(),

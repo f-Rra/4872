@@ -10,14 +10,106 @@
         f4872.Models.Familia.Focaccia => "Focaccia",
         _ => "Empanada"
     };
+
+    // «Septiembre»: es-AR lo devuelve en minúscula y acá encabeza el renglón
+    string Mes(DateOnly d) => char.ToUpper(d.ToString("MMMM")[0]) + d.ToString("MMMM")[1..];
 }
 
 <div class="cabecera">
     <span class="cab-titulo">
         <h1>Costos</h1>
-        <span class="sub">Qué cuesta y qué deja</span>
+        <span class="sub">@(Model.PorMes ? "Lo cobrado contra lo que costó" : "Qué cuesta y qué deja")</span>
     </span>
+
+    @* Enlaces y no botones: cambian qué se está mirando, igual que los
+       filtros de Pedidos *@
+    <div class="filtros">
+        @foreach (var (clave, nombre) in f4872.ViewModels.CostosVm.Solapas)
+        {
+            <a asp-action="Costos" asp-route-vista="@clave"
+               aria-pressed="@((clave == Model.Vista).ToString().ToLowerInvariant())">@nombre</a>
+        }
+    </div>
 </div>
+
+@if (Model.PorMes)
+{
+    <div class="banda">
+        @if (Model.EnCurso is f4872.ViewModels.MesDeCostos hoy)
+        {
+            <b>@Mes(hoy.Mes) va @hoy.Cobro.ToString("C") cobrados</b>
+            <span>
+                · @hoy.Pedidos @(hoy.Pedidos == 1 ? "pedido entregado" : "pedidos entregados")
+                · quedan @Model.SinEntregarPlata sin entregar
+            </span>
+        }
+        else
+        {
+            <b>Todavía no entregaste ningún pedido este mes</b>
+            <span>· quedan @Model.SinEntregarPlata sin entregar</span>
+        }
+
+        @if (Model.PromedioCerrados is string prom)
+        {
+            <span class="aparte">margen de los meses cerrados: @prom</span>
+        }
+    </div>
+
+    @* Cobró y Costó no son del mismo tipo de dato y por eso el segundo va
+       flojo: lo cobrado es histórico de verdad y lo que costó se recalcula
+       con los precios de compra de hoy. *@
+    <div class="rollo-ing">
+        <table class="grilla">
+            <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th class="g-num">Pedidos</th>
+                    <th class="g-num">Cobró</th>
+                    <th class="g-num">Costó</th>
+                    <th class="g-num">Dejó</th>
+                    <th class="g-fin">Margen</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Meses.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="sinCargar">
+                            Todavía no hay ningún pedido entregado. El primero abre el mes.
+                        </td>
+                    </tr>
+                }
+
+                @foreach (var m in Model.Meses)
+                {
+                    <tr>
+                        <td class="g-nom">
+                            @Mes(m.Mes) @m.Mes.Year
+                            @if (m.Abierto)
+                            {
+                                <span class="bajo">todavía abierto</span>
+                            }
+                        </td>
+                        <td class="g-num g-flojo">@m.Pedidos</td>
+                        <td class="g-num">@m.Cobro.ToString("C")</td>
+                        <td class="g-num g-flojo">@m.Costo.ToString("C")</td>
+                        <td class="g-num"><b>@m.Deja.ToString("C")</b></td>
+                        <td class="g-fin g-num">@(m.Porcentaje is int p ? $"{p}%" : "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pie-tabla">
+        <span class="cuantos">
+            Lo cobrado es el precio con el que se confirmó cada pedido. Lo que costó
+            se calcula con los precios de compra de hoy.
+        </span>
+    </div>
+}
+else
+{
 
 @* Lo único de la pantalla que mira los pedidos: qué sale hacer lo que hay
    pedido. Lo de abajo es por unidad y no depende de la semana. *@
@@ -134,3 +226,4 @@
         </div>
     }
 </div>
+}
