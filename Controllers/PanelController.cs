@@ -56,6 +56,52 @@ public class PanelController : Controller
     //
     // Stock, Necesito y Falta, en el orden de la resta. El stock se edita en el
     // renglon; las otras dos salen solas de los pedidos.
+    // Que cuesta hacer cada producto y que deja.
+    //
+    // La lista va por margen de menor a mayor: la pantalla es para ver que
+    // revisar, y lo primero que se mira es lo que menos deja.
+    [HttpGet("costos")]
+    public async Task<IActionResult> Costos(int? producto = null)
+    {
+        var marco = await Marco();
+        var lista = await _recetas.Costos();
+
+        // la banda es lo unico de la pantalla que mira los pedidos: el resto es
+        // por unidad y no cambia de una semana a la otra
+        var pedidas = await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+            .GroupBy(x => x.IdProducto)
+            .Select(g => new { IdProducto = g.Key, Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)) })
+            .ToDictionaryAsync(x => x.IdProducto, x => x.Piezas);
+
+        var cuesta = lista.Sum(x => x.Costo * pedidas.GetValueOrDefault(x.IdProducto));
+        var cobra = lista.Sum(x => x.Venta * pedidas.GetValueOrDefault(x.IdProducto));
+
+        var incompletos = lista.Count(x => x.SinPrecio > 0);
+        var flojos = lista.Count(x => x.Flojo);
+
+        return View(new CostosVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Lista = lista,
+            Elegido = producto is int elegido
+                ? lista.FirstOrDefault(x => x.IdProducto == elegido) ?? lista.FirstOrDefault()
+                : lista.FirstOrDefault(),
+            Cuesta = cuesta.ToString("C"),
+            SeCobra = cobra.ToString("C"),
+            Deja = (cobra - cuesta).ToString("C"),
+            Margen = cobra > 0 ? $"{Math.Round((cobra - cuesta) / cobra * 100)}%" : null,
+            // lo que falta cargar tapa al margen flojo: mientras haya un costo a
+            // medias el porcentaje que se muestra no es el de verdad
+            Aparte = incompletos > 0
+                ? $"{incompletos} {(incompletos == 1 ? "producto" : "productos")} sin terminar de cargar"
+                : flojos > 0
+                    ? $"{flojos} {(flojos == 1 ? "producto" : "productos")} bajo el {CostosVm.MargenMinimo}%"
+                    : $"ninguno bajo el {CostosVm.MargenMinimo}%"
+        });
+    }
+
     [HttpGet("ingredientes")]
     public async Task<IActionResult> Ingredientes(bool todos = false, int? ingrediente = null, bool nuevo = false)
     {

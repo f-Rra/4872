@@ -278,6 +278,159 @@ public class RecetaService
             .ThenBy(x => x.Donde)
             .ToList();
 
+    // Lo que cuesta hacer una unidad de cada producto y lo que deja.
+    //
+    // No mira los pedidos: es la receta contra el precio al que se compra cada
+    // ingrediente. Vive aca porque recorre las mismas dos recetas que el resto
+    // -la del producto y la de su base- y son las mismas reglas: la base se
+    // carga por tanda entera y hay que dividirla por el rinde.
+    public async Task<IReadOnlyList<CostoDeProducto>> Costos()
+    {
+        var productos = await _contexto.Productos
+            .Select(p => new
+            {
+                p.IdProducto,
+                p.Nombre,
+                p.Familia,
+                p.Precio,
+                Base = p.Base == null ? null : new
+                {
+                    p.Base.Nombre,
+                    p.Base.Rinde,
+                    Receta = p.Base.Receta.Select(r => new
+                    {
+                        r.Ingrediente.Nombre,
+                        r.Ingrediente.Unidad,
+                        r.Ingrediente.Libre,
+                        r.Ingrediente.CantidadDeCompra,
+                        r.Ingrediente.PrecioDeCompra,
+                        r.Cantidad
+                    }).ToList()
+                },
+                Receta = p.Receta.Select(r => new
+                {
+                    r.Ingrediente.Nombre,
+                    r.Ingrediente.Unidad,
+                    r.Ingrediente.Libre,
+                    r.Ingrediente.CantidadDeCompra,
+                    r.Ingrediente.PrecioDeCompra,
+                    r.Cantidad
+                }).ToList()
+            })
+            .ToListAsync();
+
+        // El precio por unidad de una empanada sale del pack, y de los packs se
+        // toma el que sale mas barato por unidad: es el peor caso para el margen
+        // y el que conviene mirar.
+        var porPack = await _contexto.Packs
+            .Where(x => x.Activo && x.Unidades > 0)
+            .Select(x => x.Precio / x.Unidades)
+            .ToListAsync();
+
+        var deEmpanada = porPack.Count > 0 ? porPack.Min() : 0m;
+
+        var costos = new List<CostoDeProducto>();
+
+        foreach (var p in productos)
+        {
+            var renglones = new List<RenglonDeCosto>();
+            var sinPrecio = 0;
+            var costo = 0m;
+
+            if (p.Base is not null)
+            {
+                var deLaBase = new List<RenglonDeCosto>();
+                var costoBase = 0m;
+
+                foreach (var r in p.Base.Receta)
+                {
+                    // la receta de la base es de la tanda entera: lo que entra en
+                    // una pizza es esa cantidad dividida por el rinde
+                    var cuanto = p.Base.Rinde > 0 ? r.Cantidad / p.Base.Rinde : 0m;
+                    var sale = Cuanto(cuanto, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
+
+                    if (sale is null)
+                    {
+                        sinPrecio++;
+                    }
+
+                    costoBase += sale ?? 0m;
+
+                    deLaBase.Add(new RenglonDeCosto
+                    {
+                        Nombre = r.Nombre,
+                        Cuanto = Cantidades.Bonito(cuanto, r.Unidad),
+                        Bulto = Bulto(r.CantidadDeCompra, r.PrecioDeCompra, r.Unidad),
+                        Sale = sale,
+                        DeLaBase = true
+                    });
+                }
+
+                // el renglon de la base va primero y lleva el total de una
+                // unidad; los de abajo cuelgan de el y no se vuelven a sumar
+                renglones.Add(new RenglonDeCosto { Nombre = p.Base.Nombre, Sale = costoBase, EsBase = true });
+                renglones.AddRange(deLaBase);
+                costo += costoBase;
+            }
+
+            foreach (var r in p.Receta)
+            {
+                var sale = Cuanto(r.Cantidad, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
+
+                if (sale is null)
+                {
+                    sinPrecio++;
+                }
+
+                costo += sale ?? 0m;
+
+                renglones.Add(new RenglonDeCosto
+                {
+                    Nombre = r.Nombre,
+                    Cuanto = Cantidades.Bonito(r.Cantidad, r.Unidad),
+                    Bulto = Bulto(r.CantidadDeCompra, r.PrecioDeCompra, r.Unidad),
+                    Sale = sale
+                });
+            }
+
+            costos.Add(new CostoDeProducto
+            {
+                IdProducto = p.IdProducto,
+                Nombre = p.Nombre,
+                Familia = p.Familia,
+                Costo = costo,
+                Venta = p.Familia == Familia.Empanada ? deEmpanada : p.Precio ?? 0m,
+                SinPrecio = sinPrecio,
+                Desglose = renglones
+            });
+        }
+
+        // el peor margen arriba: es la pantalla de que revisar, no un listado
+        return [.. costos.OrderBy(x => x.Porcentaje ?? int.MinValue).ThenBy(x => x.Nombre)];
+    }
+
+    // Lo que sale esa cantidad de ese ingrediente. Nulo cuando no se puede
+    // saber: sin el bulto o sin su precio no hay precio por gramo.
+    //
+    // El agua y la masa madre no son un caso sin cargar: no se compran, asi que
+    // cuestan cero de verdad y no le faltan al costo.
+    private static decimal? Cuanto(decimal cantidad, bool libre, decimal? bulto, decimal? precio)
+    {
+        if (libre)
+        {
+            return 0m;
+        }
+
+        return bulto > 0 && precio.HasValue ? cantidad * (precio.Value / bulto.Value) : null;
+    }
+
+    // «$32.000 cada 25 kg»: de donde sale el precio por gramo, dicho como se
+    // compra en el almacen y no como se usa en la receta.
+    private static string Bulto(decimal? cantidad, decimal? precio, Medida unidad) =>
+        cantidad > 0 && precio.HasValue
+            ? $"{precio.Value.ToString("C")} cada {Cantidades.Bonito(cantidad.Value, unidad)}"
+            : "";
+
     // Que hay que ir a comprar: lo que se come menos lo que hay en stock.
     //
     // Se apoya en Necesita para que la cuenta viva en un solo lado: la pantalla

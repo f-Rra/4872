@@ -1,0 +1,136 @@
+@model f4872.ViewModels.CostosVm
+@{
+    ViewData["Title"] = "Costos";
+    ViewData["Seccion"] = "costos";
+    Layout = "_Marco";
+
+    string Fam(f4872.Models.Familia f) => f switch
+    {
+        f4872.Models.Familia.Pizza => "Pizza",
+        f4872.Models.Familia.Focaccia => "Focaccia",
+        _ => "Empanada"
+    };
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Costos</h1>
+        <span class="sub">Qué cuesta y qué deja</span>
+    </span>
+</div>
+
+@* Lo único de la pantalla que mira los pedidos: qué sale hacer lo que hay
+   pedido. Lo de abajo es por unidad y no depende de la semana. *@
+<div class="banda">
+    <b>Hacer todo lo que hay pedido cuesta @Model.Cuesta</b>
+    <span>· se cobra @Model.SeCobra · deja @Model.Deja@(Model.Margen is string m ? $" ({m})" : "")</span>
+    <span class="aparte">@Model.Aparte</span>
+</div>
+
+<div class="doble">
+    <div class="columna">
+        <div class="rollo">
+            <ul>
+                @foreach (var c in Model.Lista)
+                {
+                    <li class="@(c.IdProducto == Model.Elegido?.IdProducto ? "elegido" : null)">
+                        <a asp-action="Costos" asp-route-producto="@c.IdProducto">
+                            <span class="izq">
+                                <span class="fila-p">
+                                    <span class="nom">@c.Nombre</span>
+                                    @* el porcentaje va acá arriba porque es el
+                                       dato por el que está ordenada la lista *@
+                                    <span class="pct @(c.Flojo ? "flojo" : null)">
+                                        @(c.Porcentaje is int p ? $"{p}%" : "—")
+                                        @if (c.SinPrecio > 0)
+                                        {
+                                            <span class="asterisco">*</span>
+                                        }
+                                    </span>
+                                </span>
+                                <span class="fila-p">
+                                    <span class="fam">
+                                        @(c.SinPrecio > 0 ? $"falta cargar {c.SinPrecio}" : Fam(c.Familia))
+                                    </span>
+                                    <span class="plata">@c.Venta.ToString("C") − @c.Costo.ToString("C")</span>
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    @if (Model.Elegido is f4872.ViewModels.CostoDeProducto d)
+    {
+        <div class="detalle">
+            <div class="det-tope">
+                <h2>@d.Nombre</h2>
+                <span class="estado @(d.SinPrecio > 0 || d.Flojo ? "e-entregado" : "e-preparando")">
+                    @(d.SinPrecio > 0 ? "margen sin confirmar" : d.Porcentaje is int p ? $"{p}% de margen" : "sin precio de venta")
+                </span>
+            </div>
+            <p class="det-meta">
+                @Fam(d.Familia)@(d.Familia == f4872.Models.Familia.Empanada ? " · por unidad, del pack que sale más barato" : "")
+            </p>
+
+            @* La base va en un renglón que sí suma, con lo suyo colgando abajo:
+               lo de abajo ya está contado arriba y por eso no lleva número. *@
+            <ul class="desglose">
+                @foreach (var r in d.Desglose)
+                {
+                    <li class="@(r.EsBase ? "fija" : r.DeLaBase ? "sangria" : null)">
+                        <span class="qn">@r.Nombre</span>
+                        <span class="cuanto">@r.Cuanto</span>
+                        @* «sin precio» solo cuando de verdad no se sabe: el agua
+                           y la masa madre no tienen bulto porque no se compran,
+                           y cuestan cero de verdad *@
+                        <span class="bulto">
+                            @if (!r.EsBase)
+                            {
+                                @(r.Bulto.Length > 0 ? r.Bulto : r.Sale is null ? "sin precio" : "")
+                            }
+                        </span>
+                        <span class="sub">@(r.Sale is decimal s ? s.ToString("C") : "—")</span>
+                    </li>
+                }
+            </ul>
+
+            <dl class="cuentas">
+                <div>
+                    <dt>Cuesta</dt>
+                    <dd>
+                        @d.Costo.ToString("C")
+                        @if (d.SinPrecio > 0)
+                        {
+                            <span class="asterisco">*</span>
+                        }
+                    </dd>
+                </div>
+                <div>
+                    <dt>Se vende a</dt>
+                    <dd>@d.Venta.ToString("C")</dd>
+                </div>
+                <div class="fuerte">
+                    <dt>Deja</dt>
+                    <dd>
+                        @d.Deja.ToString("C")
+                        @if (d.Porcentaje is int pct)
+                        {
+                            <em>@pct%</em>
+                        }
+                    </dd>
+                </div>
+            </dl>
+
+            @if (d.SinPrecio > 0)
+            {
+                <p class="nota-f">
+                    @d.SinPrecio @(d.SinPrecio == 1 ? "ingrediente sin precio de compra" : "ingredientes sin precio de compra"):
+                    el costo real es más alto. Se cargan en Ingredientes.
+                </p>
+            }
+        </div>
+    }
+</div>

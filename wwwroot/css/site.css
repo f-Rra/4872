@@ -79,6 +79,16 @@ body{
    borde de la ventana: si no, en una pantalla ancha queda una franja */
 body.final{background:var(--verde)}
 
+/* La barra de scroll también es del verde. En el panel hay media docena de
+   zonas que scrollean —las dos columnas, el rollo de la grilla, el modal— y la
+   gris del sistema es lo único gris que se ve en toda la pantalla.
+   El borde del grosor del riel deja el pulgar como una barra fina y no como un
+   bloque pegado a los dos bordes. */
+html{scrollbar-color:var(--verde) var(--papel)}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:var(--papel)}
+::-webkit-scrollbar-thumb{background:var(--verde);border:3px solid var(--papel)}
+
 a{color:var(--verde)}
 
 .cara{font-family:var(--cara)}
