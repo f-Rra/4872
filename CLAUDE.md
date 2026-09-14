@@ -48,9 +48,22 @@ Salió del diseño y está validado contra los números reales del vendedor:
 - **La cantidad es del par producto–ingrediente**, no del ingrediente. Una fugazzeta lleva 200 g de cebolla y una empanada de carne, 15.
 - **Quitable**, también por par: si el cliente puede pedirlo *sin* ese ingrediente.
 - **Ingrediente** — unidad (`g` / `ml` / `u`), stock, y **cómo se compra**: qué cantidad trae la compra y cuánto sale. El precio unitario se deriva. Bandera para lo que no se compra (agua, masa madre).
-- **Base** — sub-receta que consume un producto: el **bollo de masa** y la **tapa de empanada**. Se carga **por tanda entera con un `rinde`**, como se amasa, y el panel divide.
+- **Base** — sub-receta que consume un producto: los dos bollos. Se carga **por tanda entera con un `rinde`**, como se amasa, y el panel divide. La tapa de empanada **no** es una base: se compra hecha, así que es un ingrediente más de cada gusto.
 
-La receta del bollo, dicha por el vendedor: **1 kg de harina · 700 g de agua · 100 g de masa madre · 30 g de sal → 6 bollos de 280 g**.
+Las dos recetas de bollo, dichas por el vendedor. Son lo único real del sistema:
+
+| | pizza | focaccia |
+|---|---|---|
+| harina | 1 kg | 1 kg |
+| agua | 600 g | 750 g |
+| masa madre | 100 g | 100 g |
+| sal | 30 g | 30 g |
+| oliva | — | 50 g |
+| **la tanda pesa** | 1730 g | 1930 g |
+| **el bollo sale de** | 288 g | 483 g |
+| **rinde** | **6** | **4** |
+
+La pizza y la focaccia **no comparten bollo**: son masas distintas.
 
 ## Cómo trabajamos
 
@@ -76,7 +89,7 @@ Scopes: `tienda`, `panel`, `datos`, `app`.
 
 **Ninguna de las 7 pizzas, las 4 focaccias, los 8 gustos de empanada ni los ~37 ingredientes es real** — los inventé yo para poder diseñar. Tampoco los precios de venta, las compras ni las cantidades.
 
-No sembrar la base con eso como si fuera la carta de verdad. Lo real lo tiene que dar él, o cargarlo desde las pantallas de Productos e Ingredientes, que están diseñadas justo para eso. Lo único real hoy es la receta del bollo.
+No sembrar la base con eso como si fuera la carta de verdad. Lo real lo tiene que dar él, o cargarlo desde las pantallas de Productos e Ingredientes, que están diseñadas justo para eso. Lo único real hoy son las dos recetas de bollo.
 
 ## Comandos
 

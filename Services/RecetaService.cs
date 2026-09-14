@@ -366,24 +366,10 @@ public class RecetaService
                     });
                 }
 
-                // Una base de un solo ingrediente no se abre: el renglón de
-                // arriba y el de abajo dirian casi lo mismo -«Tapa de empanada»
-                // y «Tapas de empanada»- asi que va uno solo, con el nombre de
-                // la base y los numeros del ingrediente.
-                if (deLaBase.Count == 1)
-                {
-                    deLaBase[0].Nombre = p.Base.Nombre;
-                    deLaBase[0].DeLaBase = false;
-                    renglones.Add(deLaBase[0]);
-                }
-                else
-                {
-                    // el renglon de la base va primero y lleva el total de una
-                    // unidad; los de abajo cuelgan de el y no se vuelven a sumar
-                    renglones.Add(new RenglonDeCosto { Nombre = p.Base.Nombre, Sale = costoBase, EsBase = true });
-                    renglones.AddRange(deLaBase);
-                }
-
+                // el renglon de la base va primero y lleva el total de una
+                // unidad; los de abajo cuelgan de el y no se vuelven a sumar
+                renglones.Add(new RenglonDeCosto { Nombre = p.Base.Nombre, Sale = costoBase, EsBase = true });
+                renglones.AddRange(deLaBase);
                 costo += costoBase;
             }
 

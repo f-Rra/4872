@@ -14,6 +14,7 @@ public static class Sembrador
     // los que hacen al producto: sin ellos deja de ser eso. El resto se puede sacar
     private static readonly HashSet<string> Fijos =
     [
+        "Tapas de empanada",
         "Salsa de tomate", "Muzzarella", "Longaniza", "Jamón crudo",
         "Carne", "Pollo", "Jamón", "Choclo", "Salsa blanca", "Acelga", "Semolín"
     ];
@@ -73,57 +74,65 @@ public static class Sembrador
         (12, 15200)
     ];
 
-    // la receta del bollo es la única cosa real de todo este archivo
+    // Las dos recetas de bollo son lo único real de todo este archivo. Van por
+    // tanda entera, que es como se amasan, y el panel divide por el rinde.
+    //
+    // El rinde es cuantos bollos sale la tanda, y el peso del bollo sale de ahi:
+    // la de pizza pesa 1730 g y se corta en 6, o sea bollos de 288; la de
+    // focaccia pesa 1930 y se corta en 4, o sea de 483.
+    //
+    // La tapa de empanada no es una base: se compra hecha. Es un ingrediente
+    // más de cada gusto, como la muzzarella.
     private static readonly (string N, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
     [
-        ("Bollo de masa",    6, [("Harina 000", 1000), ("Agua", 700), ("Masa madre", 100), ("Sal fina", 30)]),
-        ("Tapa de empanada", 1, [("Tapas de empanada", 1)])
+        ("Bollo de pizza",    6, [("Harina 000", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
+        ("Bollo de focaccia", 4, [("Harina 000", 1000), ("Agua", 750), ("Masa madre", 100), ("Sal fina", 30), ("Oliva", 50)])
     ];
 
     // familia, nombre, precio (nulo en empanadas: van por pack), si está en la
     // carta, la base que consume, y cuánto lleva UNA pieza de cada ingrediente
-    private static readonly (Familia Fam, string N, decimal? Precio, bool Activo, string Base, (string Ing, decimal Cant)[] Receta)[] LosProductos =
+    private static readonly (Familia Fam, string N, decimal? Precio, bool Activo, string? Base, (string Ing, decimal Cant)[] Receta)[] LosProductos =
     [
-        (Familia.Pizza, "Margarita",      9800,  true,  "Bollo de masa",
+        (Familia.Pizza, "Margarita",      9800,  true,  "Bollo de pizza",
             [("Salsa de tomate", 80), ("Muzzarella", 120), ("Albahaca", 4), ("Oliva", 8)]),
-        (Familia.Pizza, "Marinara",       8900,  true,  "Bollo de masa",
+        (Familia.Pizza, "Marinara",       8900,  true,  "Bollo de pizza",
             [("Salsa de tomate", 90), ("Ajo", 6), ("Orégano", 1), ("Oliva", 10)]),
-        (Familia.Pizza, "Fugazzeta",      11200, true,  "Bollo de masa",
+        (Familia.Pizza, "Fugazzeta",      11200, true,  "Bollo de pizza",
             [("Muzzarella", 140), ("Cebolla", 200), ("Orégano", 1), ("Oliva", 8)]),
-        (Familia.Pizza, "Napolitana",     10800, true,  "Bollo de masa",
+        (Familia.Pizza, "Napolitana",     10800, true,  "Bollo de pizza",
             [("Salsa de tomate", 80), ("Muzzarella", 120), ("Tomate", 90), ("Ajo", 5)]),
-        (Familia.Pizza, "Calabresa",      12400, false, "Bollo de masa",
+        (Familia.Pizza, "Calabresa",      12400, false, "Bollo de pizza",
             [("Salsa de tomate", 80), ("Muzzarella", 120), ("Longaniza", 60), ("Morrón", 40)]),
-        (Familia.Pizza, "Cuatro quesos",  12900, true,  "Bollo de masa",
+        (Familia.Pizza, "Cuatro quesos",  12900, true,  "Bollo de pizza",
             [("Muzzarella", 90), ("Provolone", 40), ("Roquefort", 35), ("Parmesano", 25)]),
-        (Familia.Pizza, "Rúcula y crudo", 13500, true,  "Bollo de masa",
+        (Familia.Pizza, "Rúcula y crudo", 13500, true,  "Bollo de pizza",
             [("Muzzarella", 110), ("Rúcula", 20), ("Jamón crudo", 40), ("Parmesano", 15)]),
 
-        (Familia.Focaccia, "Romero y sal", 6800, true,  "Bollo de masa",
+        (Familia.Focaccia, "Romero y sal", 6800, true,  "Bollo de focaccia",
             [("Romero", 2), ("Sal gruesa", 3), ("Oliva", 12), ("Semolín", 5)]),
-        (Familia.Focaccia, "Cherry",       7900, true,  "Bollo de masa",
+        (Familia.Focaccia, "Cherry",       7900, true,  "Bollo de focaccia",
             [("Tomate cherry", 60), ("Albahaca", 3), ("Oliva", 10), ("Sal", 1)]),
-        (Familia.Focaccia, "Cebolla",      7400, true,  "Bollo de masa",
+        (Familia.Focaccia, "Cebolla",      7400, true,  "Bollo de focaccia",
             [("Cebolla", 150), ("Tomillo", 2), ("Oliva", 10), ("Sal", 1)]),
-        (Familia.Focaccia, "Aceitunas",    8200, false, "Bollo de masa",
+        (Familia.Focaccia, "Aceitunas",    8200, false, "Bollo de focaccia",
             [("Aceitunas", 50), ("Orégano", 1), ("Oliva", 10), ("Sal", 1)]),
 
-        (Familia.Empanada, "Carne suave",     null, true,  "Tapa de empanada",
-            [("Carne", 35), ("Cebolla", 15), ("Huevo", 6), ("Comino", 1)]),
-        (Familia.Empanada, "Carne picante",   null, true,  "Tapa de empanada",
-            [("Carne", 35), ("Cebolla", 15), ("Pimentón", 1), ("Ají molido", 1)]),
-        (Familia.Empanada, "Jamón y queso",   null, true,  "Tapa de empanada",
-            [("Jamón", 20), ("Muzzarella", 25), ("Orégano", 1)]),
-        (Familia.Empanada, "Humita",          null, true,  "Tapa de empanada",
-            [("Choclo", 30), ("Salsa blanca", 20), ("Cebolla de verdeo", 0.2m), ("Nuez moscada", 0.2m)]),
-        (Familia.Empanada, "Verdura",         null, true,  "Tapa de empanada",
-            [("Acelga", 0.3m), ("Cebolla", 10), ("Salsa blanca", 15)]),
-        (Familia.Empanada, "Pollo",           null, false, "Tapa de empanada",
-            [("Pollo", 30), ("Cebolla", 12), ("Morrón", 8), ("Perejil", 0.2m)]),
-        (Familia.Empanada, "Caprese",         null, true,  "Tapa de empanada",
-            [("Muzzarella", 25), ("Tomate", 20), ("Albahaca", 2), ("Oliva", 3)]),
-        (Familia.Empanada, "Cebolla y queso", null, true,  "Tapa de empanada",
-            [("Cebolla", 30), ("Muzzarella", 25), ("Orégano", 1)])
+        (Familia.Empanada, "Carne suave",     null, true,  null,
+            [("Tapas de empanada", 1), ("Carne", 35), ("Cebolla", 15), ("Huevo", 6), ("Comino", 1)]),
+        (Familia.Empanada, "Carne picante",   null, true,  null,
+            [("Tapas de empanada", 1), ("Carne", 35), ("Cebolla", 15), ("Pimentón", 1), ("Ají molido", 1)]),
+        (Familia.Empanada, "Jamón y queso",   null, true,  null,
+            [("Tapas de empanada", 1), ("Jamón", 20), ("Muzzarella", 25), ("Orégano", 1)]),
+        (Familia.Empanada, "Humita",          null, true,  null,
+            [("Tapas de empanada", 1), ("Choclo", 30), ("Salsa blanca", 20), ("Cebolla de verdeo", 0.2m), ("Nuez moscada", 0.2m)]),
+        (Familia.Empanada, "Verdura",         null, true,  null,
+            [("Tapas de empanada", 1), ("Acelga", 0.3m), ("Cebolla", 10), ("Salsa blanca", 15)]),
+        (Familia.Empanada, "Pollo",           null, false, null,
+            [("Tapas de empanada", 1), ("Pollo", 30), ("Cebolla", 12), ("Morrón", 8), ("Perejil", 0.2m)]),
+        (Familia.Empanada, "Caprese",         null, true,  null,
+            [("Tapas de empanada", 1), ("Muzzarella", 25), ("Tomate", 20), ("Albahaca", 2), ("Oliva", 3)]),
+        (Familia.Empanada, "Cebolla y queso", null, true,  null,
+            [("Tapas de empanada", 1), ("Cebolla", 30), ("Muzzarella", 25), ("Orégano", 1)])
     ];
 
     public static async Task SembrarSiEstaVacia(Contexto contexto, ILogger logger)
@@ -184,7 +193,8 @@ public static class Sembrador
             Nombre = p.N,
             Precio = p.Precio,
             Activo = p.Activo,
-            Base = bases[p.Base],
+            // las empanadas no llevan: la tapa es un ingrediente suyo
+            Base = p.Base is null ? null : bases[p.Base],
             Receta = [.. p.Receta.Select(r => new ProductoIngrediente
             {
                 Ingrediente = ingredientes[r.Ing],
