@@ -336,32 +336,100 @@
   .campo.ancho input{width:17rem;max-width:100%}
   .campo.corto input{width:7rem}
   .par .campo{flex:1}
-  .ingr{display:flex;flex-wrap:wrap;gap:.32rem;padding-top:.15rem}
-  .ingr span{
-    font-size:.8rem;font-weight:600;border:1.3px solid rgba(30,82,69,.4);
-    border-radius:999px;padding:.14rem .55rem;white-space:nowrap;
+  /* ---------- la receta ----------
+     Un renglon por ingrediente: nombre, cuanto, si se puede sacar, y la x. Se lee
+     como una receta y el ojo baja comparando, igual que los campos de arriba. */
+  .receta{list-style:none;margin:0;padding:0}
+  .receta li{
+    display:flex;align-items:center;gap:.8rem;height:var(--fila);
+    border-bottom:1px solid rgba(30,82,69,.18);
   }
-  .ingr span{display:inline-flex;align-items:center;gap:.3rem}
-  .ingr .quitar{
-    background:transparent;border:0;padding:0;cursor:pointer;color:var(--verde);
-    font-family:var(--ui);font-size:.95rem;line-height:1;opacity:.5;
+  .receta li:last-child{border-bottom:0}
+  .receta .rn{flex:1;min-width:0;font-size:.93rem;font-weight:700;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* la cantidad va en pastilla, como los demas chips de la pantalla, con la
+     unidad adentro: el numero y lo que mide son una sola cosa */
+  .receta .rcaja{
+    flex:none;display:inline-flex;align-items:baseline;gap:.22rem;
+    border:1.3px solid rgba(30,82,69,.4);border-radius:999px;padding:.1rem .55rem;
   }
-  .ingr .quitar:hover{opacity:1}
-  .ingr .mas-ing{
+  .receta .rcaja:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+  /* dos clases y no una: la regla de los campos de la ficha es
+     «.reng input[type=number]» y con una sola clase le ganaba, estirando la
+     pastilla al ancho del renglon */
+  .receta .rcaja .rc{
+    width:2.9rem;text-align:right;font-size:.86rem;font-weight:800;
+    font-variant-numeric:tabular-nums;font-family:var(--ui);color:var(--verde);
+    background:transparent;border:0;padding:0;
+  }
+  .receta .rcaja .rc:hover{border:0}
+  .receta .rcaja .rc:focus{outline:0;border:0}
+  .receta .rcaja .rc::placeholder{font-weight:600;opacity:.4}
+  .receta .ru{flex:none;font-size:.72rem;font-weight:700;opacity:.6;min-width:1.1rem}
+  .receta .rx{
+    flex:none;background:transparent;border:0;cursor:pointer;color:var(--verde);
+    font-family:var(--ui);font-size:1rem;line-height:1;opacity:.4;padding:0 .1rem;width:1.1rem;
+  }
+  .receta .rx:hover{opacity:1}
+
+  /* La masa va sin pastilla: en esta pantalla la pastilla es lo que dice «esto se
+     toca», y la masa no se toca desde aca. Cae en la misma columna que las
+     cantidades de arriba para que las dos listas se lean juntas. */
+  .receta .rq{
+    flex:none;min-width:4.4rem;text-align:right;
+    font-size:.88rem;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums;
+  }
+
+  /* modificable va macizo y fijo perfilado: lo que se puede tocar pesa mas */
+  .receta .saca{
+    flex:none;font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    border-radius:999px;padding:.16rem .5rem;min-width:6.2rem;text-align:center;cursor:pointer;
+    font-family:var(--ui);border:1.4px solid var(--verde);background:var(--verde);color:var(--papel);
+  }
+  .receta .saca[aria-pressed="false"]{background:transparent;color:var(--piedra);border-color:rgba(154,146,135,.85)}
+  .receta .saca:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+  .hueco{flex:none;min-width:6.2rem}
+
+  /* El renglon de sumar va arriba y a la altura de la etiqueta: las dos cosas se
+     leen como una sola linea y la receta cuelga abajo. Esta siempre en el mismo
+     lugar, tenga la receta cuatro ingredientes o doce. */
+  .reng.alto.receta-reng > .et{display:flex;align-items:center;height:var(--fila);padding-top:0}
+  .tope li{border-bottom:1.4px solid rgba(30,82,69,.35);gap:.55rem}
+  .mas{
     flex:none;width:1.55rem;height:1.55rem;border-radius:50%;cursor:pointer;
     background:transparent;border:1.4px solid rgba(30,82,69,.5);color:var(--verde);
-    display:grid;place-items:center;padding:0;margin-left:.15rem;
-    transition:background .15s ease,border-color .15s ease;
+    display:grid;place-items:center;padding:0;
   }
-  .ingr .mas-ing svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round}
-  .ingr .mas-ing:hover{background:var(--verde);border-color:var(--verde);color:var(--papel)}
-  .ingr .sumar{
-    font-family:var(--ui);font-size:.8rem;font-weight:600;color:var(--verde);
-    background:transparent;border:1.3px solid var(--verde);border-radius:999px;
-    padding:.12rem .6rem;width:9rem;margin-left:.15rem;
+  .mas svg{width:13px;height:13px}
+  .mas:hover{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .dice{flex:1;font-size:.8rem;font-weight:600;opacity:.55;cursor:pointer;text-align:left;
+    background:transparent;border:0;font-family:var(--ui);color:var(--verde);padding:0}
+  /* el buscador ocupa el lugar del texto, en el mismo renglon */
+  .buscar-linea{
+    flex:1;min-width:0;font-family:var(--ui);font-size:.9rem;font-weight:600;color:var(--verde);
+    background:transparent;border:0;border-bottom:1.3px dashed rgba(30,82,69,.45);padding:0 0 .12rem;
   }
-  .ingr .sumar::placeholder{color:var(--verde);opacity:.45}
-  .ingr .sumar:focus{outline:0}
+  .buscar-linea::placeholder{opacity:.45;font-weight:600}
+  .buscar-linea:focus{outline:0;border-bottom-color:var(--verde);border-bottom-style:solid}
+  .elegido{flex:1;min-width:0;font-size:.93rem;font-weight:700;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* la lista propia y no el datalist del navegador, que se dibuja con los colores
+     del sistema operativo y no con los de la pantalla */
+  .candidatos{
+    list-style:none;margin:.45rem 0 0;padding:0;max-height:9.5rem;overflow-y:auto;
+    border:1.3px solid rgba(30,82,69,.3);
+  }
+  .candidatos li{border-bottom:1px solid rgba(30,82,69,.12)}
+  .candidatos li:last-child{border-bottom:0}
+  .candidatos button{
+    width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+    font-family:var(--ui);font-size:.85rem;font-weight:600;color:var(--verde);padding:.34rem .6rem;
+  }
+  .candidatos button:hover{background:rgba(30,82,69,.1)}
+  .candidatos .nada{padding:.45rem .6rem;font-size:.8rem;font-weight:600;opacity:.7;line-height:1.4}
+
   .candidatos{
     list-style:none;margin:.45rem 0 0;padding:0;max-height:9.5rem;overflow-y:auto;
     border:1.3px solid rgba(30,82,69,.3);
@@ -1214,15 +1282,32 @@
     return listaProd().length + ' \u00b7 ' + (a === 0 ? 'ninguno agotado' : a === 1 ? '1 agotado' : a + ' agotados');
   }
 
-  function ingrHTML(lista){
-    return '<div class="ingr">' + lista.map(function(g, k){
-        return '<span>' + g + '<button class="quitar" type="button" data-qi="' + k + '" title="Quitar">\u00d7</button></span>';
-      }).join("") +
+  // Un rengl\u00f3n por ingrediente: qu\u00e9 lleva, cu\u00e1nto y si se puede sacar.
+  // Los tres juntos porque cuando carg\u00e1s una pizza la pregunta es esa, e ir a
+  // Ingredientes por el cu\u00e1nto obliga a ir y volver por cada rengl\u00f3n.
+  function ingrHTML(lista, prod){
+    // el rengl\u00f3n de arriba nunca se mueve de lugar: el (+) en reposo y el
+    // buscador cuando se abre, tenga la receta cuatro ingredientes o doce
+    var tope = '<ul class="receta tope"><li>' +
       (sumando
-        ? '<input class="sumar" id="ing-nuevo" type="text" placeholder="Buscar\u2026" autocomplete="off">'
-        : '<button class="mas-ing" type="button" data-abrire="1" title="Sumar un ingrediente" aria-label="Sumar un ingrediente">' +
-          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>') +
-      '</div>' + (sumando ? candidatosHTML(lista) : '');
+        ? '<input class="buscar-linea" id="ing-nuevo" type="text" placeholder="Buscar\u2026" autocomplete="off">'
+        : '<button class="mas" type="button" data-abrire="1" aria-label="Sumar un ingrediente">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">' +
+          '<path d="M12 5v14M5 12h14"/></svg></button>' +
+          '<button class="dice" type="button" data-abrire="1">Sumar un ingrediente</button>') +
+      '<span class="hueco"></span><span class="rx"></span></li></ul>' +
+      (sumando ? candidatosHTML(lista) : '');
+
+    return tope + '<ul class="receta">' + lista.map(function(g, k){
+      var x = buscaIng(g), c = prod ? cuantoLleva(prod, g) : 0;
+      return '<li><span class="rn">' + g + '</span>' +
+        '<span class="rcaja"><input class="rc" value="' + redondo(c) + '" data-cant="' + g + '">' +
+        '<span class="ru">' + (x ? x.u : 'g') + '</span></span>' +
+        '<button class="saca" type="button" data-saca="' + g + '" aria-pressed="' +
+          (prod ? seSaca(prod, g) : true) + '">' +
+          ((prod && !seSaca(prod, g)) ? 'Fijo' : 'Modificable') + '</button>' +
+        '<button class="rx" type="button" data-qi="' + k + '" title="Quitar">\u00d7</button></li>';
+    }).join("") + '</ul>';
   }
 
   // solo se puede sumar un ingrediente que ya exista: escribir libre es como
@@ -1273,9 +1358,36 @@
   var AVISO_PACK = 'Los dos precios valen para todos los gustos.';
 
   // B \u00b7 rengl\u00f3n etiquetado
+  // Lo que le toca de masa a UNA pieza. Una pizza es un bollo.
+  //
+  // La receta de la masa se carga por tanda entera, que es como se amasa,
+  // pero ac\u00e1 no se muestra as\u00ed: en esta ficha todo lo dem\u00e1s es por
+  // pieza —120 g de muzzarella son de una pizza— y mezclar las dos
+  // unidades obligaba a explicar el rinde. Dividida, las dos listas dicen lo
+  // mismo.
+  //
+  // Va de lectura: son n\u00fameros derivados, y la receta de la masa no es de
+  // este producto sino de todos los que la amasan.
+  function baseHTML(el){
+    var bn = baseDe(el.f);
+    if(!bn) return '';
+    var b = BASES[bn];
+    var filas = Object.keys(b.r)
+      .sort(function(x, y){ return b.r[y] - b.r[x]; })
+      .map(function(g){
+        var x = buscaIng(g);
+        return '<li><span class="rn">' + g + '</span>' +
+          '<span class="rq">' + bonito(b.r[g] / b.rinde, x ? x.u : 'g') + '</span>' +
+          '<span class="hueco"></span><span class="rx"></span></li>';
+      }).join("");
+    return '<div class="reng alto receta-reng"><span class="et">Base</span>' +
+      '<span class="va"><ul class="receta lectura">' + filas + '</ul></span></div>';
+  }
+
   function fichaRenglones(nuevo, el, ing){
     var v = valores(el);
-    function r(et, va){ return '<div class="reng"><span class="et">' + et + '</span><span class="va">' + va + '</span></div>'; }
+    function r(et, va, cls){ return '<div class="reng' + (cls ? ' ' + cls : '') + '">' +
+      '<span class="et">' + et + '</span><span class="va">' + va + '</span></div>'; }
     var precios = el.f === "emp"
       ? r("Pack x6", inP6(v.p6)) + r("Pack x12", inP12(v.p12))
       : r("Precio", inPre(v.p));
@@ -1284,7 +1396,8 @@
         r("Nombre", inNom(v.n)) +
         r("Tipo", chipsFam(el)) +
         precios +
-        r("Ingredientes", ingrHTML(ing)) +
+        r("Ingredientes", ingrHTML(ing, nuevo ? null : el.n), "alto receta-reng") +
+        (nuevo ? '' : baseHTML(el)) +
       '</div>' +
       (el.f === "emp" ? '<p class="nota-f menos" style="margin:-.9rem 0 1.3rem">' + AVISO_PACK + '</p>' : '') +
       accionesHTML(nuevo, el);
@@ -1332,7 +1445,6 @@
   }
 
   var UNIDADES = ["g", "ml", "u"];
-  // cuanto lleva UNA pieza de cada producto, ingrediente por ingrediente
   // Cuánto lleva UNA pieza. No hay renglones a medias: la tabla exige cantidad
   // mayor que cero, así que un ingrediente sin cuánto no es un ingrediente de la
   // receta: o lleva algo o no está.
@@ -1717,41 +1829,93 @@
     }, 0);
   }
 
-  var MESES = [
-    {m:"Mayo",   pedidos:34, factura:1284000, costo:352000},
-    {m:"Junio",  pedidos:41, factura:1596000, costo:449000},
-    {m:"Julio",  pedidos:47, factura:1913000, costo:551000}
-  ];
+  // El mes de un pedido. La maqueta guarda la hora como texto \u2014"ayer 19:02"\u2014
+  // porque a las otras cinco pantallas les alcanza; ac\u00e1 hace falta la fecha
+  // para agrupar, y "ayer" puede caer en el mes pasado.
+  function mesDe(p){
+    var d = new Date();
+    if(/ayer/.test(p.hora)) d.setDate(d.getDate() - 1);
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  }
+  function claveMes(d){ return d.getFullYear() + "-" + d.getMonth(); }
+  function nombreMes(d){
+    var n = d.toLocaleDateString("es-AR", {month:"long"});
+    return n.charAt(0).toUpperCase() + n.slice(1);
+  }
+
+  // Los meses cerrados son inventados: ac\u00e1 hay un solo pedido entregado, as\u00ed
+  // que la tabla de verdad tendr\u00eda un rengl\u00f3n y no se ver\u00eda nada. Van medidos
+  // desde hoy y no con el nombre escrito, as\u00ed la maqueta no envejece. En la app
+  // no existen: esos renglones los escribe el uso.
+  var EJEMPLO = [{pedidos:34, factura:1284000, costo:352000},
+                 {pedidos:41, factura:1596000, costo:449000},
+                 {pedidos:47, factura:1913000, costo:551000}];
+
+  // Lo mismo que hace el panel: agrupa los pedidos entregados por el mes en que
+  // se pidieron, del m\u00e1s viejo al m\u00e1s nuevo. El de hoy queda abierto.
+  function meses(){
+    var hoy = new Date(), por = {};
+    entregados().forEach(function(p){
+      var d = mesDe(p), k = claveMes(d);
+      if(!por[k]) por[k] = {d:d, pedidos:0, factura:0, costo:0};
+      por[k].pedidos++;
+      por[k].factura += total(p);
+      por[k].costo += costoPedido(p);
+    });
+
+    var filas = EJEMPLO.map(function(x, k){
+      return {d:new Date(hoy.getFullYear(), hoy.getMonth() - (EJEMPLO.length - k), 1),
+              pedidos:x.pedidos, factura:x.factura, costo:x.costo};
+    });
+    Object.keys(por).forEach(function(k){ filas.push(por[k]); });
+
+    return filas.sort(function(a, b){ return a.d - b.d; }).map(function(x){
+      x.abierto = claveMes(x.d) === claveMes(hoy);
+      x.deja = x.factura - x.costo;
+      x.pct = x.factura ? Math.round(x.deja / x.factura * 100) : null;
+      return x;
+    });
+  }
 
   function vistaMeses(){
-    var e = entregados();
-    var enCurso = {m:"Agosto", pedidos:e.length,
-                   factura:e.reduce(function(a, p){ return a + total(p); }, 0),
-                   costo:e.reduce(function(a, p){ return a + costoPedido(p); }, 0), curso:true};
-    var filas = MESES.concat([enCurso]);
-    var cerrados = MESES;
-    var mediaPct = cerrados.reduce(function(a, x){ return a + (x.factura - x.costo) / x.factura * 100; }, 0) / cerrados.length;
+    var filas = meses();
+    var enCurso = filas.filter(function(x){ return x.abierto; })[0];
+    // el promedio sale solo de los cerrados: el mes en curso todav\u00eda se mueve
+    // y arrastrar\u00eda el n\u00famero para cualquier lado
+    var cerrados = filas.filter(function(x){ return !x.abierto && x.pct !== null; });
+    var media = cerrados.length
+      ? Math.round(cerrados.reduce(function(a, x){ return a + x.pct; }, 0) / cerrados.length)
+      : null;
+    var sinEntregar = activos().reduce(function(a, p){ return a + total(p); }, 0);
 
-    var banda = '<div class="banda"><b>Agosto va ' + plata(enCurso.factura) + ' cobrados</b>' +
-      '<span>&middot; ' + enCurso.pedidos + (enCurso.pedidos === 1 ? ' pedido entregado' : ' pedidos entregados') +
-      ' &middot; quedan ' + plata(activos().reduce(function(a, p){ return a + total(p); }, 0)) + ' sin entregar</span>' +
-      '<span class="aparte">margen de los tres meses cerrados: ' + Math.round(mediaPct) + '%</span></div>';
+    var banda = '<div class="banda">' + (enCurso
+        ? '<b>' + nombreMes(enCurso.d) + ' va ' + plata(enCurso.factura) + ' cobrados</b>' +
+          '<span>&middot; ' + enCurso.pedidos +
+          (enCurso.pedidos === 1 ? ' pedido entregado' : ' pedidos entregados') +
+          ' &middot; quedan ' + plata(sinEntregar) + ' sin entregar</span>'
+        : '<b>Todav\u00eda no entregaste ning\u00fan pedido este mes</b>' +
+          '<span>&middot; quedan ' + plata(sinEntregar) + ' sin entregar</span>') +
+      (media === null ? '' : '<span class="aparte">margen de los meses cerrados: ' + media + '%</span>') +
+      '</div>';
 
+    // Cobr\u00f3 y Cost\u00f3 no son el mismo tipo de dato, y por eso el segundo va
+    // flojo: lo cobrado es hist\u00f3rico de verdad y lo que cost\u00f3 se recalcula con
+    // los precios de compra de hoy.
     return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
       '<th>Mes</th><th class="g-num">Pedidos</th><th class="g-num">Cobr\u00f3</th>' +
       '<th class="g-num">Cost\u00f3</th><th class="g-num">Dej\u00f3</th><th class="g-fin">Margen</th>' +
       '</tr></thead><tbody>' + filas.map(function(x){
-        var deja = x.factura - x.costo, pct = x.factura ? deja / x.factura * 100 : 0;
-        return '<tr><td class="g-nom">' + x.m +
-          (x.curso ? '<span class="bajo">todav\u00eda abierto</span>' : '') + '</td>' +
+        return '<tr><td class="g-nom">' + nombreMes(x.d) + ' ' + x.d.getFullYear() +
+          (x.abierto ? '<span class="bajo">todav\u00eda abierto</span>' : '') + '</td>' +
           '<td class="g-num g-flojo">' + x.pedidos + '</td>' +
           '<td class="g-num">' + plata(x.factura) + '</td>' +
           '<td class="g-num g-flojo">' + plata(x.costo) + '</td>' +
-          '<td class="g-num"><b>' + plata(deja) + '</b></td>' +
-          '<td class="g-fin g-num">' + (x.factura ? Math.round(pct) + '%' : "\u2014") + '</td></tr>';
+          '<td class="g-num"><b>' + plata(x.deja) + '</b></td>' +
+          '<td class="g-fin g-num">' + (x.pct === null ? "\u2014" : x.pct + '%') + '</td></tr>';
       }).join("") + '</tbody></table></div>' +
-      '<div class="pie-tabla"><span class="cuantos">Mayo, junio y julio son n\u00fameros de ejemplo. ' +
-      'Agosto sale de los pedidos entregados de verdad.</span></div>';
+      '<div class="pie-tabla"><span class="cuantos">Lo cobrado es el precio con el que se ' +
+      'confirm\u00f3 cada pedido. Lo que cost\u00f3 se calcula con los precios de compra de ' +
+      'hoy.</span></div>';
   }
 
   function vistaCostos(){
@@ -2050,7 +2214,10 @@
 
       '<div class="bloque"><h3>Por mes: lo cobrado contra lo que cost\u00f3</h3>' +
       '<p>El mes en curso <b>se calcula de verdad</b>, de los pedidos entregados. Marc\u00e1 uno como entregado ' +
-      'en Pedidos y volv\u00e9. Los meses anteriores son de ejemplo.</p>' +
+      'en Pedidos y volv\u00e9. Los meses anteriores son de ejemplo, para poder ver la tabla llena.</p>' +
+      '<p><b>El primer d\u00eda la tabla est\u00e1 vac\u00eda</b> y lo dice: <i>todav\u00eda no hay ning\u00fan pedido ' +
+      'entregado, el primero abre el mes</i>. Ac\u00e1 no se puede ver \u2014un entregado no se ' +
+      'cancela\u2014, pero es el estado con el que arranca.</p>' +
       '<p>Lo que <b>no</b> est\u00e1: luz, alquiler, sueldos. Eso es un libro de caja y ah\u00ed el panel no le gana ' +
       'a una planilla.</p></div>';
     }
@@ -2182,20 +2349,25 @@
         pintar(); restaurarIng();
       });
     });
+    // el modificable vive en la receta del producto: lo que se toca es si ESTE
+    // producto se puede pedir sin ESE ingrediente
     document.querySelectorAll("#marco [data-saca]").forEach(function(b){
       b.addEventListener("click", function(){
-        sincronizarIng();
-        var n = TIPEADO_I.n, p = b.dataset.saca;
-        QUITABLE[p] = QUITABLE[p] || {};
-        QUITABLE[p][ingElegido] = !QUITABLE[p][ingElegido];
-        pintar(); restaurarIng();
+        sincronizar();
+        var g = b.dataset.saca;
+        QUITABLE[prodElegido] = QUITABLE[prodElegido] || {};
+        QUITABLE[prodElegido][g] = !QUITABLE[prodElegido][g];
+        pintar();
       });
     });
+    // la cantidad tambien: es del par producto-ingrediente, y se carga en la
+    // receta del producto que la lleva
     document.querySelectorAll("#marco [data-cant]").forEach(function(b){
       b.addEventListener("change", function(){
-        sincronizarIng();
-        ponerCuanto(b.dataset.cant, ingElegido, leerMedida(b.value, buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g"));
-        pintar(); restaurarIng();
+        sincronizar();
+        var g = b.dataset.cant, x = buscaIng(g);
+        ponerCuanto(prodElegido, g, leerMedida(b.value, x ? x.u : "g"));
+        pintar();
       });
     });
     document.querySelectorAll("#marco [data-iborrar]").forEach(function(b){
