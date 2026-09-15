@@ -520,9 +520,34 @@
     background:var(--papel);border:2px solid var(--verde);padding:1.15rem 1.25rem 1.25rem;
   }
   .modal h4{margin:0 0 .2rem;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;line-height:1.1}
-  .modal .sub-m{margin:0 0 1rem;font-size:.82rem;font-weight:600;opacity:.75}
-  .modal .campo > input{width:100%}
-  .modal .campo.corto > input{width:7rem}
+  .modal .sub-m{margin:0 0 .9rem;font-size:.82rem;font-weight:600;opacity:.75}
+  /* la etiqueta del panel mide 7,6rem porque tiene que dar para \u00abPack x12\u00bb.
+     Ac\u00e1 son cuatro palabras cortas y ese ancho deja un hueco que no separa nada */
+  .modal .reng{gap:.7rem}
+  .modal .reng > .et{width:5.5rem}
+  .modal .renglones .reng:last-child{border-bottom:0}
+  .modal .renglones{margin-bottom:0}
+  /* Pastilla, como el stock de la grilla: en el panel lo que se puede tocar
+     tiene borde redondo. Van en pastilla los dos n\u00fameros de la compra y no el
+     nombre: uno se escribe cifra por cifra y el otro es texto com\u00fan. */
+  .modal .pastilla{
+    display:inline-flex;align-items:baseline;gap:.28rem;
+    border:1.4px solid rgba(30,82,69,.4);border-radius:999px;padding:.22rem .8rem;
+  }
+  .modal .pastilla:hover{border-color:rgba(30,82,69,.75)}
+  .modal .pastilla:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+  .modal .pastilla .signo{font-size:.92rem;font-weight:700;opacity:.5;flex:none}
+  .modal .pastilla > input{
+    font-family:var(--ui);font-size:.95rem;font-weight:700;color:var(--verde);
+    background:transparent;border:0;padding:0;width:6.5rem;font-variant-numeric:tabular-nums;
+  }
+  .modal .pastilla > input:focus{outline:0}
+  .modal .nota-f{margin:.7rem 0 0}
+  .modal .secundarias{margin-top:.9rem}
+  .reparto .cu{
+    flex:none;min-width:6.2rem;text-align:right;
+    font-size:.8rem;font-weight:700;opacity:.55;font-variant-numeric:tabular-nums;
+  }
   .reparto{border-top:1.4px solid rgba(30,82,69,.3);margin-top:.2rem}
   .reparto .fila{
     display:flex;align-items:baseline;gap:.55rem;
@@ -1163,13 +1188,13 @@
       if(!k.filas.length || x.libre) return;
       if(!k.con){ if(entraEnPedidos(x.n)) sinMedida++; return; }
       var f = k.total - x.stock;
-      if(f > 0) faltan.push({n:x.n, f:f, u:x.u, flojo:k.sin});
+      if(f > 0) faltan.push({n:x.n, f:f, u:x.u});
     });
     faltan.sort(function(a, b){ return b.f - a.f; });
     var cuerpo = faltan.length
       ? '<ul class="comprar">' + faltan.map(function(r){
           return '<li><span class="qn">' + r.n + '</span><span class="cu">' + bonito(r.f, r.u) +
-            (r.flojo ? '<span class="asterisco">*</span>' : '') + '</span></li>';
+            '</span></li>';
         }).join("") + '</ul>'
       : '<p class="nada-h">Alcanza con lo que hay.</p>';
     return '<div class="mitad-h"><h5>Comprar</h5>' + cuerpo +
@@ -1308,18 +1333,27 @@
 
   var UNIDADES = ["g", "ml", "u"];
   // cuanto lleva UNA pieza de cada producto, ingrediente por ingrediente
+  // Cuánto lleva UNA pieza. No hay renglones a medias: la tabla exige cantidad
+  // mayor que cero, así que un ingrediente sin cuánto no es un ingrediente de la
+  // receta: o lleva algo o no está.
   var CANT = {
-    "Margarita":      {"Salsa de tomate":80, "Muzzarella":120, "Albahaca":4, "Oliva":8},
-    "Marinara":       {"Salsa de tomate":90, "Ajo":6, "Or\u00e9gano":1, "Oliva":10},
-    "Fugazzeta":      {"Muzzarella":140, "Cebolla":200, "Or\u00e9gano":1, "Oliva":8},
-    "Napolitana":     {"Salsa de tomate":80, "Muzzarella":120, "Tomate":90, "Ajo":5},
-    "Cuatro quesos":  {"Muzzarella":90, "Provolone":40, "Roquefort":35, "Parmesano":25},
-    "Romero y sal":   {"Romero":2, "Sal gruesa":3, "Oliva":12, "Semolin":5},
-    "Cherry":         {"Tomate cherry":60, "Albahaca":3, "Oliva":10, "Sal":1},
-    "Carne suave":    {"Carne":35, "Cebolla":15, "Comino":1},
-    "Carne picante":  {"Carne":35, "Cebolla":15},
-    "Humita":         {"Choclo":30, "Salsa blanca":20}
+    "Margarita":            {"Salsa de tomate":80, "Muzzarella":120, "Albahaca":4, "Oliva":8},
+    "Marinara":             {"Salsa de tomate":90, "Ajo":6, "Orégano":1, "Oliva":10},
+    "Fugazzeta":            {"Muzzarella":140, "Cebolla":200, "Orégano":1, "Oliva":8},
+    "Napolitana":           {"Salsa de tomate":80, "Muzzarella":120, "Tomate":90, "Ajo":5},
+    "Cuatro quesos":        {"Muzzarella":90, "Provolone":40, "Roquefort":35, "Parmesano":25},
+    "Jamón crudo y rúcula": {"Muzzarella":110, "Jamón crudo":40, "Rúcula":20, "Oliva":8},
+    "Calabresa":            {"Salsa de tomate":80, "Muzzarella":120, "Longaniza":60, "Orégano":1},
+    "Romero y sal":         {"Romero":2, "Sal gruesa":3, "Oliva":12, "Semolin":5},
+    "Cherry":               {"Tomate cherry":60, "Albahaca":3, "Oliva":10, "Sal":1},
+    "Carne suave":          {"Tapas de empanada":1, "Carne":35, "Cebolla":15, "Huevo":6, "Comino":1},
+    "Carne picante":        {"Tapas de empanada":1, "Carne":35, "Cebolla":15, "Pimentón":1, "Ají molido":1},
+    "Jamón y queso":      {"Tapas de empanada":1, "Jamón":20, "Muzzarella":25, "Orégano":1},
+    "Humita":               {"Tapas de empanada":1, "Choclo":30, "Salsa blanca":20, "Cebolla de verdeo":0.2, "Nuez moscada":0.2},
+    "Caprese":              {"Tapas de empanada":1, "Muzzarella":25, "Tomate":20, "Albahaca":2, "Oliva":3},
+    "Pollo":                {"Tapas de empanada":1, "Pollo":30, "Cebolla":12, "Morrón":8, "Perejil":0.2}
   };
+
   // que puede pedirse "sin", producto por producto
   var QUITABLE = {};
   (function(){
@@ -1483,12 +1517,18 @@
   function cuentaIng(ing){
     var ped = pedidasPorProducto(), total = 0, con = 0, sin = 0, filas = [];
     (porIngrediente()[ing] || []).forEach(function(p){
-      var c = cuantoLleva(p, ing), n = ped[p] || 0;
+      var esBase = !!BASES[p], c = cuantoLleva(p, ing), n = ped[p] || 0;
       if(c) con++; else sin++;
-      total += c * n;
-      filas.push({prod:p, cuanto:c, piezas:n, sale:c * n, saca:seSaca(p, ing),
-                  base:!!BASES[p], tanda:cuantoTanda(p, ing), rinde:BASES[p] ? BASES[p].rinde : 0});
+      // La masa se amasa por tandas enteras: media tanda no se amasa, as\u00ed que
+      // lo que se gasta es la receta por cu\u00e1ntas tandas salgan, no la parte
+      // proporcional. Es la misma cuenta que hace Producci\u00f3n.
+      var tandas = esBase ? Math.ceil(n / BASES[p].rinde) : 0;
+      var sale = esBase ? cuantoTanda(p, ing) * tandas : c * n;
+      total += sale;
+      filas.push({prod:p, cuanto:c, piezas:n, sale:sale, saca:seSaca(p, ing), base:esBase,
+                  tanda:cuantoTanda(p, ing), rinde:esBase ? BASES[p].rinde : 0, tandas:tandas});
     });
+    filas.sort(function(a, b){ return b.sale - a.sale; });
     return {total:total, con:con, sin:sin, filas:filas};
   }
   function entraEnPedidos(ing){
@@ -1505,11 +1545,6 @@
 
     function necesita(x){ return cta(x.n).total; }
 
-    function ast(k){ return k.sin ? '<span class="asterisco" title="falta cargar alg\u00fan producto">*</span>' : ""; }
-    function vacio(){ return '<td class="g-num" colspan="2"><span class="sinCargar">sin cargar la medida</span></td>'; }
-
-    function ast(k){ return k.sin ? '<span class="asterisco" title="falta cargar alg\u00fan producto">*</span>' : ""; }
-
     var faltantes = base.filter(function(x){ return !x.libre && cta(x.n).con && necesita(x) > x.stock; }).length;
     var banda = '<div class="banda"><b>' + activos().length +
       (activos().length === 1 ? ' pedido sin entregar' : ' pedidos sin entregar') + '</b>' +
@@ -1518,13 +1553,18 @@
 
     var cuerpo = base.map(function(x){
       var k = cta(x.n);
-      var pie = !k.filas.length ? "todav\u00eda en ninguna receta"
-        : k.sin === 0 ? "en " + k.filas.length + (k.filas.length === 1 ? " producto" : " productos")
-        : k.con === 0 ? "sin cargar en " + k.sin + (k.sin === 1 ? " producto" : " productos")
-        : "falta cargarlo en " + k.sin + " de " + k.filas.length;
+      // Las masas van nombradas: la harina est\u00e1 en el bollo y en ninguna
+      // pizza, y decir \u00abtodav\u00eda en ninguna receta\u00bb ser\u00eda falso.
+      var prods = k.filas.filter(function(r){ return !r.base; }).length;
+      var masas = k.filas.filter(function(r){ return r.base; });
+      var partes = [];
+      if(prods) partes.push("en " + prods + (prods === 1 ? " producto" : " productos"));
+      if(masas.length === 1) partes.push("en " + masas[0].prod.toLowerCase());
+      else if(masas.length > 1) partes.push("en " + masas.length + " bases");
+      var pie = partes.length ? partes.join(" y ") : "todav\u00eda en ninguna receta";
       return '<tr>' +
         '<td class="g-nom"><button class="abre" type="button" data-ing="' + x.n + '">' + x.n + '</button>' +
-        '<span class="bajo' + (k.sin && k.filas.length ? " alerta" : "") + '">' + pie + '</span></td>' +
+        '<span class="bajo">' + pie + '</span></td>' +
         (function(v){ return '<td class="g-num"><span class="pastilla"><input value="' + v +
           '" data-stock="' + x.n + '" data-auto="1" style="width:' + Math.max(6, v.length) + 'ch"></span></td>'; })(bonito(x.stock, x.u)) +
         '<td class="g-num g-flojo">' + (k.con ? bonito(k.total, x.u) : "\u2014") + '</td>' +
@@ -1557,6 +1597,9 @@
     if(b && TIPEADO_I.p) b.value = TIPEADO_I.p;
     if(c && TIPEADO_I.t) c.value = TIPEADO_I.t;
   }
+  // La ficha de un ingrediente. Lo que se edita ac\u00e1 es qui\u00e9n es y c\u00f3mo se
+  // compra; las cantidades de cada producto se cargan en la receta de ese
+  // producto, que es donde uno est\u00e1 pensando en \u00e9l.
   function fichaIng(){
     if(ingElegido === undefined) return "";
     var nuevo = ingElegido === null;
@@ -1565,57 +1608,70 @@
     var u = uniNueva || x.u;
     var k = nuevo ? {filas:[], total:0, con:0, sin:0} : cuentaIng(x.n);
 
-    var reparto = nuevo
-      ? '<p class="nota-f">Cuando lo sumes a la receta de un producto, ac\u00e1 vas a poder cargar cu\u00e1nto lleva.</p>'
-      : (k.filas.length
-        ? '<div class="reparto">' + k.filas.map(function(r){
-            var val = r.base ? (r.tanda ? bonito(r.tanda, u) : "") : (r.cuanto ? bonito(r.cuanto, u) : "");
-            return '<div class="fila"><span class="qn">' + r.prod +
-              (r.base && r.rinde > 1 ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
-              '<span class="cajaNum"><input value="' + val + '" data-cant="' + r.prod + '" data-auto="1" ' +
-                'style="width:' + Math.max(3, String(val).length) + 'ch" placeholder="0"></span>' +
-              (BASES[r.prod] ? '<span class="llave chica hueca">Base</span>'
-                : '<button class="llave chica" type="button" data-saca="' + r.prod + '" aria-pressed="' + r.saca + '" ' +
-                  'title="' + (r.saca ? "El cliente lo puede sacar" : "No se puede sacar") + '">' +
-                  (r.saca ? "Se saca" : "Fijo") + '</button>') +
-              '<span class="sale">' + (!r.cuanto ? '<span class="sinCargar">sin cargar</span>'
-                : r.base && r.rinde > 1 ? redondo(r.cuanto) + ' ' + u + ' c/u'
-                : !r.piezas ? '<span class="sinCargar">no se pide</span>'
-                : '\u00d7 ' + r.piezas + ' = ' + bonito(r.sale, u)) + '</span></div>';
-          }).join("") +
-          '<div class="fila total"><span class="qn">Hace falta</span><span class="sale">' +
-            (k.con ? bonito(k.total, u) : "\u2014") + '</span></div></div>' +
-          (k.sin ? '<p class="nota-f menos">Falta el n\u00famero en ' + k.sin +
-            (k.sin === 1 ? ' producto' : ' productos') + '. Mientras tanto el total va corto.</p>' : '')
-        : '<p class="nota-f">Todav\u00eda no entra en ninguna receta.</p>');
+    // d\u00f3nde se usa. Las masas van nombradas: la harina est\u00e1 en el bollo y en
+    // ninguna pizza, y decir \u00abtodav\u00eda en ninguna receta\u00bb ser\u00eda falso
+    var prods = k.filas.filter(function(r){ return !r.base; }).length;
+    var masas = k.filas.filter(function(r){ return r.base; });
+    var partes = [];
+    if(prods) partes.push("en " + prods + (prods === 1 ? " producto" : " productos"));
+    if(masas.length === 1) partes.push("en " + masas[0].prod.toLowerCase());
+    else if(masas.length > 1) partes.push("en " + masas.length + " bases");
+    var donde = partes.length ? partes.join(" y ") : "todav\u00eda en ninguna receta";
+
+    // El desglose es de lectura: de d\u00f3nde sale el n\u00famero que muestra la
+    // grilla. Solo lo que entra en alg\u00fan pedido: un producto que nadie pidi\u00f3
+    // no aporta nada, y un rengl\u00f3n que diga \u00abx 0 = 0\u00bb es ruido.
+    var entran = k.filas.filter(function(r){ return r.sale > 0; });
+    var reparto = (nuevo || !entran.length) ? '' :
+      '<div class="reparto">' + entran.map(function(r){
+        return '<div class="fila"><span class="qn">' + r.prod +
+          (r.base ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
+          '<span class="cu">' + (r.base ? bonito(r.tanda, u) + ' la tanda' : bonito(r.cuanto, u)) + '</span>' +
+          '<span class="sale">' + (r.base
+            ? '\u00d7 ' + r.tandas + (r.tandas === 1 ? ' tanda = ' : ' tandas = ') + bonito(r.sale, u)
+            : '\u00d7 ' + r.piezas + ' = ' + bonito(r.sale, u)) + '</span></div>';
+      }).join("") +
+      '<div class="fila total"><span class="qn">Hace falta</span>' +
+      '<span class="sale">' + bonito(k.total, u) + '</span></div></div>';
+
+    // el agua y la masa madre no se compran: los dos campos no aplican
+    var compra = x.libre
+      ? '<p class="nota-f">El agua y la masa madre no se compran: no entran en la lista ni en los costos.</p>'
+      : '<div class="reng"><span class="et">De a</span><span class="va">' +
+          '<span class="pastilla"><span class="signo">' + u + '</span>' +
+          '<input id="i-trae" value="' + (nuevo || !x.trae ? "" : redondo(x.trae)) + '" placeholder="0"></span>' +
+        '</span></div>' +
+        '<div class="reng"><span class="et">Precio</span><span class="va">' +
+          '<span class="pastilla"><span class="signo">$</span>' +
+          '<input id="i-precio" value="' + (nuevo || !x.sale ? "" : x.sale) + '" placeholder="0"></span>' +
+        '</span></div>';
 
     return '<div class="telon" data-icerrar="1"><div class="modal" data-adentro="1">' +
-      '<h4>' + (nuevo ? "Ingrediente nuevo" : x.n) + '</h4>' +
-      '<p class="sub-m">' + (nuevo ? "Queda disponible para las recetas." :
-        (k.filas.length ? "Se usa en " + k.filas.length + (k.filas.length === 1 ? " producto" : " productos")
-                        : "Todav\u00eda no se usa en ninguna receta")) + '</p>' +
-      '<div class="campo"><label>Nombre</label><input id="i-nombre" value="' + x.n + '" placeholder="C\u00f3mo se llama"></div>' +
-      '<div class="par junto"><div class="campo"><label>Se mide en</label><div class="chips">' + UNIDADES.map(function(w){
-        return '<button type="button" data-uni="' + w + '" aria-pressed="' + (u === w) + '">' + unidadLarga(w) + '</button>';
-      }).join("") + '</div></div>' +
-      '<div class="campo corto"><label>Se compra de a</label><span class="conUn">' +
-        '<input id="i-trae" value="' + (nuevo || !x.trae ? "" : bonito(x.trae, u)) + '" placeholder="0">' +
-        '</span></div>' +
-      '<div class="campo corto"><label>Precio del bulto</label><span class="conUn">' +
-        '<input id="i-precio" value="' + (nuevo || !x.sale ? "" : plata(x.sale)) + '" placeholder="$">' +
-        '<em>' + (!nuevo && x.trae ? "= " + plata(porMedida(x) * (u === "u" ? 1 : 1000)) + " " + (u === "u" ? "c/u" : u === "ml" ? "el litro" : "el kilo") : "") + '</em></span></div></div>' +
-      '<div class="campo"><label>En cada producto</label>' + reparto +
-        (nuevo || !k.filas.length ? '' :
-          '<p class="nota-f menos"><b>Se saca</b> quiere decir que el cliente puede pedir la pizza sin \u00e9l. ' +
-          contarSacables(x.n) + ' de ' + k.filas.length + ' lo permiten.</p>') + '</div>' +
-      '<div class="acciones"><button class="btn" type="button" data-iguardar="1">' +
+      '<div class="det-tope"><h4>' + (nuevo ? "Ingrediente nuevo" : x.n) + '</h4></div>' +
+      (nuevo ? '' : '<p class="sub-m">' + donde + '</p>') +
+
+      '<div class="renglones">' +
+        '<div class="reng"><span class="et">Nombre</span><span class="va">' +
+          '<input id="i-nombre" value="' + x.n + '" placeholder="C\u00f3mo se llama"></span></div>' +
+        '<div class="reng"><span class="et">Se mide en</span><span class="va"><span class="chips">' +
+          UNIDADES.map(function(w){
+            return '<button type="button" data-uni="' + w + '" aria-pressed="' + (u === w) + '">' +
+                   unidadLarga(w) + '</button>';
+          }).join("") + '</span></span></div>' +
+        compra +
+      '</div>' +
+
+      reparto +
+
+      '<div class="acciones en-fila"><button class="btn" type="button" data-iguardar="1">' +
         (nuevo ? "Crear ingrediente" : "Guardar cambios") + '</button>' +
-      '<button class="btn flaco" type="button" data-icerrar="1">Cancelar</button>' +
+      '<button class="btn flaco" type="button" data-icerrar="1">Cancelar</button></div>' +
+
       (nuevo ? '' : '<div class="secundarias">' + (k.filas.length
         ? '<span class="noBorra">No se puede borrar: est\u00e1 en ' + k.filas.length +
           (k.filas.length === 1 ? ' receta' : ' recetas') + '</span>'
         : '<button class="enlace" type="button" data-iborrar="' + x.n + '">Borrar ingrediente</button>') +
-        '</div>') + '</div>' +
+        '</div>') +
       '</div></div>';
   }
 
