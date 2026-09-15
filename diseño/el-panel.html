@@ -29,7 +29,7 @@
     font-family:var(--ui);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
   }
   .pliego{
-    max-width:1340px;margin:0 auto;
+    max-width:1700px;margin:0 auto;
     padding:clamp(1.4rem,4vw,2.4rem) clamp(1rem,3vw,2rem) 3.5rem;
     display:flex;flex-direction:column;gap:1.1rem;
   }
@@ -607,7 +607,29 @@
   }
   .selprod button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
 
-  .lado{display:flex;flex-direction:column;gap:1rem}
+  /* La maqueta a la izquierda y el costado a la derecha, como en la tienda.
+     El costado se queda pegado y scrollea solo: la maqueta mide 700 px y si
+     las dos scrollean juntas se pierde de vista lo que se está leyendo. */
+  .taller{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,368px);gap:1.8rem;align-items:start}
+  @media (max-width:1240px){.taller{grid-template-columns:1fr}}
+  .lado{
+    display:flex;flex-direction:column;gap:1rem;
+    position:sticky;top:1.2rem;max-height:calc(100vh - 2.4rem);
+    overflow-y:auto;padding-right:.5rem;
+  }
+
+  /* Cómo se usa: va primero y encuadrado, porque es lo único del costado que
+     se lee para hacer algo. Lo de abajo es por qué quedó así. */
+  .uso{border:1.5px solid var(--verde);padding:.9rem 1rem 1rem;background:rgba(30,82,69,.04)}
+  .uso b{
+    display:block;margin-bottom:.5rem;color:var(--verde);font-weight:800;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .uso p{margin:0 0 .6rem;font-size:.9rem;color:var(--hoja-tinta);line-height:1.5}
+  .uso ol{margin:0;padding-left:1.15rem;font-size:.9rem;color:var(--hoja-suave);line-height:1.5}
+  .uso li{margin-bottom:.45rem}
+  .uso li:last-child{margin-bottom:0}
+  .uso li b{display:inline;margin:0;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--hoja-tinta);font-weight:700}
   .lado h2{margin:0;font-size:.72rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--hoja-suave)}
   .lado p{margin:0;font-size:.92rem;color:var(--hoja-suave);line-height:1.5;max-width:82ch}
   .lado p b{color:var(--hoja-tinta);font-weight:600}
@@ -643,8 +665,10 @@
     </p>
   </header>
 
-  <div class="marco" id="marco"></div>
-  <div class="lado" id="lado"></div>
+  <div class="taller">
+    <div class="marco" id="marco"></div>
+    <div class="lado" id="lado"></div>
+  </div>
 </div>
 
 <script>
@@ -1691,6 +1715,71 @@
     return banda + '<div class="doble">' + col + det + '</div>';
   }
 
+
+  // Cómo se usa cada pantalla. Va aparte de las notas de diseño a propósito:
+  // esto es para operar, lo otro es para entender por qué quedó así.
+  function uso(entrada, pasos){
+    return '<div class="uso"><b>C\u00f3mo se usa</b><p>' + entrada + '</p><ol>' +
+      pasos.map(function(x){ return '<li>' + x + '</li>'; }).join("") + '</ol></div>';
+  }
+
+  var USO = {
+    inicio: function(){
+      return uso('Es la pantalla de llegada. Ac\u00e1 no se carga nada: todo lo que dice sale de los pedidos sin entregar.', [
+        'Las cinco cifras de arriba son el estado del finde: cu\u00e1ntos pedidos entraron, cu\u00e1nto falta comprar, cu\u00e1nto hay que producir y cu\u00e1nto suma.',
+        '<b>Hornear</b> y <b>Comprar</b> son las dos listas de la tanda. Las dos se recalculan solas cuando avanz\u00e1s o cancel\u00e1s un pedido.',
+        'El interruptor de la cabecera abre y cierra la tienda. Cerrada, el cliente ve el cartel en lugar de la carta y no puede pedir.'
+      ]);
+    },
+
+    pedidos: function(){
+      return uso('Es el \u00fanico lugar donde los pedidos cambian de estado. Todo lo dem\u00e1s del panel lee de ac\u00e1.', [
+        'Los pedidos entran solos desde la tienda y te llega el aviso por <b>Telegram</b>. No hay que cargar nada a mano.',
+        'El bot\u00f3n grande los mueve de a un paso: <b>Nuevo \u2192 Preparando \u2192 Entregado</b>.',
+        '<b>Escribirle por WhatsApp</b> abre la conversaci\u00f3n con ese cliente, con el mensaje ya armado. Desde ah\u00ed se coordina la entrega.',
+        '<b>Cancelar</b> pregunta antes y no se deshace. El pedido queda en el historial pero sale de todos los n\u00fameros.'
+      ]);
+    },
+
+    produccion: function(){
+      return uso('Es la lista de la mesada: se lee de parado y con las manos ocupadas.', [
+        'Arriba, cu\u00e1ntos bollos salen y <b>cu\u00e1ntas tandas de cada masa</b> hay que amasar. La de pizza y la de focaccia van por separado: son masas distintas.',
+        'Abajo, cu\u00e1nto hacer de cada gusto. El n\u00famero grande es el total.',
+        'Las pastillas dicen cu\u00e1ntos van <b>sin algo</b>. Los que no aparecen ah\u00ed van enteros: si dice 5 y abajo hay 3 sin albahaca, dos llevan todo.'
+      ]);
+    },
+
+    productos: function(){
+      return uso('Es la carta: lo que est\u00e9 ac\u00e1 y no est\u00e9 agotado es lo que el cliente ve.', [
+        'Eleg\u00ed uno de la izquierda y edit\u00e1 nombre, precio y receta. Todo se guarda junto con <b>Guardar cambios</b>.',
+        'En la receta, el n\u00famero es <b>cu\u00e1nto lleva una pieza</b>. <b>Modificable</b> decide si el cliente lo puede pedir sin eso; <b>Fijo</b>, que no.',
+        '<b>Base</b> es la masa que lleva una pieza. Se ve pero no se toca: la receta de la masa va por tanda entera y se carga aparte.',
+        '<b>Marcar agotado</b> lo saca de la tienda sin borrarlo. Nada que haya estado en un pedido se borra.',
+        'Las empanadas no tienen precio propio: se cobran por pack, y los dos precios valen para todos los gustos.'
+      ]);
+    },
+
+    ingredientes: function(){
+      return uso('Es la lista de compras, no el inventario. De f\u00e1brica muestra solo lo que entra en los pedidos sin entregar.', [
+        'Las tres columnas son la resta: <b>Stock</b> menos <b>Necesito</b> da <b>Falta</b>, que es lo que hay que ir a buscar.',
+        'El <b>stock</b> se edita en el rengl\u00f3n: escrib\u00ed el n\u00famero y sal\u00ed del campo. La unidad va adentro, as\u00ed que \u00ab2 kg\u00bb tambi\u00e9n entra.',
+        'Toc\u00e1 el nombre para abrir la ficha. Ah\u00ed carg\u00e1s <b>c\u00f3mo se compra</b> \u2014cu\u00e1nto trae el bulto y cu\u00e1nto sale\u2014, que es de donde salen los costos.',
+        'Abajo de la ficha, el desglose dice <b>de d\u00f3nde sale</b> lo que hace falta: qu\u00e9 producto lo lleva y cu\u00e1ntas piezas.',
+        '<b>Ver todos</b> muestra los que no entran en ning\u00fan pedido. Al pie, <b>Ingrediente nuevo</b>.'
+      ]);
+    },
+
+    costos: function(){
+      return uso('Dos preguntas distintas, una en cada solapa.', [
+        '<b>Por producto</b>: qu\u00e9 cuesta hacer uno y qu\u00e9 deja. La lista arranca por el que menos deja, que es el que hay que mirar.',
+        'El desglose dice de d\u00f3nde sale cada peso, con el <b>precio del bulto</b> al lado para poder discutirlo con el almac\u00e9n.',
+        'El asterisco avisa que a ese producto le falta cargar el precio de alg\u00fan ingrediente: el costo que se ve es un piso, no el real.',
+        '<b>Por mes</b>: lo cobrado contra lo que cost\u00f3, de los pedidos entregados.',
+        'Ojo con esa tabla: lo cobrado es hist\u00f3rico \u2014el precio con el que se confirm\u00f3 cada pedido\u2014 pero lo que cost\u00f3 se calcula con los precios de compra de <b>hoy</b>.'
+      ]);
+    }
+  };
+
   var REGLAS =
     '<div class="reglas"><b>Reglas que valen en las seis</b><ul>' +
     '<li><b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">Bowlby es del cliente, Archivo es del vendedor.</b> ' +
@@ -1913,7 +2002,7 @@
     }
     document.getElementById("marco").innerHTML = menu() + cont;
 
-    document.getElementById("lado").innerHTML = NOTAS[seccion]() + REGLAS;
+    document.getElementById("lado").innerHTML = USO[seccion]() + NOTAS[seccion]() + REGLAS;
 
     document.querySelectorAll("#marco [data-s]").forEach(function(b){
       b.addEventListener("click", function(){ seccion = b.dataset.s; pintar(); });

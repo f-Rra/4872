@@ -403,6 +403,19 @@
 
   /* ============ la explicación ============ */
   .lado{display:flex;flex-direction:column;gap:1.5rem}
+
+  /* Cómo se usa: primero y encuadrado. Es lo único del costado que se lee
+     para hacer algo; lo de abajo es por qué quedó así. */
+  .uso{border:1.5px solid var(--verde);padding:.9rem 1rem 1rem;background:rgba(30,82,69,.04)}
+  .uso b{
+    display:block;margin-bottom:.5rem;color:var(--verde);font-weight:800;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+  }
+  .uso p{margin:0 0 .6rem;font-size:.92rem;color:var(--hoja-tinta);line-height:1.5}
+  .uso ol{margin:0;padding-left:1.15rem;font-size:.92rem;color:var(--hoja-suave);line-height:1.5}
+  .uso li{margin-bottom:.45rem}
+  .uso li:last-child{margin-bottom:0}
+  .uso li b{display:inline;margin:0;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--hoja-tinta);font-weight:700}
   .lado h2{
     margin:0 0 .5rem;font-size:.72rem;font-weight:800;letter-spacing:.16em;
     text-transform:uppercase;color:var(--hoja-suave);
@@ -863,6 +876,49 @@
       : '<div class="ojo">Los cuatro ingredientes entran en una fila</div>';
   }
 
+  // Cómo la usa el cliente. Va aparte de las notas de diseño a propósito: esto
+  // es lo que pasa en la pantalla, lo otro es por qué quedó así.
+  function uso(entrada, pasos){
+    return '<div class="uso"><b>C\u00f3mo se usa</b><p>' + entrada + '</p><ol>' +
+      pasos.map(function(x){ return '<li>' + x + '</li>'; }).join("") + '</ol></div>';
+  }
+
+  var USO = {
+    inicio: function(){
+      return uso('Lo primero que ve el que entra. Existe para explicar que ac\u00e1 se pide en la semana y llega el finde.', [
+        'Dice qu\u00e9 es el lugar y c\u00f3mo funciona, en dos l\u00edneas.',
+        'El bot\u00f3n ocupa el ancho entero y lleva a la carta: al que ya es cliente le cuesta un toque por semana.',
+        'Con la tienda <b>cerrada</b> no se ve la carta: en su lugar va el cartel de que esta semana no se toman pedidos.'
+      ]);
+    },
+
+    carta: function(){
+      return uso('Las tres familias en solapas. Es donde se arma el pedido.', [
+        'Cada rengl\u00f3n es un producto con su precio y lo que lleva.',
+        'Los ingredientes en <b>pastilla punteada</b> se pueden sacar: se tocan y quedan tachados. Los otros no, porque sin eso deja de ser ese producto.',
+        'Las <b>empanadas</b> no se cobran por unidad: se eligen packs de 6 o de 12, de un solo gusto cada uno.',
+        'Lo <b>agotado</b> se ve pero no se puede sumar.',
+        'Abajo queda fija la cuenta con lo que va del pedido y el bot\u00f3n para seguir.'
+      ]);
+    },
+
+    checkout: function(){
+      return uso('Los datos para entregar. Lo m\u00e1s corto posible: cuatro campos y confirmar.', [
+        'Nombre, WhatsApp y direcci\u00f3n <b>en un solo rengl\u00f3n</b>. Lo que falte se arregla por WhatsApp, que es la conversaci\u00f3n que va a haber igual.',
+        'Arriba queda el detalle de lo pedido, con los \u00absin\u00bb de cada cosa.',
+        'Al confirmar, el pedido se guarda y al vendedor le llega un aviso por <b>Telegram</b>.'
+      ]);
+    },
+
+    listo: function(){
+      return uso('La confirmaci\u00f3n. Cierra el recorrido y deja claro qu\u00e9 pasa despu\u00e9s.', [
+        'Muestra el n\u00famero de pedido, que es por el que se lo va a nombrar.',
+        'Dice que el vendedor escribe por WhatsApp para coordinar el d\u00eda y la hora.',
+        'El carrito se vac\u00eda: el pedido ya est\u00e1 del otro lado.'
+      ]);
+    }
+  };
+
   var TEXTOS = {
     inicio: function(){
       return '<h2>1 · El inicio</h2>' +
@@ -1012,7 +1068,7 @@
   };
 
   function pintarLado(){
-    document.getElementById("lado").innerHTML = TEXTOS[paso]();
+    document.getElementById("lado").innerHTML = USO[paso]() + TEXTOS[paso]();
     document.querySelectorAll("#v-tienda [data-t]").forEach(function(b){
       b.addEventListener("click", function(){ tienda = b.dataset.t; pintarCarta(); pintarLado(); });
     });
