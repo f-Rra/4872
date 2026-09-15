@@ -465,9 +465,21 @@ public class PanelController : Controller
             : await _contexto.Productos.FindAsync(ficha.IdProducto)
                 ?? throw new InvalidOperationException($"No existe el producto {ficha.IdProducto}.");
 
+        // antes de pisarla, para saber si se mudo de familia
+        var cambioDeFamilia = !nuevo && producto.Familia != ficha.Familia;
+
         producto.Nombre = nombre;
         producto.Familia = ficha.Familia;
         producto.Precio = precio;
+
+        // La masa va con la familia: una pizza amasa el bollo de pizza, sea
+        // nueva o recien mudada. Sin esto una pizza nueva quedaba sin base y
+        // salia $219 mas barata, sin entrar en el amasado ni en la harina que
+        // hay que comprar -y todos los numeros seguian pareciendo creibles.
+        if (nuevo || cambioDeFamilia)
+        {
+            producto.IdBase = await BaseDe(ficha.Familia);
+        }
 
         if (nuevo)
         {
@@ -644,6 +656,18 @@ public class PanelController : Controller
         vm.Error = error;
         return View(nameof(Productos), vm);
     }
+
+    // Que masa amasa una familia. Sale de lo que ya hacen los demas productos de
+    // esa familia y no de una columna aparte: es lo que los datos ya dicen, y no
+    // hay dos masas para la misma familia. Nulo en empanadas, que no amasan.
+    private async Task<int?> BaseDe(Familia familia) =>
+        await _contexto.Productos
+            .Where(x => x.Familia == familia && x.IdBase != null)
+            .GroupBy(x => x.IdBase)
+            // la mas usada, por si quedara alguno suelto con otra
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefaultAsync();
 
     // Lo que le toca de masa a una pieza. Nulo en las empanadas, que no amasan.
     //
