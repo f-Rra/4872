@@ -285,6 +285,34 @@
             </div>
         </div>
 
+        @* Lo que le toca de masa a una pieza. Una pizza es un bollo, así que
+           estos números están en la misma unidad que los de arriba: lo que lleva
+           una. Van de lectura porque son derivados -la masa se carga por tanda
+           entera- y porque la receta del bollo no es de este producto. *@
+        @if (Model.Ficha.Bollo is f4872.ViewModels.Bollo bollo)
+        {
+            <div class="renglones sigue">
+                <div class="reng alto receta-reng">
+                    <span class="et">Base</span>
+                    <span class="va">
+                        <ul class="receta lectura">
+                            @foreach (var r in bollo.Receta)
+                            {
+                                <li>
+                                    <span class="rn">@r.Nombre</span>
+                                    <span class="rq">@r.Cuanto</span>
+                                    @* los dos huecos de los botones que no lleva:
+                                       sin ellos el numero cae mas a la derecha
+                                       que las cantidades de arriba *@
+                                    <span class="hueco"></span><span class="rx"></span>
+                                </li>
+                            }
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        }
+
         @if (!Model.EsNuevo)
         {
             <form id="sumar-ingrediente" method="post" asp-action="SumarIngrediente"

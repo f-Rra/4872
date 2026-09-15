@@ -75,6 +75,14 @@ public class FichaProducto
     // renglón de arriba: nulo en reposo, con nombre mientras se carga.
     public IngredienteDeLaReceta? Sumando { get; set; }
 
+    // El bollo que amasa este producto. Nulo en las empanadas, que no amasan
+    // nada: la tapa se compra hecha y es un ingrediente más.
+    //
+    // Vive en la ficha por lo mismo que los precios de pack: es donde se lo
+    // mira. Y como ellos, no es de este producto —cambiarlo lo cambia para
+    // todos los que lo amasan— así que la pantalla lo dice.
+    public Bollo? Bollo { get; set; }
+
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
     public string NombreDeFamilia => Familia switch
@@ -116,4 +124,25 @@ public class PrecioPack
 {
     public int Unidades { get; set; }
     public decimal Precio { get; set; }
+}
+
+// Lo que le toca de masa a UNA pieza. Una pizza es un bollo.
+//
+// La receta de la base se carga por tanda entera, que es como se amasa, pero
+// acá no se muestra así: en esta ficha todo lo demás es por pieza —120 g de
+// muzzarella son de una pizza— y mezclar las dos unidades en la misma pantalla
+// obligaba a explicar el rinde. Dividida, las dos listas dicen lo mismo.
+//
+// Va de lectura: son números derivados, y la receta de la masa no es de este
+// producto sino de todos los que la amasan.
+public class Bollo
+{
+    public IReadOnlyList<IngredienteDelBollo> Receta { get; set; } = [];
+}
+
+// Un renglón de la masa, ya formateado: «166,7 g».
+public class IngredienteDelBollo
+{
+    public string Nombre { get; set; } = null!;
+    public string Cuanto { get; set; } = null!;
 }

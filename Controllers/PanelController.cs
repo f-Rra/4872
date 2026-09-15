@@ -232,9 +232,8 @@ public class PanelController : Controller
 
     // Como se lee un renglon del desglose.
     //
-    // Una base no multiplica a la vista: su cantidad es de la tanda entera y lo
-    // que se come sale de dividirla por el rinde, asi que poner «x 12» al lado
-    // de los 700 ml invita a una cuenta que no cierra. El rinde lo explica.
+    // La base multiplica por tandas y no por piezas: se amasa de a tandas
+    // enteras, asi que lo que se gasta es la receta por cuantas tandas salgan.
     private static RenglonDesglose Renglon(ParteDeReceta p, Medida unidad) => new()
     {
         Donde = p.Donde,
@@ -243,7 +242,7 @@ public class PanelController : Controller
             ? $"{Cantidades.Bonito(p.Cantidad, unidad)} la tanda"
             : Cantidades.Bonito(p.Cantidad, unidad),
         Sale = p.EsBase
-            ? Cantidades.Bonito(p.Total, unidad)
+            ? $"× {p.Tandas} {(p.Tandas == 1 ? "tanda" : "tandas")} = {Cantidades.Bonito(p.Total, unidad)}"
             : $"× {p.Piezas} = {Cantidades.Bonito(p.Total, unidad)}"
     };
 
@@ -646,6 +645,43 @@ public class PanelController : Controller
         return View(nameof(Productos), vm);
     }
 
+    // Lo que le toca de masa a una pieza. Nulo en las empanadas, que no amasan.
+    //
+    // La receta de la base esta cargada por tanda y aca se divide por el rinde,
+    // que es lo que la pone en la misma unidad que el resto de la ficha: todo lo
+    // demas de esa pantalla es por pieza.
+    private async Task<Bollo?> Bollo(int idProducto)
+    {
+        var x = await _contexto.Productos
+            .Where(p => p.IdProducto == idProducto && p.IdBase != null && p.Base!.Rinde > 0)
+            .Select(p => new
+            {
+                p.Base!.Rinde,
+                Receta = p.Base.Receta
+                    .OrderByDescending(r => r.Cantidad)
+                    .Select(r => new { r.Ingrediente.Nombre, r.Ingrediente.Unidad, r.Cantidad })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (x is null)
+        {
+            return null;
+        }
+
+        return new Bollo
+        {
+            Receta =
+            [
+                .. x.Receta.Select(r => new IngredienteDelBollo
+                {
+                    Nombre = r.Nombre,
+                    Cuanto = Cantidades.Bonito(r.Cantidad / x.Rinde, r.Unidad)
+                })
+            ]
+        };
+    }
+
     private async Task<ProductosVm> Catalogo(string? familia, int? producto, bool nuevo, int? sumando = null)
     {
         familia = ProductosVm.Chips.Any(x => x.Clave == familia) ? familia! : "todo";
@@ -695,6 +731,8 @@ public class PanelController : Controller
                     Modificable = x.Quitable
                 })
                 .ToListAsync();
+
+        var bollo = elegido is null ? null : await Bollo(elegido.IdProducto);
 
         // el que se eligio y esta esperando la cantidad, si hay alguno
         var enEspera = sumando is null
@@ -748,6 +786,7 @@ public class PanelController : Controller
                     Activo = elegido.Activo,
                     Packs = packs,
                     Receta = receta,
+                    Bollo = bollo,
                     Disponibles = [.. disponibles.Select(x => new IngredienteDisponible
                     {
                         Nombre = x.Nombre,

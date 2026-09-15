@@ -130,6 +130,10 @@ public class ParteDeReceta
     // cuántas piezas lo llevan de verdad: las que lo pidieron sin no cuentan
     public int Piezas { get; set; }
 
+    // Cuántas tandas hay que amasar para esas piezas, redondeado para arriba.
+    // Cero cuando no viene de una base.
+    public int Tandas { get; set; }
+
     public decimal Total { get; set; }
 
     public bool EsBase => Rinde is not null;

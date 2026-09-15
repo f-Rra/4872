@@ -400,22 +400,28 @@
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* la cantidad va en pastilla, como los demas chips de la pantalla, con la
-   unidad adentro: el numero y lo que mide son una sola cosa */
-.receta .rcaja{
+   unidad adentro: el numero y lo que mide son una sola cosa. El rinde usa la
+   misma pastilla: es otro numero que se toca */
+.receta .rcaja,
+.rinde-reng .rcaja{
   flex:none;display:inline-flex;align-items:baseline;gap:.22rem;
   border:1.3px solid rgba(30,82,69,.4);border-radius:999px;padding:.1rem .55rem;
 }
-.receta .rcaja:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
+.receta .rcaja:focus-within,
+.rinde-reng .rcaja:focus-within{border-color:var(--verde);box-shadow:0 0 0 1px var(--verde)}
 /* dos clases y no una: la regla de los campos de la ficha es
    «.reng input[type=number]» y con una sola clase le ganaba, estirando la
    pastilla al ancho del renglon */
-.receta .rcaja .rc{
+.receta .rcaja .rc,
+.rinde-reng .rcaja .rc{
   width:2.9rem;text-align:right;font-size:.86rem;font-weight:800;
   font-variant-numeric:tabular-nums;font-family:var(--ui);color:var(--verde);
   background:transparent;border:0;padding:0;
 }
-.receta .rcaja .rc:hover{border:0}
-.receta .rcaja .rc:focus{outline:0;border:0}
+.receta .rcaja .rc:hover,
+.rinde-reng .rcaja .rc:hover{border:0}
+.receta .rcaja .rc:focus,
+.rinde-reng .rcaja .rc:focus{outline:0;border:0}
 .receta .rcaja .rc::placeholder{font-weight:600;opacity:.4}
 .receta .ru{flex:none;font-size:.72rem;font-weight:700;opacity:.6;min-width:1.1rem}
 .receta .rx{
@@ -423,6 +429,14 @@
   font-family:var(--ui);font-size:1rem;line-height:1;opacity:.4;padding:0 .1rem;width:1.1rem;
 }
 .receta .rx:hover{opacity:1}
+
+/* La masa va sin pastilla: en esta pantalla la pastilla es lo que dice «esto se
+   toca», y la masa no se toca desde aca. Cae en la misma columna que las
+   cantidades de arriba para que las dos listas se lean juntas. */
+.receta .rq{
+  flex:none;min-width:4.4rem;text-align:right;
+  font-size:.88rem;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums;
+}
 
 /* modificable va macizo y fijo perfilado: lo que se puede tocar pesa mas */
 .receta .saca{

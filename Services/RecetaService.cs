@@ -96,6 +96,20 @@ public class RecetaService
         return porComo;
     }
 
+    // «Bollo de pizza» se lee «pizza» cuando ya se dijo la palabra tanda: «2
+    // tandas de bollo de pizza» dice bollo dos veces. Si el nombre no empieza
+    // asi se deja entero, que es lo unico honesto con un nombre que no conozco.
+    private static string Corto(string nombre) =>
+        nombre.StartsWith("Bollo de ", StringComparison.OrdinalIgnoreCase)
+            ? nombre["Bollo de ".Length..]
+            : nombre.ToLowerInvariant();
+
+    // Cuantas tandas hay que amasar para esas piezas. Se redondea para arriba
+    // porque media tanda no se amasa, y es la misma cuenta que usa la lista de
+    // compras: si se amasan tres tandas, se gasta harina para tres.
+    private static int Tandas(int piezas, int rinde) =>
+        rinde > 0 ? (int)Math.Ceiling(piezas / (double)rinde) : 0;
+
     // Cuantas tandas de masa hay que amasar. La receta de la base se carga por
     // tanda entera con su rinde -1 kg de harina da 6 bollos- asi que el numero
     // que sirve en la mesada es cuantas tandas, no cuantos gramos de harina.
@@ -115,7 +129,7 @@ public class RecetaService
         var ids = piezas.Keys.ToList();
         var bases = await _contexto.Productos
             .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null && x.Base!.Rinde > 0)
-            .Select(x => new { x.IdProducto, x.Base!.Rinde })
+            .Select(x => new { x.IdProducto, x.Base!.IdBase, x.Base.Nombre, x.Base.Rinde })
             .ToListAsync();
 
         if (bases.Count == 0)
@@ -123,19 +137,21 @@ public class RecetaService
             return "sin base cargada";
         }
 
-        // agrupado por rinde y no por base: dos bases que rinden seis se amasan
-        // igual, y lo que se lee en la mesada es «cuatro tandas de seis»
-        var porRinde = bases
-            .GroupBy(x => x.Rinde)
+        // Agrupado por base y no por rinde: la masa de pizza y la de focaccia
+        // son masas distintas, y juntarlas porque las dos rindieran seis seria
+        // mandarlo a amasar una sola tanda de dos cosas que no se mezclan.
+        var porBase = bases
+            .GroupBy(x => new { x.IdBase, x.Nombre, x.Rinde })
             .Select(g => new
             {
-                Rinde = g.Key,
-                Tandas = (int)Math.Ceiling(g.Sum(x => piezas[x.IdProducto]) / (double)g.Key)
+                g.Key.Nombre,
+                Tandas = Tandas(g.Sum(x => piezas[x.IdProducto]), g.Key.Rinde)
             })
-            .OrderByDescending(x => x.Tandas);
+            .OrderByDescending(x => x.Tandas)
+            .ThenBy(x => x.Nombre);
 
-        return string.Join(" · ", porRinde.Select(x =>
-            $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {x.Rinde}"));
+        return string.Join(" · ", porBase.Select(x =>
+            $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {Corto(x.Nombre)}"));
     }
 
     // De donde sale cada parte de lo que hace falta: un renglon por producto que
@@ -241,18 +257,24 @@ public class RecetaService
         // descuenta: una pizza sin albahaca se hace con el bollo entero igual.
         partes.AddRange(deBase
             .GroupBy(x => new { x.Base, x.Rinde, x.IdIngrediente, x.Cantidad })
-            .Select(g => new ParteDeReceta
+            .Select(g =>
             {
-                IdIngrediente = g.Key.IdIngrediente,
-                Donde = g.Key.Base,
-                Cantidad = g.Key.Cantidad,
-                Rinde = g.Key.Rinde,
-                Piezas = g.Sum(x => piezas[x.IdProducto]),
-                // el rinde no puede ser cero, pero si alguien lo carga en cero
-                // la division rompe la pantalla entera por un dato mal puesto
-                Total = g.Key.Rinde > 0
-                    ? g.Key.Cantidad / g.Key.Rinde * g.Sum(x => piezas[x.IdProducto])
-                    : 0m
+                var cuantas = g.Sum(x => piezas[x.IdProducto]);
+                var tandas = Tandas(cuantas, g.Key.Rinde);
+
+                return new ParteDeReceta
+                {
+                    IdIngrediente = g.Key.IdIngrediente,
+                    Donde = g.Key.Base,
+                    Cantidad = g.Key.Cantidad,
+                    Rinde = g.Key.Rinde,
+                    Piezas = cuantas,
+                    Tandas = tandas,
+                    // Por tandas enteras y no proporcional: media tanda no se
+                    // amasa. Para trece bollos de a seis hay que hacer tres
+                    // tandas, asi que se compra harina para tres.
+                    Total = g.Key.Cantidad * tandas
+                };
             }));
 
         return partes;
