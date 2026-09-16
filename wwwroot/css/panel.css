@@ -109,6 +109,9 @@
 }
 .banda b{font-weight:800}
 .banda.cerrada{background:var(--verde);color:var(--papel);border-bottom-color:var(--verde)}
+/* el dato del costado se va al otro extremo y va mas flojo: acompana al
+   titular de la banda en vez de competir con el */
+.banda .aparte{margin-left:auto;font-size:.78rem;font-weight:700;opacity:.7}
 
 .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 
