@@ -92,14 +92,23 @@ builder.Services.AddScoped<RecetaService>();
 
 var app = builder.Build();
 
-// la carta de prueba es inventada, asi que solo en la maquina de uno y solo si
-// no hay nada cargado. Ver Data/Sembrador.cs
-if (app.Environment.IsDevelopment())
+// Las dos masas van siempre, tambien en produccion: son la receta del vendedor
+// y no datos de prueba. Sin ellas, el primer producto que se cargue queda sin
+// masa. La carta inventada, en cambio, solo en la maquina de uno.
+//
+// OJO para el deploy: esto toca la base al arrancar, asi que las migraciones
+// tienen que correr antes. Ver Data/Sembrador.cs
 {
     using var alcance = app.Services.CreateScope();
-    await Sembrador.SembrarSiEstaVacia(
-        alcance.ServiceProvider.GetRequiredService<Contexto>(),
-        alcance.ServiceProvider.GetRequiredService<ILogger<Program>>());
+    var contexto = alcance.ServiceProvider.GetRequiredService<Contexto>();
+    var registro = alcance.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    await Sembrador.SembrarLasMasas(contexto, registro);
+
+    if (app.Environment.IsDevelopment())
+    {
+        await Sembrador.SembrarLaCartaDePrueba(contexto, registro);
+    }
 }
 
 if (!app.Environment.IsDevelopment())

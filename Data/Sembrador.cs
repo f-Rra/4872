@@ -6,8 +6,11 @@ namespace f4872.Data;
 /// <summary>
 /// CARTA INVENTADA. Ninguna de estas pizzas, focaccias, gustos, precios,
 /// cantidades ni compras es real: salen de las maquetas, donde se inventaron
-/// para poder diseñar. Lo único real acá es la receta del bollo.
-/// Corre solo en Development y solo si la base está vacía.
+/// para poder diseñar. Lo único real acá son las dos recetas de bollo.
+///
+/// Por eso se siembra en dos partes. <see cref="SembrarLasMasas"/> corre
+/// siempre, también en producción, porque las masas son del negocio.
+/// <see cref="SembrarLaCartaDePrueba"/> corre solo en Development.
 /// </summary>
 public static class Sembrador
 {
@@ -83,10 +86,23 @@ public static class Sembrador
     //
     // La tapa de empanada no es una base: se compra hecha. Es un ingrediente
     // más de cada gusto, como la muzzarella.
-    private static readonly (string N, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
+    private static readonly (string N, Familia Fam, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
     [
-        ("Bollo de pizza",    6, [("Harina 000", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
-        ("Bollo de focaccia", 4, [("Harina 000", 1000), ("Agua", 750), ("Masa madre", 100), ("Sal fina", 30), ("Oliva", 50)])
+        ("Bollo de pizza",    Familia.Pizza,    6, [("Harina 000", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
+        ("Bollo de focaccia", Familia.Focaccia, 4, [("Harina 000", 1000), ("Agua", 750), ("Masa madre", 100), ("Sal fina", 30), ("Oliva", 50)])
+    ];
+
+    // Los ingredientes que llevan las masas, sacados de LasBases para que no
+    // haya dos listas que se puedan desincronizar. De la tabla de arriba se usa
+    // solo el nombre, la unidad y si se compra: el stock y el precio de ahí son
+    // inventados y los carga él desde Ingredientes.
+    private static (string N, Medida U, bool Libre)[] LosDeLasMasas() =>
+    [
+        .. LasBases
+            .SelectMany(b => b.Receta.Select(r => r.Ing))
+            .Distinct()
+            .Select(n => LosIngredientes.First(x => x.N == n))
+            .Select(x => (x.N, x.U, x.Libre))
     ];
 
     // familia, nombre, precio (nulo en empanadas: van por pack), si está en la
@@ -135,7 +151,62 @@ public static class Sembrador
             [("Tapas de empanada", 1), ("Cebolla", 30), ("Muzzarella", 25), ("Orégano", 1)])
     ];
 
-    public static async Task SembrarSiEstaVacia(Contexto contexto, ILogger logger)
+    /// <summary>
+    /// Las dos masas y los cinco ingredientes que llevan. Corre SIEMPRE, también
+    /// en producción: no son datos de prueba, son la receta del vendedor.
+    ///
+    /// Sin esto, en una base nueva la primera pizza que se cargue queda sin masa
+    /// —BaseDe no tiene de dónde copiarla— y a partir de ahí Producción no pide
+    /// harina y el costo sale sin el renglón de la base.
+    /// </summary>
+    public static async Task SembrarLasMasas(Contexto contexto, ILogger logger)
+    {
+        if (await contexto.Bases.AnyAsync())
+        {
+            return;
+        }
+
+        // el ingrediente puede existir ya, cargado a mano o por la carta de
+        // prueba: se reusa en vez de duplicarlo, que partiria los costos en dos
+        var nombres = LosDeLasMasas().Select(x => x.N).ToList();
+        var ingredientes = await contexto.Ingredientes
+            .Where(x => nombres.Contains(x.Nombre))
+            .ToDictionaryAsync(x => x.Nombre);
+
+        foreach (var (n, u, libre) in LosDeLasMasas())
+        {
+            if (ingredientes.ContainsKey(n))
+            {
+                continue;
+            }
+
+            // sin stock ni precio de compra: esos son suyos y no se inventan
+            var nuevo = new Ingrediente { Nombre = n, Unidad = u, Libre = libre };
+            contexto.Ingredientes.Add(nuevo);
+            ingredientes[n] = nuevo;
+        }
+
+        contexto.Bases.AddRange(LasBases.Select(b => new Base
+        {
+            Nombre = b.N,
+            Familia = b.Fam,
+            Rinde = b.Rinde,
+            Receta = [.. b.Receta.Select(r => new BaseIngrediente
+            {
+                Ingrediente = ingredientes[r.Ing],
+                Cantidad = r.Cant
+            })]
+        }));
+
+        await contexto.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Sembradas las {Cuantas} masas con sus {Ingredientes} ingredientes. Es la receta de " +
+            "verdad; les falta cargar el stock y el precio de compra desde Ingredientes.",
+            LasBases.Length, LosDeLasMasas().Length);
+    }
+
+    public static async Task SembrarLaCartaDePrueba(Contexto contexto, ILogger logger)
     {
         // los packs tienen guarda propia: son dos filas que la pantalla de
         // empanadas necesita para poder mostrar un precio, y se suman despues
@@ -153,16 +224,33 @@ public static class Sembrador
                 "Sembrados {Cuantos} tamanos de pack con precios INVENTADOS.", LosPacks.Length);
         }
 
-        // si ya hay algo cargado no se toca nada: el dia que entre la carta de
-        // verdad, esto no puede volver a meterle las pizzas inventadas
-        if (await contexto.Productos.AnyAsync() || await contexto.Ingredientes.AnyAsync())
+        // Si ya hay productos, o ingredientes que no sean los de las masas,
+        // alguien empezo a cargar lo de verdad: no se le meten las pizzas
+        // inventadas encima. La guarda no puede ser «hay ingredientes» a secas
+        // porque las masas ya dejaron los cinco suyos.
+        if (await contexto.Productos.AnyAsync() ||
+            await contexto.Ingredientes.CountAsync() > LosDeLasMasas().Length)
         {
             return;
         }
 
-        var ingredientes = LosIngredientes.ToDictionary(
-            x => x.N,
-            x => new Ingrediente
+        // las masas ya estan sembradas: corren antes y siempre
+        var bases = await contexto.Bases.ToDictionaryAsync(x => x.Nombre);
+
+        var ingredientes = await contexto.Ingredientes.ToDictionaryAsync(x => x.Nombre);
+        foreach (var x in LosIngredientes)
+        {
+            // los de las masas ya existen, sin compra cargada. En la maquina de
+            // uno conviene que tengan numeros, si no las pantallas no muestran nada
+            if (ingredientes.TryGetValue(x.N, out var ya))
+            {
+                ya.Stock = x.Stock;
+                ya.CantidadDeCompra = x.Trae;
+                ya.PrecioDeCompra = x.Sale;
+                continue;
+            }
+
+            var nuevo = new Ingrediente
             {
                 Nombre = x.N,
                 Unidad = x.U,
@@ -170,22 +258,10 @@ public static class Sembrador
                 CantidadDeCompra = x.Trae,
                 PrecioDeCompra = x.Sale,
                 Libre = x.Libre
-            });
-        contexto.Ingredientes.AddRange(ingredientes.Values);
-
-        var bases = LasBases.ToDictionary(
-            x => x.N,
-            x => new Base
-            {
-                Nombre = x.N,
-                Rinde = x.Rinde,
-                Receta = [.. x.Receta.Select(r => new BaseIngrediente
-                {
-                    Ingrediente = ingredientes[r.Ing],
-                    Cantidad = r.Cant
-                })]
-            });
-        contexto.Bases.AddRange(bases.Values);
+            };
+            contexto.Ingredientes.Add(nuevo);
+            ingredientes[x.N] = nuevo;
+        }
 
         contexto.Productos.AddRange(LosProductos.Select(p => new Producto
         {
@@ -206,9 +282,10 @@ public static class Sembrador
         await contexto.SaveChangesAsync();
 
         logger.LogWarning(
-            "Sembrada la carta INVENTADA de la maqueta: {Productos} productos, {Ingredientes} " +
-            "ingredientes y {Bases} bases. Ninguno de esos nombres ni precios es real, salvo la " +
-            "receta del bollo. Para borrarla: TRUNCATE \"Productos\", \"Ingredientes\", \"Bases\" CASCADE",
-            LosProductos.Length, LosIngredientes.Length, LasBases.Length);
+            "Sembrada la carta INVENTADA de la maqueta: {Productos} productos y {Ingredientes} " +
+            "ingredientes. Ninguno de esos nombres ni precios es real. Las masas no salen de " +
+            "aca: esas son de verdad. Para borrar lo inventado: " +
+            "TRUNCATE \"Productos\", \"Ingredientes\", \"Bases\" CASCADE",
+            LosProductos.Length, LosIngredientes.Length);
     }
 }
