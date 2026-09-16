@@ -657,16 +657,13 @@ public class PanelController : Controller
         return View(nameof(Productos), vm);
     }
 
-    // Que masa amasa una familia. Sale de lo que ya hacen los demas productos de
-    // esa familia y no de una columna aparte: es lo que los datos ya dicen, y no
-    // hay dos masas para la misma familia. Nulo en empanadas, que no amasan.
+    // Que masa amasa una familia. Lo dice la masa y no los productos que ya la
+    // usan: en una base recien puesta en marcha no hay ninguno, y la primera
+    // pizza quedaba sin masa. Nulo en empanadas, que no amasan: no tienen fila.
     private async Task<int?> BaseDe(Familia familia) =>
-        await _contexto.Productos
-            .Where(x => x.Familia == familia && x.IdBase != null)
-            .GroupBy(x => x.IdBase)
-            // la mas usada, por si quedara alguno suelto con otra
-            .OrderByDescending(g => g.Count())
-            .Select(g => g.Key)
+        await _contexto.Bases
+            .Where(x => x.Familia == familia)
+            .Select(x => (int?)x.IdBase)
             .FirstOrDefaultAsync();
 
     // Lo que le toca de masa a una pieza. Nulo en las empanadas, que no amasan.

@@ -8,6 +8,13 @@ public class Base
 
     public string Nombre { get; set; } = null!;
 
+    // Qué familia la amasa. Va acá y no deducido de los productos que ya la
+    // usan: en una base recién creada no hay ninguno, y el primer producto que
+    // se cargara quedaba sin masa. Las empanadas no amasan, así que no tienen
+    // fila propia — no es que tengan una con la familia vacía.
+    [DisplayName("La amasa")]
+    public Familia Familia { get; set; }
+
     // se amasa por tanda entera y no de a un bollo: 1 kg de harina da 6 bollos.
     // La receta se carga como el la dice y el calculo divide por el rinde
     [DisplayName("Rinde")]

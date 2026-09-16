@@ -17,6 +17,16 @@ public class BaseConfiguracion : IEntityTypeConfiguration<Base>
         laBase.HasIndex(x => x.Nombre)
             .IsUnique();
 
+        laBase.Property(x => x.Familia)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
+        // una sola masa por familia: si hubiera dos, cual amasa una pizza nueva
+        // volveria a ser una adivinanza
+        laBase.HasIndex(x => x.Familia)
+            .IsUnique();
+
         laBase.Property(x => x.Rinde)
             .HasDefaultValue(1);
 
