@@ -440,6 +440,20 @@
     letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
   }
 
+  /* La franja del cuándo. Mismo fondo dibujado que la nota del WhatsApp en el
+     checkout: es el mismo tipo de dato —algo que conviene saber antes de
+     seguir— y no hacía falta inventarle una forma nueva. */
+  .franja{
+    position:relative;z-index:0;margin:0 .95rem 1.15rem;padding:.7rem .8rem;
+    font-size:.88rem;font-weight:700;text-align:center;line-height:1.4;
+  }
+  .franja::after{
+    content:"";position:absolute;z-index:-1;inset:0;
+    background-color:rgba(30,82,69,.09);pointer-events:none;
+    -webkit-mask:var(--frase) center/100% 100% no-repeat;
+    mask:var(--frase) center/100% 100% no-repeat;
+  }
+
   /* mismo padding que la portada. Sin línea abajo de todo: la última que se ve
      es la de arriba del botón */
   .cta-pie{
@@ -902,15 +916,31 @@
           <div class="credenciales">
             <div class="cred">
               <i class="dib fermento" aria-hidden="true"></i>
-              <div><b>Fermentación lenta</b><span>48 a 72 horas en frío.</span></div>
+              <div><b>Fermentación lenta</b><span>Entre 48 y 72 hs de reposo en frío.</span></div>
             </div>
             <div class="cred">
               <i class="dib harina" aria-hidden="true"></i>
-              <div><b>Masa madre y harinas seleccionadas</b><span>Sin levadura comercial ni aditivos.</span></div>
+              <div><b>Masa madre &amp; Harina 00</b><span>La base de nuestros productos.</span></div>
             </div>
             <div class="cred">
               <i class="dib envase" aria-hidden="true"></i>
-              <div><b>Todo envasado al vacío</b><span>Tu pedido llega sellado y apto para freezar.</span></div>
+              <div><b>Envasado al vacío</b><span>Para conservar mejor la calidad de tu pedido.</span></div>
+            </div>
+            <!-- Las tres de arriba son del oficio y valen para todo; estas tres
+                 nombran una familia cada una, y reusan los dibujos de las
+                 solapas de la carta. La pizza no tenia la suya: las tres
+                 primeras hablan de su masa, asi que era el caso por omision. -->
+            <div class="cred">
+              <i class="dib pizza" aria-hidden="true"></i>
+              <div><b>Estilo napoletano</b><span>Borde aireado y masa liviana.</span></div>
+            </div>
+            <div class="cred">
+              <i class="dib focaccia" aria-hidden="true"></i>
+              <div><b>Alta hidratación</b><span>Focaccias aireadas en distintos sabores.</span></div>
+            </div>
+            <div class="cred">
+              <i class="dib empanada" aria-hidden="true"></i>
+              <div><b>Elaboración artesanal</b><span>Empanadas en packs x6 o x12.</span></div>
             </div>
           </div>
         </section>
@@ -940,6 +970,13 @@
             </li>
           </ol>
         </section>
+
+        <!-- Cuando lo comes. La pantalla contaba como se hace y como se pide,
+             pero nunca que dia llega; los 48 a 72 horas del recorrido son de la
+             masa, no del pedido. Sin nombrar un dia de corte a proposito: el
+             pedido tiene que estar el miercoles o el jueves segun cuanto
+             fermente, y eso todavia no esta fijo. -->
+        <p class="franja">Pedís en la semana, lo recibís el finde.</p>
 
         <div class="cta-pie">
           <button type="button" class="cta" id="ir-carta">Armá tu pedido</button>
@@ -1337,6 +1374,17 @@
   var TEXTOS = {
     inicio: function(){
       return '<h2>1 · El inicio</h2>' +
+      '<div class="bloque"><h3>Seis credenciales y un rengl\u00f3n con el cu\u00e1ndo</h3>' +
+      '<p>Las <b>tres primeras</b> son del oficio y valen para todo. Las <b>tres \u00faltimas</b> ' +
+      'nombran una familia cada una y reusan los dibujos de las solapas de la carta, ' +
+      'as\u00ed que no cost\u00f3 ninguno nuevo.</p>' +
+      '<p>La pizza no tiene una credencial propia por nombre: las tres primeras hablan de ' +
+      '<b>su masa</b>, as\u00ed que era el caso por omisi\u00f3n hasta que entr\u00f3 la napoletana.</p>' +
+      '<p>Arriba del bot\u00f3n, <b>cu\u00e1ndo lo com\u00e9s</b>. La pantalla contaba c\u00f3mo se hace y ' +
+      'c\u00f3mo se pide, pero nunca qu\u00e9 d\u00eda llega \u2014los 48 a 72 horas del recorrido son ' +
+      'de la masa, no del pedido\u2014. No nombra un d\u00eda de corte a prop\u00f3sito: todav\u00eda no ' +
+      'est\u00e1 fijo si el pedido cierra el mi\u00e9rcoles o el jueves.</p></div>' +
+
       '<div class="bloque"><h3>Existe para el que llega de cero</h3>' +
       '<p>El nombre no dice que esto es una pizzería, y el negocio funciona distinto a cualquier ' +
       'delivery: se pide en la semana y llega el fin de semana. Sin esta pantalla, el que entra por ' +

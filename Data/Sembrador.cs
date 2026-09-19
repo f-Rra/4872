@@ -25,7 +25,7 @@ public static class Sembrador
     // nombre, unidad, stock, cuánto trae la compra, cuánto sale, si no se compra
     private static readonly (string N, Medida U, decimal Stock, decimal? Trae, decimal? Sale, bool Libre)[] LosIngredientes =
     [
-        ("Harina 000",        Medida.Gramo,     42000, 25000, 32000, false),
+        ("Harina 00",         Medida.Gramo,     42000, 25000, 32000, false),
         ("Agua",              Medida.Mililitro,     0,  null,  null, true),
         ("Masa madre",        Medida.Gramo,       400,  null,  null, true),
         ("Sal fina",          Medida.Gramo,      2000,  1000,  1100, false),
@@ -88,8 +88,8 @@ public static class Sembrador
     // más de cada gusto, como la muzzarella.
     private static readonly (string N, Familia Fam, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
     [
-        ("Bollo de pizza",    Familia.Pizza,    6, [("Harina 000", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
-        ("Bollo de focaccia", Familia.Focaccia, 4, [("Harina 000", 1000), ("Agua", 750), ("Masa madre", 100), ("Sal fina", 30), ("Oliva", 50)])
+        ("Bollo de pizza",    Familia.Pizza,    6, [("Harina 00", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
+        ("Bollo de focaccia", Familia.Focaccia, 4, [("Harina 00", 1000), ("Agua", 750), ("Masa madre", 100), ("Sal fina", 30), ("Oliva", 50)])
     ];
 
     // Los ingredientes que llevan las masas, sacados de LasBases para que no

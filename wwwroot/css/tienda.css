@@ -248,6 +248,20 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
   letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
 }
 
+/* La franja del cuándo. Mismo fondo dibujado que la nota del WhatsApp en el
+   checkout: es el mismo tipo de dato —algo que conviene saber antes de seguir—
+   y no hacía falta inventarle una forma nueva. */
+.franja{
+  position:relative;z-index:0;margin:0 .95rem 1.15rem;padding:.7rem .8rem;
+  font-size:.88rem;font-weight:700;text-align:center;line-height:1.4;
+}
+.franja::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background-color:rgba(30,82,69,.09);pointer-events:none;
+  -webkit-mask:var(--frase) center/100% 100% no-repeat;
+  mask:var(--frase) center/100% 100% no-repeat;
+}
+
 /* mismo padding que la portada. Sin línea abajo de todo: la última que se ve
    es la de arriba del botón */
 .cta-pie{

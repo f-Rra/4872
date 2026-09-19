@@ -17,17 +17,37 @@
 
             <div class="cred">
                 <i class="dib fermento" aria-hidden="true"></i>
-                <div><b>Fermentación lenta</b><span>48 a 72 horas en frío.</span></div>
+                <div><b>Fermentación lenta</b><span>Entre 48 y 72 hs de reposo en frío.</span></div>
             </div>
 
             <div class="cred">
                 <i class="dib harina" aria-hidden="true"></i>
-                <div><b>Masa madre y harinas seleccionadas</b><span>Sin levadura comercial ni aditivos.</span></div>
+                <div><b>Masa madre &amp; Harina 00</b><span>La base de nuestros productos.</span></div>
             </div>
 
             <div class="cred">
                 <i class="dib envase" aria-hidden="true"></i>
-                <div><b>Todo envasado al vacío</b><span>Tu pedido llega sellado y apto para freezar.</span></div>
+                <div><b>Envasado al vacío</b><span>Para conservar mejor la calidad de tu pedido.</span></div>
+            </div>
+
+            @* Las tres de arriba son del oficio y valen para todo; estas tres
+               nombran una familia cada una. La pizza no tenía la suya: las tres
+               primeras hablan de su masa, así que era el caso por omisión.
+
+               Reusan los dibujos de las solapas de la carta, que ya estaban. *@
+            <div class="cred">
+                <i class="dib pizza" aria-hidden="true"></i>
+                <div><b>Estilo napoletano</b><span>Borde aireado y masa liviana.</span></div>
+            </div>
+
+            <div class="cred">
+                <i class="dib focaccia" aria-hidden="true"></i>
+                <div><b>Alta hidratación</b><span>Focaccias aireadas en distintos sabores.</span></div>
+            </div>
+
+            <div class="cred">
+                <i class="dib empanada" aria-hidden="true"></i>
+                <div><b>Elaboración artesanal</b><span>Empanadas en packs x6 o x12.</span></div>
             </div>
 
         </div>
@@ -61,6 +81,14 @@
             </li>
         </ol>
     </section>
+
+    @* Cuándo lo comés. La pantalla contaba cómo se hace y cómo se pide, pero
+       nunca qué día llega; los «48 a 72 horas» del recorrido son de la masa, no
+       del pedido. Va pegada al botón, que es donde se decide.
+
+       Sin nombrar un día de corte a propósito: el pedido tiene que estar el
+       miércoles o el jueves según cuánto fermente, y eso todavía no está fijo. *@
+    <p class="franja">Pedís en la semana, lo recibís el finde.</p>
 
     <div class="cta-pie">
         <a class="cta" asp-controller="Tienda" asp-action="Carta">Armá tu pedido</a>
