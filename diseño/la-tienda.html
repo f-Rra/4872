@@ -453,6 +453,10 @@
     -webkit-mask:var(--frase) center/100% 100% no-repeat;
     mask:var(--frase) center/100% 100% no-repeat;
   }
+  /* cerrada, el mismo renglón pasa a verde pleno y se queda solo al pie: es lo
+     último que se lee y no hay botón abajo que le discuta el peso */
+  .franja.cerrada-ahora{color:var(--papel);margin-bottom:1.6rem}
+  .franja.cerrada-ahora::after{background-color:var(--verde)}
 
   /* mismo padding que la portada. Sin línea abajo de todo: la última que se ve
      es la de arriba del botón */
@@ -971,16 +975,13 @@
           </ol>
         </section>
 
-        <!-- Cuando lo comes. La pantalla contaba como se hace y como se pide,
-             pero nunca que dia llega; los 48 a 72 horas del recorrido son de la
-             masa, no del pedido. Sin nombrar un dia de corte a proposito: el
-             pedido tiene que estar el miercoles o el jueves segun cuanto
-             fermente, y eso todavia no esta fijo. -->
-        <p class="franja">Pedís en la semana, lo recibís el finde.</p>
-
-        <div class="cta-pie">
-          <button type="button" class="cta" id="ir-carta">Armá tu pedido</button>
-        </div>
+        <!-- El pie es la zona donde se decide, asi que es la que cambia cuando
+             la tienda no toma pedidos: lo de arriba sigue valiendo igual.
+             Abierta, el renglon dice cuando lo comes; la pantalla contaba como
+             se hace y como se pide pero nunca que dia llega, porque los 48 a 72
+             horas del recorrido son de la masa y no del pedido. Sin nombrar un
+             dia de corte a proposito: todavia no esta fijo. -->
+        <div id="pie-inicio"></div>
       </div>
 
       <!-- 2 · la carta -->
@@ -1069,7 +1070,6 @@
     {n:"Verdura"}, {n:"Pollo", agotada:true}, {n:"Caprese"}, {n:"Cebolla y queso"}
   ];
   var PACK = {6:7900, 12:15200};
-  var VUELTA = "Volvemos a tomar pedidos el martes.";
 
   var paso = "inicio";         // inicio | carta | checkout | listo
   var solapa = "pizzas";
@@ -1108,18 +1108,32 @@
       '<div class="abajo"><div class="fila-ing">' + chips + '</div></div></li>';
   }
 
+  // El pie del inicio: abierta invita, cerrada solo avisa. Sin boton, porque
+  // no hay nada que hacer hasta que la abra.
+  function pintarInicio(){
+    var e = document.getElementById("pie-inicio");
+    if(!e) return;
+    e.innerHTML = tienda === "abierta"
+      ? '<p class="franja">Ped\u00eds en la semana, lo recib\u00eds el finde.</p>' +
+        '<div class="cta-pie"><button type="button" class="cta" id="ir-carta">Arm\u00e1 tu pedido</button></div>'
+      : '<p class="franja cerrada-ahora">La tienda est\u00e1 cerrada.</p>';
+    var b = document.getElementById("ir-carta");
+    if(b) b.addEventListener("click", function(){ ir("carta"); });
+  }
+
   function pintarCarta(){
     var el = document.getElementById("panel");
     document.body.dataset.tienda = tienda;
     document.getElementById("aviso").innerHTML = (tienda === "banda" || tienda === "gris")
-      ? '<div class="aviso-cierre"><b>Esta semana no tomamos pedidos</b><span>' + VUELTA + '</span></div>' : '';
+      ? '<div class="aviso-cierre"><b>La tienda est\u00e1 cerrada</b></div>' : '';
 
     // Cerrada se va la carta entera y tambien las solapas: llevarian a listas
     // que no se pueden pedir. Queda el logo y el cartel.
     document.getElementById("solapas").hidden = tienda === "lleno";
     if(tienda === "lleno"){
-      el.innerHTML = '<div class="cerrada"><h1>Cerrado por esta semana</h1>' +
-        '<p>' + VUELTA + ' Mientras tanto la masa descansa.</p>' +
+      // Sin prometer cuando se vuelve: el dia no esta guardado en ningun lado
+      // y una fecha que despues no se cumple es peor que no decirla.
+      el.innerHTML = '<div class="cerrada"><h1>La tienda est\u00e1 cerrada</h1>' +
         '<p class="marca">48·72</p></div>';
       barra(); return;
     }
@@ -1150,6 +1164,7 @@
       el.querySelectorAll(".contador button, .tam button").forEach(function(b){ b.disabled = true; });
     }
     engancharCarta();
+    pintarInicio();
     barra();
   }
 
@@ -1294,7 +1309,6 @@
   document.querySelectorAll("#pasos [data-p]").forEach(function(b){
     b.addEventListener("click", function(){ ir(b.dataset.p); });
   });
-  document.getElementById("ir-carta").addEventListener("click", function(){ ir("carta"); });
   document.getElementById("ir-checkout").addEventListener("click", function(){ ir("checkout"); });
   document.querySelector("[data-volver]").addEventListener("click", function(e){ e.preventDefault(); ir("carta"); });
   document.getElementById("confirmar").addEventListener("click", function(){ ir("listo"); });

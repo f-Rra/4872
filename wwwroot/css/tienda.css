@@ -261,6 +261,10 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
   -webkit-mask:var(--frase) center/100% 100% no-repeat;
   mask:var(--frase) center/100% 100% no-repeat;
 }
+/* cerrada, el mismo renglón pasa a verde pleno y se queda solo al pie: es lo
+   último que se lee y no hay botón abajo que le discuta el peso */
+.franja.cerrada-ahora{color:var(--papel);margin-bottom:1.6rem}
+.franja.cerrada-ahora::after{background-color:var(--verde)}
 
 /* mismo padding que la portada. Sin línea abajo de todo: la última que se ve
    es la de arriba del botón */

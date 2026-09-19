@@ -1,3 +1,4 @@
+@model bool
 @{
     Layout = "_Tienda";
 }
@@ -82,16 +83,30 @@
         </ol>
     </section>
 
-    @* Cuándo lo comés. La pantalla contaba cómo se hace y cómo se pide, pero
-       nunca qué día llega; los «48 a 72 horas» del recorrido son de la masa, no
-       del pedido. Va pegada al botón, que es donde se decide.
+    @* El pie es la zona donde se decide, así que es la que cambia cuando la
+       tienda no toma pedidos: lo de arriba —cómo se hace, cómo funciona— sigue
+       valiendo igual y el que llegó de cero lo puede leer lo mismo.
+
+       Abierta, el renglón dice cuándo lo comés. La pantalla contaba cómo se
+       hace y cómo se pide, pero nunca qué día llega; los «48 a 72 horas» del
+       recorrido son de la masa, no del pedido.
 
        Sin nombrar un día de corte a propósito: el pedido tiene que estar el
        miércoles o el jueves según cuánto fermente, y eso todavía no está fijo. *@
-    <p class="franja">Pedís en la semana, lo recibís el finde.</p>
+    @if (Model)
+    {
+        <p class="franja">Pedís en la semana, lo recibís el finde.</p>
 
-    <div class="cta-pie">
-        <a class="cta" asp-controller="Tienda" asp-action="Carta">Armá tu pedido</a>
-    </div>
+        <div class="cta-pie">
+            <a class="cta" asp-controller="Tienda" asp-action="Carta">Armá tu pedido</a>
+        </div>
+    }
+    else
+    {
+        @* Sin botón y sin prometer cuándo se vuelve: no hay nada que hacer acá
+           hasta que la abra, y una fecha que después no se cumple es peor que
+           no decir nada. *@
+        <p class="franja cerrada-ahora">La tienda está cerrada.</p>
+    }
 
 </div>

@@ -19,10 +19,14 @@ public class TiendaController : Controller
     }
 
     // el inicio: existe para el que llega de cero, porque el nombre no dice que
-    // esto es una pizzería ni que el pedido tarda días
-    public IActionResult Index()
+    // esto es una pizzería ni que el pedido tarda días.
+    //
+    // Necesita saber si la tienda toma pedidos: cerrada, el botón invitaba a
+    // armar uno que no se puede hacer y el renglón de abajo prometía una entrega
+    // para el fin de semana. La carta ya lo miraba; el inicio no se había enterado.
+    public async Task<IActionResult> Index()
     {
-        return View();
+        return View(await Abierta());
     }
 
     // la carta. La acción se llama en español como todo el código; /shop es
