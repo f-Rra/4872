@@ -4,20 +4,28 @@ Tienda web y panel de vendedor para una pizzería napoletana de una sola sucursa
 
 ## Estado
 
-**El diseño está cerrado antes que el código.** Diez pantallas maquetadas y medidas, con las decisiones tomadas una por una. Las maquetas viven en `diseño/` y están publicadas:
+**El diseño está cerrado antes que el código.** Once pantallas maquetadas y medidas, con las decisiones tomadas una por una. Las maquetas viven en `diseño/` y están publicadas:
 
 - **[La tienda](https://claude.ai/code/artifact/019297d7-ce3f-463a-a117-3341c3b04f8b)** (`diseño/la-tienda.html`) — las cuatro pantallas del comprador: el inicio, la carta, el checkout y la confirmación.
-- **[El panel](https://claude.ai/code/artifact/0a303942-558d-41e1-940e-fb75788f0e0f)** (`diseño/el-panel.html`) — las seis del vendedor.
+- **[El panel](https://claude.ai/code/artifact/0a303942-558d-41e1-940e-fb75788f0e0f)** (`diseño/el-panel.html`) — las siete del vendedor: las seis de trabajo y la entrada.
 
 Los dos archivos **se explican solos**: cada pantalla trae al costado por qué quedó así, qué se descartó y sus medidas cerradas. Son la especificación; ante una duda de diseño, se miran primero.
 
-**Ya decididas** las dos que estaban abiertas: la dirección se pide **en un solo renglón** —lo que falte se arregla por WhatsApp, que es la conversación que va a haber igual— y cerrada se muestra la **versión C**, el cartel «Cerrado por esta semana» en lugar de la carta y de las solapas. Las variantes descartadas siguen en las maquetas.
+**Ya decididas** las dos que estaban abiertas: la dirección se pide **en un solo renglón** —lo que falte se arregla por WhatsApp, que es la conversación que va a haber igual— y cerrada se muestra la **versión C**, el cartel «La tienda está cerrada» en lugar de la carta y de las solapas — sin prometer cuándo vuelve, porque el día no está guardado en ningún lado. Las variantes descartadas siguen en las maquetas.
 
-**Lo que no está diseñado:** el panel no tiene pantalla de entrada. La clave y la cookie están decididas acá abajo, el aspecto no.
+**No queda nada abierto de diseño.** La entrada del panel, que era lo único que faltaba, está maquetada junto con las otras seis.
+
+**En producción** desde el 2026-09-20, en Railway: **[4872-production.up.railway.app](https://4872-production.up.railway.app)**. La imagen la arma el `Dockerfile` del repo y **cada push a `main` despliega solo**. La base es un Postgres del mismo proyecto: la cadena llega en `ConnectionStrings__Postgres` como dirección `postgresql://` y `Program.cs` la traduce, y las migraciones corren al arrancar. Las llaves con las que se firma la cookie del panel viven en una tabla, no en un disco, así que la sesión sobrevive a cada publicación.
+
+Las variables del servicio son cuatro —`ConnectionStrings__Postgres`, `Panel__Clave`, `Telegram__Token` y `Telegram__Chat`— y **ninguna vive en el repo**. En la máquina de uno, las mismas van por `dotnet user-secrets`.
+
+La tienda está **cerrada** hasta que entre la carta de verdad.
 
 ## Stack
 
-.NET 9 · ASP.NET Core MVC · EF Core code-first con Fluent API · PostgreSQL (instalado nativo, no Docker) · Bootstrap 5 + CSS propio · Razor + JS vanilla · Railway o Render para el deploy.
+.NET 9 · ASP.NET Core MVC · EF Core code-first con Fluent API · PostgreSQL (nativo en la máquina de uno, un servicio en Railway) · **CSS propio, sin frameworks** · Razor + JS vanilla · Railway con `Dockerfile` para el deploy.
+
+Bootstrap y jQuery venían con la plantilla y se fueron en el commit `c2ac2ef`: el diseño está medido al píxel y el reboot de Bootstrap pelea con él. Si alguna pantalla parece necesitar una grilla o un componente, se dibuja.
 
 **Un solo proyecto**, `f4872` (el repo se llama `4872`, pero un identificador de C# no puede empezar con dígito):
 
