@@ -100,6 +100,19 @@
         </nav>
 
         <main class="lista" id="lista">
+
+            @* Que los ingredientes se tocan no se descubre solo: la nota del
+               diseño decía «probá tocar la muzzarella de la Margarita», y si hay
+               que explicárselo al que diseña, el cliente no tiene cómo adivinarlo.
+
+               Va uno solo y afuera de las familias: la carta abre siempre en
+               pizzas, así que uno por familia serían dos que nadie ve nunca. Lo
+               muestra y lo esconde tienda.js, que además lo saca en empanadas
+               —que no tienen nada que sacar— y no lo repite en otra visita. *@
+            <div class="hueco-pista" id="pista" hidden>
+                <p class="pista">Tocá un ingrediente para sacarlo.</p>
+            </div>
+
             <div data-familia="pizzas">@{ Renglones(Model.Pizzas); }</div>
             <div data-familia="empanadas" hidden>
                 @if (Model.Packs.Count == 0)

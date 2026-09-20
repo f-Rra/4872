@@ -13,6 +13,10 @@
   // avisarle nada a nadie. Pero sí tiene que sobrevivir a una recarga o a un
   // «volver atrás», que en un teléfono pasa todo el tiempo.
   var LLAVE = "4872.pedido";
+  // una sola vez por dispositivo: mostrarlo en cada visita cansa a la segunda
+  // semana, y el que ya sabe que los ingredientes se tocan no necesita que se
+  // lo repitan todos los martes
+  var LLAVE_PISTA = "4872.pista";
   var carrito = {};
 
   // localStorage tira excepción en modo privado y con las cookies bloqueadas.
@@ -226,6 +230,7 @@
     var chip = e.target.closest(".ing:not(.fijo)");
     if (!chip || chip.disabled) return;
     chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    irsePista();   // ya entendió: el cartel no hace falta más
     pintar();
   });
 
@@ -240,6 +245,9 @@
     lista.querySelectorAll("[data-familia]").forEach(function (g) {
       g.hidden = g.dataset.familia !== boton.dataset.solapa;
     });
+
+    // en empanadas no hay ingredientes que sacar, así que el cartel sobra
+    if (boton.dataset.solapa === "empanadas") irsePista();
 
     lista.scrollTop = 0;
   });
@@ -257,7 +265,39 @@
     });
   }
 
+  // ---------- el cartel de los ingredientes ----------
+  // No se borra de golpe: se apaga y el hueco se cierra, así la lista sube sola
+  // en vez de saltar. Un alto "auto" no transiciona, por eso se fija el que
+  // tiene antes de llevarlo a cero.
+  var pista = document.getElementById("pista");
+  var relojPista = 0;
+
+  function irsePista() {
+    if (!pista || pista.hidden) return;
+    window.clearTimeout(relojPista);
+    try { localStorage.setItem(LLAVE_PISTA, "1"); } catch (e) { /* sin guardar */ }
+
+    pista.style.height = pista.scrollHeight + "px";
+    void pista.offsetWidth;
+    pista.classList.add("ido");
+    pista.style.height = "0px";
+    window.setTimeout(function () { if (pista) pista.hidden = true; }, 460);
+  }
+
+  function asomarPista() {
+    if (!pista) return;
+    var visto = true;
+    try { visto = localStorage.getItem(LLAVE_PISTA) === "1"; } catch (e) { /* sin guardar */ }
+    // sin renglones que tocar no hay nada que explicar
+    var hay = lista.querySelector("[data-familia]:not([hidden]) .ing:not(.fijo)");
+    if (visto || !hay) return;
+
+    pista.hidden = false;
+    relojPista = window.setTimeout(irsePista, 4000);
+  }
+
   recuperar();
   recuperarIngredientes();
   pintar();
+  asomarPista();
 })();

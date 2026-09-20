@@ -48,6 +48,46 @@
   color:var(--piedra);font-size:.86rem;font-weight:600;
 }
 
+/* ---------- el cartel de los ingredientes ----------
+   Arriba de la primera pizza y en el flujo, no encima: taparle el primer
+   renglón con el cartel que explica cómo usarlo sería esconder justo lo que
+   explica. Cuando se va, el hueco se cierra solo y la lista sube.
+
+   El costado es el mismo .95rem que todo lo demás y abajo no lleva nada: el
+   primer <li> ya trae su --aire. El cuerpo de la pastilla es el de .frase en el
+   checkout, que es el mismo dibujo.
+
+   Arriba son 1,6rem y no los 2rem del segmentado de packs. Medido, 2rem deja
+   los dos huecos iguales —24 px contra 24— pero se ven distintos: el de arriba
+   linda con una línea fina y el de abajo con la Bowlby maciza, y el mismo
+   espacio al lado de algo pesado se lee más chico. Los 6 px de menos son esa
+   corrección, no un descuido. */
+/* flex:none no es decorativo: .lista es flex en columna y el overflow:hidden
+   de aca le resuelve el min-height a 0, asi que con la lista mas alta que la
+   pantalla el flex lo encogia hasta desaparecer y el cartel terminaba
+   encimado con el primer renglon */
+.hueco-pista{overflow:hidden;flex:none}
+.hueco-pista[hidden]{display:none}
+.pista{
+  position:relative;margin:1.6rem .95rem 0;padding:.6rem .7rem;
+  font-family:var(--ui);font-size:.8rem;font-weight:700;
+  text-align:center;color:var(--verde);pointer-events:none;
+}
+.pista::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background-color:rgba(30,82,69,.14);
+  -webkit-mask:var(--frase) center/100% 100% no-repeat;
+  mask:var(--frase) center/100% 100% no-repeat;
+}
+.hueco-pista{transition:height .42s ease}
+.pista{transition:opacity .28s ease}
+.hueco-pista.ido .pista{opacity:0}
+.pista{animation:asomar .42s ease backwards}
+@keyframes asomar{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:none}
+}
+
 /* ---------- el renglón de la carta ---------- */
 ol.carta{list-style:none;margin:0;padding:0}
 ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
@@ -231,6 +271,8 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 
 @media (prefers-reduced-motion:reduce){
   .pedido{transition:none}
+  .hueco-pista,.pista{transition:none}
+  .pista{animation:none}
 }
 
 /* ============================================================

@@ -240,6 +240,40 @@
     color:var(--piedra);font-size:.86rem;font-weight:600;
   }
 
+  /* ---------- el cartel de los ingredientes ----------
+     Arriba de la primera pizza y en el flujo, no encima: taparle el primer
+     renglón con el cartel que explica cómo usarlo sería esconder justo lo que
+     explica. Cuando se va, el hueco se cierra solo y la lista sube.
+
+     Arriba son 1,6rem y no los 2rem del segmentado de packs. Medido, 2rem deja
+     los dos huecos iguales —24 px contra 24— pero se ven distintos: el de
+     arriba linda con una línea fina y el de abajo con la Bowlby maciza, y el
+     mismo espacio al lado de algo pesado se lee más chico. */
+  .hueco-pista{overflow:hidden;flex:none}
+  .hueco-pista[hidden]{display:none}
+  .pista{
+    position:relative;margin:1.6rem .95rem 0;padding:.6rem .7rem;
+    font-family:var(--ui);font-size:.8rem;font-weight:700;
+    text-align:center;color:var(--verde);pointer-events:none;
+  }
+  .pista::after{
+    content:"";position:absolute;z-index:-1;inset:0;
+    background-color:rgba(30,82,69,.14);
+    -webkit-mask:var(--frase) center/100% 100% no-repeat;
+    mask:var(--frase) center/100% 100% no-repeat;
+  }
+  .hueco-pista{transition:height .42s ease}
+  .pista{transition:opacity .28s ease;animation:asomar .42s ease backwards}
+  .hueco-pista.ido .pista{opacity:0}
+  @keyframes asomar{
+    from{opacity:0;transform:translateY(-6px)}
+    to{opacity:1;transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .hueco-pista,.pista{transition:none}
+    .pista{animation:none}
+  }
+
   /* ---------- el renglón de la carta ---------- */
   ol.carta{list-style:none;margin:0;padding:0}
   ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
@@ -995,6 +1029,13 @@
           <button type="button" data-s="empanadas" aria-pressed="false"><i class="dib empanada" aria-hidden="true"></i>Empanadas</button>
           <button type="button" data-s="focaccias" aria-pressed="false"><i class="dib focaccia" aria-hidden="true"></i>Focaccias</button>
         </nav>
+        <!-- Que los ingredientes se tocan no se descubre solo. Va uno solo y
+             afuera de las familias: la carta abre siempre en pizzas, asi que uno
+             por familia serian dos que nadie ve nunca. Se saca en empanadas, que
+             no tienen nada que sacar, y no se repite en otra visita. -->
+        <div class="hueco-pista" id="pista" hidden>
+          <p class="pista">Tocá un ingrediente para sacarlo.</p>
+        </div>
         <main class="lista" id="panel"></main>
       </div>
 
@@ -1121,6 +1162,38 @@
     if(b) b.addEventListener("click", function(){ ir("carta"); });
   }
 
+  // ---------- el cartel de los ingredientes ----------
+  // No se borra de golpe: se apaga y el hueco se cierra, asi la lista sube sola
+  // en vez de saltar. Un alto "auto" no transiciona, por eso se fija el que
+  // tiene antes de llevarlo a cero.
+  var pistaVista = false, relojPista = 0;
+
+  function irsePista(){
+    var p = document.getElementById("pista");
+    if(!p || p.hidden) return;
+    window.clearTimeout(relojPista);
+    pistaVista = true;
+    p.style.height = p.scrollHeight + "px";
+    void p.offsetWidth;
+    p.classList.add("ido");
+    p.style.height = "0px";
+    window.setTimeout(function(){ p.hidden = true; }, 460);
+  }
+
+  function asomarPista(){
+    var p = document.getElementById("pista");
+    if(!p) return;
+    // en empanadas no hay ingredientes que sacar, y con la tienda cerrada no hay
+    // carta. En la app ademas no vuelve a salir en otra visita: queda guardado
+    // al lado del carrito.
+    if(pistaVista || solapa === "empanadas" || tienda === "lleno"){ p.hidden = true; return; }
+    p.hidden = false;
+    p.classList.remove("ido");
+    p.style.height = "";
+    window.clearTimeout(relojPista);
+    relojPista = window.setTimeout(irsePista, 4000);
+  }
+
   function pintarCarta(){
     var el = document.getElementById("panel");
     document.body.dataset.tienda = tienda;
@@ -1165,6 +1238,7 @@
     }
     engancharCarta();
     pintarInicio();
+    asomarPista();
     barra();
   }
 
@@ -1187,6 +1261,7 @@
     p.querySelectorAll(".ing:not(.fijo)").forEach(function(c){
       c.addEventListener("click", function(){
         c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        irsePista();   // ya entendio: el cartel no hace falta mas
       });
     });
     p.querySelectorAll("[data-mas]").forEach(function(b){
