@@ -93,6 +93,14 @@ a{color:var(--verde)}
 
 .cara{font-family:var(--cara)}
 
+/* La pantalla de error, que no es ni la tienda ni el panel. Va sin diseno
+   propio a proposito: se decidio no gastarle una pantalla. Lo unico que hace
+   falta es que no parezca de otro sitio. */
+.suelta{max-width:520px;margin:0 auto;padding:3rem 1.2rem;text-align:center}
+.suelta h1{font-family:var(--cara);font-size:1.8rem;letter-spacing:-.03em;margin:0 0 .6rem}
+.suelta p{margin:0 0 .6rem;font-size:.95rem;font-weight:600;line-height:1.45}
+.suelta code{font-size:.76rem;opacity:.55;word-break:break-all}
+
 
 /* ============================================================
    Los formularios
@@ -165,6 +173,32 @@ a{color:var(--verde)}
   mask:var(--confirmar-hueca) center/100% 100% no-repeat;
 }
 .confirmar:focus-visible{outline:2px solid var(--verde);outline-offset:3px}
+
+/* Mientras manda, el botón NO se apaga. Apagarlo con disabled lo llevaba al
+   dibujo hueco de acá arriba, así que se veía más muerto que antes de llenar el
+   formulario — justo en el segundo de más ansiedad, con los datos ya puestos.
+   Queda macizo y lo cruza un barrido, que además dice que algo está pasando.
+   El doble envío lo corta el guion y no el atributo: ver wwwroot/js/checkout.js */
+.confirmar.enviando{cursor:progress}
+.confirmar.enviando::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(100deg,transparent 35%,rgba(243,237,225,.28) 50%,transparent 65%);
+  background-size:280% 100%;
+  -webkit-mask:var(--confirmar) center/100% 100% no-repeat;
+  mask:var(--confirmar) center/100% 100% no-repeat;
+  animation:barrido 1.15s linear infinite;
+}
+/* continuo y sin duración fija a propósito: la espera real es el pedido al
+   servidor y puede ser medio segundo o tres, así que una animación que dure lo
+   suyo terminaría antes que la respuesta y volvería a dejar el botón quieto */
+@keyframes barrido{
+  from{background-position:180% 0}
+  to{background-position:-80% 0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .confirmar.enviando::after{animation:none}
+}
 
 /* el aviso de que algo no salio: mismo dibujo que la nota del WhatsApp, pero
    macizo y al reves. No hay rojo en la paleta, y no hace falta: lo que separa

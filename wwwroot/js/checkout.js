@@ -138,16 +138,26 @@
   //
   // Se manda lo mismo que hay guardado, sin precios. Los pone el servidor: ver
   // Services/PedidoService.cs.
+  // El doble envío lo corta esta bandera y no el atributo disabled: apagar el
+  // botón lo lleva al dibujo hueco del botón apagado, y ahí se ve más muerto
+  // que antes de llenar el formulario. El aspecto lo pone la clase; ver site.css
+  var mandando = false;
+
   function enviar() {
     var boton = document.getElementById("confirmar");
-    if (!boton || boton.disabled) return;
+    if (!boton || boton.disabled || mandando) return;
 
     avisar("");
-    boton.disabled = true;
+    mandando = true;
+    boton.classList.add("enviando");
+    boton.setAttribute("aria-busy", "true");
     var dice = boton.textContent;
     boton.textContent = "Enviando";
 
     function fallar(texto) {
+      mandando = false;
+      boton.classList.remove("enviando");
+      boton.removeAttribute("aria-busy");
       boton.textContent = dice;
       avisar(texto);
       revisar();
