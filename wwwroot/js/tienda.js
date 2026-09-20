@@ -100,6 +100,16 @@
     return b ? b.dataset.unidades : null;
   }
 
+  // Hay que sacar la clase y forzar un reflujo antes de volver a ponerla: si se
+  // pone sobre una animación que ya está corriendo, el navegador no la reinicia
+  // y el segundo toque seguido no late.
+  function latir(elemento) {
+    if (!elemento) return;
+    elemento.classList.remove("late");
+    void elemento.offsetWidth;
+    elemento.classList.add("late");
+  }
+
   function mover(clave, paso) {
     var cuantos = (carrito[clave] || 0) + paso;
     // el cero se borra en vez de guardarse: el carrito es lo que se pidió, y un
@@ -107,6 +117,10 @@
     if (cuantos > 0) { carrito[clave] = cuantos; } else { delete carrito[clave]; }
     guardar();
     pintar();
+
+    var contador = lista.querySelector('.contador[data-clave="' + clave + '"] .n');
+    latir(contador);
+    latir(document.getElementById("cuenta-t"));
   }
 
   function pintarContador(contador, clave) {

@@ -265,13 +265,14 @@
   .hueco-pista{transition:height .42s ease}
   .pista{transition:opacity .28s ease;animation:asomar .42s ease backwards}
   .hueco-pista.ido .pista{opacity:0}
+  .hueco-pista.quieto .pista{animation:none}
   @keyframes asomar{
     from{opacity:0;transform:translateY(-6px)}
     to{opacity:1;transform:none}
   }
   @media (prefers-reduced-motion:reduce){
     .hueco-pista,.pista{transition:none}
-    .pista{animation:none}
+    .pista,.late,.listo > *,.aviso{animation:none}
   }
 
   /* ---------- el renglón de la carta ---------- */
@@ -387,6 +388,16 @@
   }
   .contador.cero::before{opacity:.45}
   .contador.cero .n{opacity:.35}
+
+  /* El acuse de recibo. Al sumar una pizza cambian dos números a la vez —este y
+     el total de la barra de abajo— y el ojo no puede estar en los dos lados.
+     Los dos son hijos de un flex, así que ya son bloques y el transform los toma. */
+  .late{animation:latido .34s ease}
+  @keyframes latido{
+    0%{transform:scale(1)}
+    38%{transform:scale(1.32)}
+    100%{transform:scale(1)}
+  }
 
   /* cuántos packs del otro tamaño ya lleva ese gusto: sin esto, cambiar de
      tamaño parece haber borrado lo que ya se habia sumado */
@@ -822,6 +833,26 @@
     font-variant-numeric:tabular-nums;
   }
   .listo p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:29ch}
+
+  /* Los renglones suben escalonados. Es el final del recorrido y una pantalla
+     verde entera que entraba de golpe. No necesita guion: se carga de cero. */
+  .listo > *{animation:subir .5s ease backwards}
+  .listo > *:nth-child(1){animation-delay:.05s}
+  .listo > *:nth-child(2){animation-delay:.16s}
+  .listo > *:nth-child(3){animation-delay:.27s}
+  .listo > *:nth-child(4){animation-delay:.38s}
+  @keyframes subir{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:none}
+  }
+
+  /* El aviso cae desde arriba. Es lo unico que explica por que el pedido no
+     salio, y apareciendo en silencio arriba del boton no se ve. */
+  .aviso{animation:caer .32s ease}
+  @keyframes caer{
+    from{opacity:0;transform:translateY(-8px)}
+    to{opacity:1;transform:none}
+  }
   .listo .marca{margin-top:1rem;font-size:1.1rem}
 
   /* Sin solapas la linea de la tapa no separa nada: queda una raya suelta arriba
@@ -1029,13 +1060,6 @@
           <button type="button" data-s="empanadas" aria-pressed="false"><i class="dib empanada" aria-hidden="true"></i>Empanadas</button>
           <button type="button" data-s="focaccias" aria-pressed="false"><i class="dib focaccia" aria-hidden="true"></i>Focaccias</button>
         </nav>
-        <!-- Que los ingredientes se tocan no se descubre solo. Va uno solo y
-             afuera de las familias: la carta abre siempre en pizzas, asi que uno
-             por familia serian dos que nadie ve nunca. Se saca en empanadas, que
-             no tienen nada que sacar, y no se repite en otra visita. -->
-        <div class="hueco-pista" id="pista" hidden>
-          <p class="pista">Tocá un ingrediente para sacarlo.</p>
-        </div>
         <main class="lista" id="panel"></main>
       </div>
 
@@ -1166,31 +1190,41 @@
   // No se borra de golpe: se apaga y el hueco se cierra, asi la lista sube sola
   // en vez de saltar. Un alto "auto" no transiciona, por eso se fija el que
   // tiene antes de llevarlo a cero.
-  var pistaVista = false, relojPista = 0;
+  // Va DENTRO de la lista y no al lado: la lista tiene barra de scroll, asi que
+  // afuera le sobrarian esos 15 px y el cartel no calzaria con los renglones.
+  // En empanadas no hay ingredientes que sacar, y con la tienda cerrada no hay
+  // carta. En la app ademas no vuelve a salir en otra visita: queda guardado al
+  // lado del carrito.
+  var pistaVista = false, pistaAsomo = false, relojPista = 0;
+
+  function vaLaPista(){
+    return !pistaVista && solapa !== "empanadas" && tienda !== "lleno";
+  }
+
+  function pistaHTML(){
+    if(!vaLaPista()) return "";
+    // quieto: la carta se repinta cada vez que sumas una pizza, y sin esto el
+    // cartel volveria a entrar de cero en cada toque
+    return '<div class="hueco-pista' + (pistaAsomo ? ' quieto' : '') + '" id="pista">' +
+           '<p class="pista">Toc\u00e1 un ingrediente para sacarlo.</p></div>';
+  }
 
   function irsePista(){
     var p = document.getElementById("pista");
-    if(!p || p.hidden) return;
+    if(!p || pistaVista) return;
     window.clearTimeout(relojPista);
     pistaVista = true;
     p.style.height = p.scrollHeight + "px";
     void p.offsetWidth;
     p.classList.add("ido");
     p.style.height = "0px";
-    window.setTimeout(function(){ p.hidden = true; }, 460);
+    window.setTimeout(function(){ if(p.parentElement) p.hidden = true; }, 460);
   }
 
   function asomarPista(){
-    var p = document.getElementById("pista");
-    if(!p) return;
-    // en empanadas no hay ingredientes que sacar, y con la tienda cerrada no hay
-    // carta. En la app ademas no vuelve a salir en otra visita: queda guardado
-    // al lado del carrito.
-    if(pistaVista || solapa === "empanadas" || tienda === "lleno"){ p.hidden = true; return; }
-    p.hidden = false;
-    p.classList.remove("ido");
-    p.style.height = "";
-    window.clearTimeout(relojPista);
+    if(!document.getElementById("pista")) return;
+    if(pistaAsomo) return;
+    pistaAsomo = true;
     relojPista = window.setTimeout(irsePista, 4000);
   }
 
@@ -1230,7 +1264,7 @@
         '</div>' + lista;
     }else{
       var fuente = solapa === "pizzas" ? PIZZAS : FOCACCIAS;
-      el.innerHTML = '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
+      el.innerHTML = pistaHTML() + '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
     }
 
     if(tienda !== "abierta"){
@@ -1248,12 +1282,26 @@
     var m = / x(6|12)$/.exec(clave);
     return m ? PACK[+m[1]] : 0;
   }
+  // Hay que sacar la clase y forzar un reflujo antes de volver a ponerla: si se
+  // pone sobre una animacion que ya esta corriendo, el navegador no la reinicia
+  // y el segundo toque seguido no late.
+  function latir(elemento){
+    if(!elemento) return;
+    elemento.classList.remove("late");
+    void elemento.offsetWidth;
+    elemento.classList.add("late");
+  }
+
   function mover(clave, d){
     var actual = carrito[clave] ? carrito[clave].cant : 0;
     var nueva = Math.max(0, actual + d);
     if(!nueva) delete carrito[clave];
     else carrito[clave] = {cant:nueva, precio:precioDe(clave)};
     pintarCarta();
+
+    var c = document.querySelector('#panel [data-mas="' + clave + '"]');
+    latir(c ? c.parentElement.querySelector(".n") : null);
+    latir(document.getElementById("cuenta-t"));
   }
 
   function engancharCarta(){

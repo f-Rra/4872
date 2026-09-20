@@ -213,3 +213,16 @@ a{color:var(--verde)}
   -webkit-mask:var(--frase) center/100% 100% no-repeat;
   mask:var(--frase) center/100% 100% no-repeat;
 }
+/* Cae desde arriba en vez de aparecer sin más. Es lo único que explica por qué
+   el pedido no salió, y apareciendo en silencio arriba del botón no se ve.
+   Sin guion: al sacarle el hidden pasa de display:none a mostrarse, y ahí la
+   animación arranca sola. */
+.aviso{animation:caer .32s ease}
+@keyframes caer{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .aviso{animation:none}
+}
