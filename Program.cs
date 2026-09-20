@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using f4872.Data;
 using f4872.Helpers;
@@ -70,6 +71,26 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opciones.ExpireTimeSpan = TimeSpan.FromDays(30);
         opciones.SlidingExpiration = true;
     });
+
+// Las llaves con las que se firma esa cookie. De fábrica viven en el disco del
+// contenedor, que se tira y se rehace entero en cada despliegue: publicar una
+// vez invalida la cookie de un mes y hay que volver a escribir la clave. En una
+// carpeta que sobreviva —un volumen del servicio— la cookie aguanta.
+//
+// Sin la variable no se toca nada: en la máquina de uno el disco no se borra
+// solo y lo de fábrica alcanza. Si la variable está y la carpeta no se puede
+// escribir, la app no arranca y lo dice; pasar de largo dejaría justo el
+// problema que se vino a arreglar, y sin que nadie se entere.
+var llaves = builder.Configuration["Llaves:Carpeta"];
+if (!string.IsNullOrWhiteSpace(llaves))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(Directory.CreateDirectory(llaves))
+        // el nombre va escrito y no sale de la carpeta donde corre la app: si
+        // algún día esa carpeta cambia, las llaves guardadas tienen que seguir
+        // abriendo las cookies que ya firmaron
+        .SetApplicationName("4872");
+}
 
 // Los servicios que alquilan una base no dan la cadena en el formato de Npgsql:
 // dan una dirección, postgresql://usuario:clave@maquina:puerto/base. Npgsql no
