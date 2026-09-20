@@ -1,9 +1,12 @@
 using f4872.Models;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace f4872.Data;
 
-public class Contexto : DbContext
+// IDataProtectionKeyContext es lo unico que pide ASP.NET para guardar acá las
+// llaves con las que firma la cookie del panel. Ver Program.cs
+public class Contexto : DbContext, IDataProtectionKeyContext
 {
     public Contexto(DbContextOptions<Contexto> opciones) : base(opciones) { }
 
@@ -17,6 +20,10 @@ public class Contexto : DbContext
     public DbSet<ItemQuitado> ItemQuitados => Set<ItemQuitado>();
     public DbSet<Pack> Packs => Set<Pack>();
     public DbSet<Tienda> Tienda => Set<Tienda>();
+
+    // No es una entidad del negocio: la tabla y su forma las define ASP.NET, y
+    // el nombre de la propiedad tampoco se elige, lo busca por la interfaz.
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {

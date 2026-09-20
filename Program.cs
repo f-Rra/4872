@@ -72,26 +72,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opciones.SlidingExpiration = true;
     });
 
-// Las llaves con las que se firma esa cookie. De fábrica viven en el disco del
-// contenedor, que se tira y se rehace entero en cada despliegue: publicar una
-// vez invalida la cookie de un mes y hay que volver a escribir la clave. En una
-// carpeta que sobreviva —un volumen del servicio— la cookie aguanta.
-//
-// Sin la variable no se toca nada: en la máquina de uno el disco no se borra
-// solo y lo de fábrica alcanza. Si la variable está y la carpeta no se puede
-// escribir, la app no arranca y lo dice; pasar de largo dejaría justo el
-// problema que se vino a arreglar, y sin que nadie se entere.
-var llaves = builder.Configuration["Llaves:Carpeta"];
-if (!string.IsNullOrWhiteSpace(llaves))
-{
-    builder.Services.AddDataProtection()
-        .PersistKeysToFileSystem(Directory.CreateDirectory(llaves))
-        // el nombre va escrito y no sale de la carpeta donde corre la app: si
-        // algún día esa carpeta cambia, las llaves guardadas tienen que seguir
-        // abriendo las cookies que ya firmaron
-        .SetApplicationName("4872");
-}
-
 // Los servicios que alquilan una base no dan la cadena en el formato de Npgsql:
 // dan una dirección, postgresql://usuario:clave@maquina:puerto/base. Npgsql no
 // la entiende y la app no arranca. Se traduce acá para poder pegar la variable
@@ -141,6 +121,24 @@ if (string.IsNullOrWhiteSpace(conexion.Password))
 }
 
 builder.Services.AddDbContext<Contexto>(opciones => opciones.UseNpgsql(conexion.ConnectionString));
+
+// Las llaves con las que se firma la cookie del panel. De fábrica viven en el
+// disco del contenedor, que se rehace entero en cada despliegue: publicar una
+// vez invalidaba una cookie pensada para durar un mes.
+//
+// Van a la base y no a un disco aparte. Un volumen también sobrevive, pero
+// depende de que el proveedor lo monte con el dueño correcto: Railway lo monta
+// como bind mount, que llega de root, y la app —que corre sin privilegios— no
+// puede escribir adentro. La base, en cambio, ya está y es la misma en
+// cualquier lado, así que esto no necesita que nadie configure nada.
+//
+// Va acá abajo y no junto a la cookie porque necesita el contexto registrado.
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<Contexto>()
+    // el nombre va escrito y no sale de la carpeta donde corre la app: si algún
+    // día esa carpeta cambia, las llaves guardadas tienen que seguir abriendo
+    // las cookies que ya firmaron
+    .SetApplicationName("4872");
 // El timeout corto es a proposito: el cliente esta esperando la respuesta de su
 // pedido y el aviso no puede hacerlo esperar mas que eso.
 //
