@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Services;
@@ -15,6 +16,41 @@ CultureInfo.DefaultThreadCurrentCulture = Cultura.Argentina();
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.DefaultThreadCurrentCulture;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ---------- lo que pide el servidor donde vive ----------
+// En la máquina de uno ninguna de las dos cosas hace falta. En un hosting son
+// la diferencia entre que la página abra y que no.
+
+// El puerto lo elige el servicio y lo pasa por variable de entorno. El que no
+// escucha ahí no recibe un solo pedido, por más que el proceso esté vivo.
+//
+// Que exista esa variable quiere decir que hay alguien adelante: el proxy del
+// servicio, que atiende en el 443 y desencripta. La app escucha HTTP nomás, así
+// que hay que decirle a qué puerto reenviar, porque el suyo no es. Sin esto
+// avisa «Failed to determine the https port for redirect» y entrega la página
+// sin encriptar en vez de mandar al visitante al candado.
+var puerto = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(puerto))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{puerto}");
+    builder.Services.AddHttpsRedirection(opciones => opciones.HttpsPort = 443);
+}
+
+// Detrás de ese proxy el pedido llega por HTTP aunque el visitante haya entrado
+// por HTTPS, y el único que sabe cómo entró de verdad es el proxy, que lo
+// cuenta en una cabecera. Sin leerla, la app decide todo como si nadie usara el
+// candado: la cookie del panel sale sin la marca de segura, el aviso de HSTS no
+// sale nunca —solo se manda sobre HTTPS— y el registro anota la dirección del
+// proxy en lugar de la del que entró.
+//
+// Las redes y los proxys conocidos se vacían porque la dirección del proxy no
+// se sabe de antemano: es un contenedor y cambia en cada despliegue.
+builder.Services.Configure<ForwardedHeadersOptions>(opciones =>
+{
+    opciones.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
+    opciones.KnownNetworks.Clear();
+    opciones.KnownProxies.Clear();
+});
 
 builder.Services.AddControllersWithViews();
 
@@ -35,10 +71,37 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opciones.SlidingExpiration = true;
     });
 
+// Los servicios que alquilan una base no dan la cadena en el formato de Npgsql:
+// dan una dirección, postgresql://usuario:clave@maquina:puerto/base. Npgsql no
+// la entiende y la app no arranca. Se traduce acá para poder pegar la variable
+// tal como viene, que es todo lo que hay que hacer el día que la base se mude.
+static NpgsqlConnectionStringBuilder ArmarConexion(string? cadena)
+{
+    if (string.IsNullOrWhiteSpace(cadena) ||
+        !(cadena.StartsWith("postgres://") || cadena.StartsWith("postgresql://")))
+    {
+        return new NpgsqlConnectionStringBuilder(cadena);
+    }
+
+    var direccion = new Uri(cadena);
+    // en una dirección el usuario y la clave van escapados: una clave con @ o
+    // con / llega escrita %40 y %2F, y así hay que devolverla
+    var credencial = direccion.UserInfo.Split(':', 2);
+
+    return new NpgsqlConnectionStringBuilder
+    {
+        Host = direccion.Host,
+        Port = direccion.Port > 0 ? direccion.Port : 5432,
+        Database = direccion.AbsolutePath.Trim('/'),
+        Username = Uri.UnescapeDataString(credencial[0]),
+        Password = credencial.Length > 1 ? Uri.UnescapeDataString(credencial[1]) : null
+    };
+}
+
 // la cadena vive en appsettings sin la clave, y la clave viaja aparte por los
 // secretos de usuario para que no termine en el repositorio. En produccion la
-// cadena va a llegar entera por variable de entorno, ya con la clave adentro
-var conexion = new NpgsqlConnectionStringBuilder(builder.Configuration.GetConnectionString("Postgres"));
+// cadena llega entera por variable de entorno, ya con la clave adentro
+var conexion = ArmarConexion(builder.Configuration.GetConnectionString("Postgres"));
 var clave = builder.Configuration["Postgres:Clave"];
 if (!string.IsNullOrWhiteSpace(clave))
 {
@@ -95,13 +158,16 @@ var app = builder.Build();
 // Las dos masas van siempre, tambien en produccion: son la receta del vendedor
 // y no datos de prueba. Sin ellas, el primer producto que se cargue queda sin
 // masa. La carta inventada, en cambio, solo en la maquina de uno.
-//
-// OJO para el deploy: esto toca la base al arrancar, asi que las migraciones
-// tienen que correr antes. Ver Data/Sembrador.cs
 {
     using var alcance = app.Services.CreateScope();
     var contexto = alcance.ServiceProvider.GetRequiredService<Contexto>();
     var registro = alcance.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    // Las migraciones corren al arrancar y no a mano. Publicar tiene que ser un
+    // push: a la base del servidor no la va a actualizar nadie desde su máquina,
+    // y la primera vez no hay ni una tabla. Va antes de sembrar, que escribe
+    // justo en las tablas que esto crea.
+    await contexto.Database.MigrateAsync();
 
     await Sembrador.SembrarLasMasas(contexto, registro);
 
@@ -110,6 +176,11 @@ var app = builder.Build();
         await Sembrador.SembrarLaCartaDePrueba(contexto, registro);
     }
 }
+
+// Antes que nada: todo lo que sigue —el redirector a HTTPS, la cookie del
+// panel, cualquier dirección que se arme sola— necesita saber por dónde entró
+// el cliente de verdad, y eso viene en las cabeceras que puso el proxy.
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
