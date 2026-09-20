@@ -1,0 +1,26 @@
+# Lo que no entra en la imagen.
+#
+# bin y obj no estan por tamano: estan por correccion. Son los restos de haber
+# compilado en Windows, y si se cuelan, el restore de adentro del contenedor
+# -que es Linux- se cruza con ellos y compila cualquier cosa.
+bin/
+obj/
+
+# el repositorio entero, que no lo necesita para correr
+.git/
+.gitignore
+.gitattributes
+
+# las maquetas son la especificacion, no la app
+diseño/
+*.md
+
+# lo de los editores y lo que quedo tirado en la raiz
+.vs/
+.vscode/
+*.user
+mintty.*
+
+# se leen antes de armar el contexto, no hace falta mandarlos adentro
+Dockerfile
+.dockerignore
