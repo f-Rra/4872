@@ -30,6 +30,13 @@ COPY --from=construir /publicado ./
 # tiene que tocar la base de verdad ni una vez. Ver Data/Sembrador.cs
 ENV ASPNETCORE_ENVIRONMENT=Production
 
+# La carpeta donde se montan las llaves de la cookie, creada aca y con dueno.
+# Un volumen nuevo hereda el dueno de la carpeta que encuentra en la imagen; si
+# no encuentra ninguna, la crea de root y el usuario de abajo no puede escribir
+# adentro. Medido: sin esto la app no arranca, "Access to the path '/datos'
+# is denied". Ver Llaves:Carpeta en Program.cs
+RUN mkdir -p /datos && chown $APP_UID /datos
+
 # La imagen trae un usuario sin privilegios. Si algun dia entran por un agujero
 # de la app, entran como el y no como root.
 USER $APP_UID
