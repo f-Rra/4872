@@ -11,6 +11,16 @@
    que quiera pedir más entra de nuevo. *@
 <div class="tienda">
     <div class="listo">
+
+        @* El logo en lugar del «48·72» escrito que estaba al pie: es la última
+           pantalla del recorrido y la única verde entera, así que la marca
+           puede ocupar lugar en vez de firmar abajo en chico.
+
+           Va como máscara y no como imagen. El archivo es una silueta de un
+           solo color y ese color es el verde de este fondo: de imagen no se
+           vería. *@
+        <i class="marca-logo" aria-hidden="true"></i>
+
         <h1>¡Pedido realizado!</h1>
 
         @* lo único que el cliente puede necesitar repetir, así que va suelto y
@@ -21,8 +31,6 @@
            texto que está acá es el que se lee si no hay nombre guardado, y es
            el que ve un buscador o alguien con el JavaScript apagado. *@
         <p id="saludo">Gracias. Te escribimos por WhatsApp para coordinar la entrega.</p>
-
-        <p class="marca">48·72</p>
     </div>
 </div>
 

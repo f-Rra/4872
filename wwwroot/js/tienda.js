@@ -1,3 +1,15 @@
+// La entrada de la pantalla dura lo que dura y después se corta. Si la clase
+// quedara puesta, cada cambio de solapa volvería a dibujar los renglones de esa
+// familia: una familia escondida está en display:none, y al mostrarla el
+// navegador le arranca las animaciones de cero.
+(function () {
+  var marco = document.querySelector(".dibujando");
+  if (!marco) return;
+  // 1,2 s es un poco más que la más tardía de todas: la línea de arriba del
+  // botón del inicio, que empieza a los 0,56 y tarda medio segundo
+  window.setTimeout(function () { marco.classList.remove("dibujando"); }, 1200);
+})();
+
 // Las solapas cambian qué familia se ve. Las tres listas ya vienen en el HTML:
 // se muestran y se esconden, no se piden de nuevo al servidor, así que cambiar
 // de solapa es instantáneo y funciona con la carta ya cargada.

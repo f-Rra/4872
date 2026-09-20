@@ -286,6 +286,10 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
   .pedido{transition:none}
   .hueco-pista,.pista{transition:none}
   .pista,.late,.listo > *{animation:none}
+  /* de la entrada se va todo. Las líneas dibujadas son catorce pseudoelementos
+     distintos; listarlos de nuevo acá sería una segunda copia de la lista de
+     abajo que alguien se tiene que acordar de actualizar */
+  .dibujando > *,.dibujando *::before,.dibujando *::after{animation:none}
 }
 
 /* ============================================================
@@ -665,7 +669,17 @@ ol.gustos li::after{opacity:.35}
   from{opacity:0;transform:translateY(14px)}
   to{opacity:1;transform:none}
 }
-.listo .marca{margin-top:1rem;font-size:1.1rem}
+/* El logo arriba del título. Va como máscara y no como imagen: el archivo es
+   una silueta de un solo color —el mismo verde que el fondo de esta pantalla—
+   así que puesto de imagen no se vería. Teñido de papel, sí.
+   148 px porque es lo único que hay para mirar: reemplaza al «48·72» escrito
+   que estaba al pie, que a este tamaño no hacía falta repetir. */
+.listo .marca-logo{
+  display:block;flex:none;width:148px;height:148px;
+  background-color:var(--papel);
+  -webkit-mask:var(--logo) center/contain no-repeat;
+  mask:var(--logo) center/contain no-repeat;
+}
 
 /* Sin solapas la linea de la tapa no separa nada: queda una raya suelta arriba
    de una pantalla vacia. Mismo criterio que arriba de todo, donde el borde de
@@ -688,3 +702,87 @@ ol.gustos li::after{opacity:.35}
 }
 .cerrada p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
 .cerrada .marca{margin-top:1.2rem;font-size:1.15rem}
+
+
+/* ============================================================
+   La entrada
+
+   Las tres pantallas que tienen líneas dibujadas entran igual:
+   el bloque aparece y su línea se traza sola de izquierda a
+   derecha, como si la estuvieran dibujando. No es una animación
+   traída de otro lado: es lo que la página ya dice ser.
+
+   La confirmación no lleva ninguna de estas —no tiene una sola
+   línea dibujada— y entra escalonada con subir, más arriba.
+
+   La clase la saca tienda.js cuando termina. Si se quedara
+   puesta, cada cambio de solapa volvería a dibujar los renglones
+   de esa familia: una familia escondida está en display:none, y
+   al mostrarla el navegador le arranca las animaciones de cero.
+   ============================================================ */
+
+.dibujando > *{animation:tinta .45s ease backwards}
+@keyframes tinta{from{opacity:0}to{opacity:1}}
+
+/* El recorte va de derecha a izquierda y no es un ancho que crece: la línea
+   está entera desde el primer cuadro y se destapa, así el trazo no se estira
+   ni se deforma mientras aparece. */
+.dibujando .tapa::after,
+.dibujando .portada::after,
+.dibujando .cierre::after,
+.dibujando .cred + .cred::before,
+.dibujando .cta-pie::before,
+.dibujando .solapas::after,
+.dibujando ol.carta li::after,
+.dibujando ol.gustos::before,
+.dibujando ol.gustos li::after,
+.dibujando .barra-tope::after,
+.dibujando .items li::after,
+.dibujando .total::before,
+.dibujando .total::after,
+.dibujando .accion::before{animation:dibujarse .5s ease backwards}
+@keyframes dibujarse{
+  from{clip-path:inset(0 100% 0 0)}
+  to{clip-path:inset(0 0 0 0)}
+}
+
+/* El inicio es la única que se lee de arriba abajo, así que sus bloques entran
+   en ese orden. La carta y el checkout entran los dos de una: son listas, y
+   escalonar una lista es hacer esperar al que ya sabe qué venía a pedir.
+   Cerrada, el inicio tiene cinco bloques en vez de seis: no está el botón. */
+.inicio.dibujando > *:nth-child(1){animation-delay:.02s}
+.inicio.dibujando > *:nth-child(2){animation-delay:.12s}
+.inicio.dibujando > *:nth-child(3){animation-delay:.22s}
+.inicio.dibujando > *:nth-child(4){animation-delay:.32s}
+.inicio.dibujando > *:nth-child(5){animation-delay:.42s}
+.inicio.dibujando > *:nth-child(6){animation-delay:.52s}
+/* cada línea sale detrás del bloque que cierra, no antes */
+.dibujando .portada::after{animation-delay:.16s}
+.dibujando .cierre::after{animation-delay:.3s}
+.dibujando .cta-pie::before{animation-delay:.56s}
+
+/* Los renglones se dibujan de arriba abajo y pegaditos: si cada uno esperara a
+   que terminara el anterior, leer la carta empezaría a tardar. Del séptimo en
+   adelante van todos juntos —abajo del pliegue no se ven entrar— y así una
+   carta de treinta pizzas no tarda más que una de seis. */
+.dibujando ol.carta li:nth-child(1)::after,
+.dibujando ol.gustos li:nth-child(1)::after,
+.dibujando .items li:nth-child(1)::after{animation-delay:.10s}
+.dibujando ol.carta li:nth-child(2)::after,
+.dibujando ol.gustos li:nth-child(2)::after,
+.dibujando .items li:nth-child(2)::after{animation-delay:.16s}
+.dibujando ol.carta li:nth-child(3)::after,
+.dibujando ol.gustos li:nth-child(3)::after,
+.dibujando .items li:nth-child(3)::after{animation-delay:.22s}
+.dibujando ol.carta li:nth-child(4)::after,
+.dibujando ol.gustos li:nth-child(4)::after{animation-delay:.28s}
+.dibujando ol.carta li:nth-child(5)::after,
+.dibujando ol.gustos li:nth-child(5)::after{animation-delay:.34s}
+.dibujando ol.carta li:nth-child(6)::after,
+.dibujando ol.gustos li:nth-child(6)::after{animation-delay:.40s}
+.dibujando ol.carta li:nth-child(n+7)::after,
+.dibujando ol.gustos li:nth-child(n+7)::after{animation-delay:.46s}
+/* las dos del total y la de arriba del botón, que cierran el checkout */
+.dibujando .total::before{animation-delay:.28s}
+.dibujando .total::after{animation-delay:.32s}
+.dibujando .accion::before{animation-delay:.40s}

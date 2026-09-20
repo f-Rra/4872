@@ -273,6 +273,10 @@
   @media (prefers-reduced-motion:reduce){
     .hueco-pista,.pista{transition:none}
     .pista,.late,.listo > *,.aviso{animation:none}
+    /* de la entrada se va todo. Las líneas dibujadas son catorce
+       pseudoelementos distintos; listarlos nombre por nombre acá sería una
+       segunda copia que alguien se tiene que acordar de actualizar */
+    .dibujando > *,.dibujando *::before,.dibujando *::after{animation:none}
   }
 
   /* ---------- el renglón de la carta ---------- */
@@ -853,7 +857,17 @@
     from{opacity:0;transform:translateY(-8px)}
     to{opacity:1;transform:none}
   }
-  .listo .marca{margin-top:1rem;font-size:1.1rem}
+  /* El logo arriba del título. Va como máscara y no como imagen: el archivo es
+     una silueta de un solo color —el mismo verde que el fondo de esta pantalla—
+     así que puesto de imagen no se vería. Teñido de papel, sí.
+     148 px porque es lo único que hay para mirar: reemplaza al «48·72» escrito
+     que estaba al pie, que a este tamaño no hacía falta repetir. */
+  .listo .marca-logo{
+    display:block;flex:none;width:148px;height:148px;
+    background-color:var(--papel);
+    -webkit-mask:var(--logo) center/contain no-repeat;
+    mask:var(--logo) center/contain no-repeat;
+  }
 
   /* Sin solapas la linea de la tapa no separa nada: queda una raya suelta arriba
      de una pantalla vacia. Mismo criterio que arriba de todo, donde el borde de
@@ -876,6 +890,89 @@
   }
   .cerrada p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
   .cerrada .marca{margin-top:1.2rem;font-size:1.15rem}
+
+  /* ============================================================
+     La entrada
+
+     Las tres pantallas que tienen líneas dibujadas entran igual:
+     el bloque aparece y su línea se traza sola de izquierda a
+     derecha, como si la estuvieran dibujando. No es una animación
+     traída de otro lado: es lo que la página ya dice ser.
+
+     La confirmación no lleva ninguna de estas —no tiene una sola
+     línea dibujada— y entra escalonada con subir, más arriba.
+
+     La clase se saca cuando termina. Si quedara puesta, cada
+     cambio de solapa volvería a dibujar los renglones de esa
+     familia: una familia escondida está en display:none, y al
+     mostrarla el navegador le arranca las animaciones de cero.
+     ============================================================ */
+
+  .dibujando > *{animation:tinta .45s ease backwards}
+  @keyframes tinta{from{opacity:0}to{opacity:1}}
+
+  /* El recorte va de derecha a izquierda y no es un ancho que crece: la línea
+     está entera desde el primer cuadro y se destapa, así el trazo no se estira
+     ni se deforma mientras aparece. */
+  .dibujando .tapa::after,
+  .dibujando .portada::after,
+  .dibujando .cierre::after,
+  .dibujando .cred + .cred::before,
+  .dibujando .cta-pie::before,
+  .dibujando .solapas::after,
+  .dibujando ol.carta li::after,
+  .dibujando ol.gustos::before,
+  .dibujando ol.gustos li::after,
+  .dibujando .barra-tope::after,
+  .dibujando .items li::after,
+  .dibujando .total::before,
+  .dibujando .total::after,
+  .dibujando .accion::before{animation:dibujarse .5s ease backwards}
+  @keyframes dibujarse{
+    from{clip-path:inset(0 100% 0 0)}
+    to{clip-path:inset(0 0 0 0)}
+  }
+
+  /* El inicio es la única que se lee de arriba abajo, así que sus bloques entran
+     en ese orden. La carta y el checkout entran los dos de una: son listas, y
+     escalonar una lista es hacer esperar al que ya sabe qué venía a pedir.
+     Cerrada, el inicio tiene cinco bloques en vez de seis: no está el botón. */
+  .inicio.dibujando > *:nth-child(1){animation-delay:.02s}
+  .inicio.dibujando > *:nth-child(2){animation-delay:.12s}
+  .inicio.dibujando > *:nth-child(3){animation-delay:.22s}
+  .inicio.dibujando > *:nth-child(4){animation-delay:.32s}
+  .inicio.dibujando > *:nth-child(5){animation-delay:.42s}
+  .inicio.dibujando > *:nth-child(6){animation-delay:.52s}
+  /* cada línea sale detrás del bloque que cierra, no antes */
+  .dibujando .portada::after{animation-delay:.16s}
+  .dibujando .cierre::after{animation-delay:.3s}
+  .dibujando .cta-pie::before{animation-delay:.56s}
+
+  /* Los renglones se dibujan de arriba abajo y pegaditos: si cada uno esperara a
+     que terminara el anterior, leer la carta empezaría a tardar. Del séptimo en
+     adelante van todos juntos —abajo del pliegue no se ven entrar— y así una
+     carta de treinta pizzas no tarda más que una de seis. */
+  .dibujando ol.carta li:nth-child(1)::after,
+  .dibujando ol.gustos li:nth-child(1)::after,
+  .dibujando .items li:nth-child(1)::after{animation-delay:.10s}
+  .dibujando ol.carta li:nth-child(2)::after,
+  .dibujando ol.gustos li:nth-child(2)::after,
+  .dibujando .items li:nth-child(2)::after{animation-delay:.16s}
+  .dibujando ol.carta li:nth-child(3)::after,
+  .dibujando ol.gustos li:nth-child(3)::after,
+  .dibujando .items li:nth-child(3)::after{animation-delay:.22s}
+  .dibujando ol.carta li:nth-child(4)::after,
+  .dibujando ol.gustos li:nth-child(4)::after{animation-delay:.28s}
+  .dibujando ol.carta li:nth-child(5)::after,
+  .dibujando ol.gustos li:nth-child(5)::after{animation-delay:.34s}
+  .dibujando ol.carta li:nth-child(6)::after,
+  .dibujando ol.gustos li:nth-child(6)::after{animation-delay:.40s}
+  .dibujando ol.carta li:nth-child(n+7)::after,
+  .dibujando ol.gustos li:nth-child(n+7)::after{animation-delay:.46s}
+  /* las dos del total y la de arriba del botón, que cierran el checkout */
+  .dibujando .total::before{animation-delay:.28s}
+  .dibujando .total::after{animation-delay:.32s}
+  .dibujando .accion::before{animation-delay:.40s}
 
   /* ---------- lo que la app no tiene ----------
      Las dos maneras descartadas de mostrar la tienda cerrada. La app
@@ -1046,7 +1143,9 @@
              se hace y como se pide pero nunca que dia llega, porque los 48 a 72
              horas del recorrido son de la masa y no del pedido. Sin nombrar un
              dia de corte a proposito: todavia no esta fijo. -->
-        <div id="pie-inicio"></div>
+        <!-- el pie lo escribe el guion como hijo directo y no dentro de un
+             envoltorio: la entrada escalona los bloques de la pantalla con
+             nth-child, y un envoltorio contaria los dos como uno solo -->
       </div>
 
       <!-- 2 · la carta -->
@@ -1086,10 +1185,13 @@
       <!-- 3 · la confirmación -->
       <div class="pantalla tienda" id="p-listo" hidden>
         <div class="listo">
+          <!-- el logo en lugar del «48·72» escrito que estaba al pie: es la
+               ultima pantalla y la unica verde entera, asi que la marca puede
+               ocupar lugar en vez de firmar abajo en chico -->
+          <i class="marca-logo" aria-hidden="true"></i>
           <h1>¡Pedido realizado!</h1>
           <span class="num">Nro 0147</span>
           <p id="listo-texto"></p>
-          <p class="marca">48·72</p>
         </div>
       </div>
 
@@ -1176,12 +1278,14 @@
   // El pie del inicio: abierta invita, cerrada solo avisa. Sin boton, porque
   // no hay nada que hacer hasta que la abra.
   function pintarInicio(){
-    var e = document.getElementById("pie-inicio");
-    if(!e) return;
-    e.innerHTML = tienda === "abierta"
+    var m = document.getElementById("p-inicio");
+    // hijos directos de la pantalla, no dentro de un envoltorio: la entrada
+    // escalona los bloques con nth-child y un envoltorio seria un bloque solo
+    m.querySelectorAll(".franja,.cta-pie").forEach(function(x){ x.remove(); });
+    m.insertAdjacentHTML("beforeend", tienda === "abierta"
       ? '<p class="franja">Ped\u00eds en la semana, lo recib\u00eds el finde.</p>' +
         '<div class="cta-pie"><button type="button" class="cta" id="ir-carta">Arm\u00e1 tu pedido</button></div>'
-      : '<p class="franja cerrada-ahora">La tienda est\u00e1 cerrada.</p>';
+      : '<p class="franja cerrada-ahora">La tienda est\u00e1 cerrada.</p>');
     var b = document.getElementById("ir-carta");
     if(b) b.addEventListener("click", function(){ ir("carta"); });
   }
@@ -1414,6 +1518,27 @@
       (n ? "Gracias, " + n + ". " : "Gracias. ") + "Te escribimos por WhatsApp para coordinar la entrega.";
   }
 
+  /* ---------- la entrada ----------
+     Cambiar de pantalla aca es, en la app, cargar una pagina: por eso la
+     entrada se repite al pasar de una a otra y no al cambiar de solapa. La
+     clase se saca a los 1,2 s, un poco mas que la mas tardia de todas —la
+     linea de arriba del boton del inicio, que empieza a los 0,56—. Si quedara
+     puesta, cambiar de familia volveria a dibujar sus renglones: lo escondido
+     esta en display:none y al mostrarlo el navegador le arranca las
+     animaciones de cero. */
+  var relojEntrada = 0;
+
+  function entrar(p){
+    // la confirmacion no lleva: no tiene una sola linea dibujada
+    if(p === "listo") return;
+    var m = document.getElementById("p-" + p);
+    document.querySelectorAll(".dibujando").forEach(function(x){ x.classList.remove("dibujando"); });
+    window.clearTimeout(relojEntrada);
+    void m.offsetWidth;
+    m.classList.add("dibujando");
+    relojEntrada = window.setTimeout(function(){ m.classList.remove("dibujando"); }, 1200);
+  }
+
   /* ---------- el recorrido ---------- */
   function ir(p){
     paso = p;
@@ -1425,6 +1550,7 @@
     });
     if(p === "checkout") pintarCheckout();
     if(p === "listo") pintarListo();
+    entrar(p);
     barra();
     pintarLado();
   }
@@ -1521,6 +1647,16 @@
       'c\u00f3mo se pide, pero nunca qu\u00e9 d\u00eda llega \u2014los 48 a 72 horas del recorrido son ' +
       'de la masa, no del pedido\u2014. No nombra un d\u00eda de corte a prop\u00f3sito: todav\u00eda no ' +
       'est\u00e1 fijo si el pedido cierra el mi\u00e9rcoles o el jueves.</p></div>' +
+
+      '<div class="bloque"><h3>Entra dibuj\u00e1ndose</h3>' +
+      '<p>Cada bloque aparece y su l\u00ednea se traza sola de izquierda a derecha, de arriba ' +
+      'abajo, en poco m\u00e1s de un segundo. Se probaron tres entradas: la tinta \u2014todo aparece ' +
+      'sin moverse\u2014, esta, y una gen\u00e9rica con zoom desde abajo.</p>' +
+      '<p>Gan\u00f3 esta porque <b>no es una animaci\u00f3n tra\u00edda de otro lado</b>: todo el lenguaje ' +
+      'de la p\u00e1gina son trazos a mano, y lo \u00fanico que puede hacer un trazo es dibujarse. ' +
+      'La gen\u00e9rica peleaba con el papel: lo impreso no entra volando.</p>' +
+      '<p>La carta y el checkout entran igual. La confirmaci\u00f3n no: <b>no tiene una sola ' +
+      'l\u00ednea dibujada</b>, as\u00ed que ah\u00ed la entrada son los cuatro renglones subiendo.</p></div>' +
 
       '<div class="bloque"><h3>Existe para el que llega de cero</h3>' +
       '<p>El nombre no dice que esto es una pizzería, y el negocio funciona distinto a cualquier ' +
@@ -1677,7 +1813,10 @@
 
       '<div class="bloque"><h3>Verde pleno, invertido</h3>' +
       '<p>Es la única pantalla de la tienda con el fondo verde. Marca el final del recorrido sin ' +
-      'necesitar un cartel que lo diga.</p></div>';
+      'necesitar un cartel que lo diga.</p>' +
+      '<p>Arriba del t\u00edtulo va el <b>logo a 148 px</b>, y abajo ya no va nada: el «48·72» escrito ' +
+      'al pie firmaba dos veces la misma pantalla. El archivo es una silueta de un solo color ' +
+      '\u2014ese mismo verde\u2014, as\u00ed que va de m\u00e1scara te\u00f1ida de papel; de imagen no se ver\u00eda.</p></div>';
     }
   };
 
@@ -1693,4 +1832,5 @@
 
   pintarCarta();
   pintarLado();
+  entrar("inicio");
 </script>

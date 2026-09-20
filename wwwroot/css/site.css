@@ -58,6 +58,9 @@
   --pastilla-hueca:url("../img/pastilla-hueca.svg");
   --pastilla-sello:url("../img/pastilla-sello.svg");
   --pastilla-sin:url("../img/pastilla-sin.svg");
+  /* el logo tambien va de mascara: la confirmacion lo pinta de papel sobre el
+     verde, y el archivo es una silueta de ese mismo verde */
+  --logo:url("../img/logo.png");
   --frase:url("../img/frase.svg");
   --confirmar:url("../img/confirmar.svg");
   --confirmar-hueca:url("../img/confirmar-hueca.svg");
