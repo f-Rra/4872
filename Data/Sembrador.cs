@@ -70,7 +70,7 @@ public static class Sembrador
         ("Acelga",            Medida.Unidad,        0,     6,  3000, false)
     ];
 
-    // los dos tamaños son de verdad; los precios, inventados como todo lo demás
+    // los dos tamaños son de verdad y van siempre; los precios, inventados
     private static readonly (int Unidades, decimal Precio)[] LosPacks =
     [
         (6, 7900),
@@ -161,6 +161,30 @@ public static class Sembrador
     /// </summary>
     public static async Task SembrarLasMasas(Contexto contexto, ILogger logger)
     {
+        // Los dos tamaños de pack van siempre, como las masas: que las empanadas
+        // se vendan de a 6 y de a 12 es del negocio, no un dato de prueba. Sin
+        // estas dos filas la ficha de una empanada no tiene dónde poner un
+        // precio, y entonces las empanadas no se pueden vender.
+        //
+        // Van en cero: el precio es suyo. Se carga desde la ficha de cualquier
+        // gusto, porque es del tamaño y no del gusto.
+        //
+        // Guarda propia y antes del corte de abajo: quien ya tenía las masas
+        // sembradas —producción, sin ir más lejos— se quedaría sin los packs.
+        var tamanos = LosPacks.Select(p => p.Unidades).ToList();
+        var puestos = await contexto.Packs
+            .Where(x => tamanos.Contains(x.Unidades))
+            .Select(x => x.Unidades)
+            .ToListAsync();
+
+        var faltan = tamanos.Where(u => !puestos.Contains(u)).ToList();
+        if (faltan.Count > 0)
+        {
+            contexto.Packs.AddRange(faltan.Select(u => new Pack { Unidades = u, Precio = 0 }));
+            await contexto.SaveChangesAsync();
+            logger.LogInformation("Sembrados {Cuantos} tamanos de pack, sin precio.", faltan.Count);
+        }
+
         if (await contexto.Bases.AnyAsync())
         {
             return;
@@ -208,20 +232,20 @@ public static class Sembrador
 
     public static async Task SembrarLaCartaDePrueba(Contexto contexto, ILogger logger)
     {
-        // los packs tienen guarda propia: son dos filas que la pantalla de
-        // empanadas necesita para poder mostrar un precio, y se suman despues
-        // de la carta. Con una sola guarda, quien ya tenia la base sembrada se
-        // quedaba sin ellos
-        if (!await contexto.Packs.AnyAsync())
+        // Los tamaños ya los creó SembrarLasMasas, en cero. Acá solo entran los
+        // precios inventados, y solo sobre los que siguen sin precio: si él ya
+        // cargó el suyo, no se le pisa.
+        var sinPrecio = await contexto.Packs.Where(x => x.Precio == 0).ToListAsync();
+        if (sinPrecio.Count > 0)
         {
-            contexto.Packs.AddRange(LosPacks.Select(p => new Pack
+            foreach (var pack in sinPrecio)
             {
-                Unidades = p.Unidades,
-                Precio = p.Precio
-            }));
+                pack.Precio = LosPacks.FirstOrDefault(p => p.Unidades == pack.Unidades).Precio;
+            }
+
             await contexto.SaveChangesAsync();
             logger.LogWarning(
-                "Sembrados {Cuantos} tamanos de pack con precios INVENTADOS.", LosPacks.Length);
+                "Puestos {Cuantos} precios de pack INVENTADOS.", sinPrecio.Count);
         }
 
         // Si ya hay productos, o ingredientes que no sean los de las masas,

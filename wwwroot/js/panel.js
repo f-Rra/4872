@@ -152,3 +152,25 @@
     });
   });
 })();
+
+
+// El renglon del precio cambia con el tipo, igual que la medida de aca arriba.
+// Las empanadas no tienen precio propio: se cobran por pack, y esos dos precios
+// son del tamano y no del gusto. El servidor dibuja los dos renglones y esconde
+// el que no va, pero decide con la familia GUARDADA: al dar de alta una
+// empanada todavia la cree una pizza, asi que el cambio lo hace el chip.
+(function () {
+  var chips = [].slice.call(document.querySelectorAll(".chips-fam input[type='radio']"));
+  var sueltos = [].slice.call(document.querySelectorAll("[data-precio='suelto']"));
+  var packs = [].slice.call(document.querySelectorAll("[data-precio='pack']"));
+  if (!chips.length || !sueltos.length) return;
+
+  function acomodar() {
+    var elegido = chips.filter(function (c) { return c.checked; })[0];
+    var porPack = !!elegido && elegido.value === "Empanada";
+    sueltos.forEach(function (e) { e.hidden = porPack; });
+    packs.forEach(function (e) { e.hidden = !porPack; });
+  }
+
+  chips.forEach(function (c) { c.addEventListener("change", acomodar); });
+})();

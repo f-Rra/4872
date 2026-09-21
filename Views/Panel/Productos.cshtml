@@ -131,32 +131,36 @@
                     </span>
                 </div>
 
-                @if (Model.Ficha.SeCobraPorPack)
+                @* Los dos renglones van siempre y se esconde el que no toca: al
+                   elegir «Empanada» en un producto nuevo, el precio tiene que
+                   cambiar ahí mismo y no después de guardar. El servidor no
+                   puede resolverlo solo, porque la familia que conoce es la
+                   guardada; lo termina panel.js cuando se toca el chip.
+
+                   Que viaje el renglón escondido no rompe nada: para una
+                   empanada el precio suelto se descarta al guardar, y un precio
+                   de pack en cero no pisa el que ya estaba. *@
+                <div class="reng" data-precio="suelto" hidden="@Model.Ficha.SeCobraPorPack">
+                    <span class="et">Precio</span>
+                    @* el signo va afuera del campo: asi lo que se guarda sigue
+                       siendo un numero y no hay que limpiarle nada al leerlo *@
+                    <span class="va conplata">
+                        <span class="signo">$</span>
+                        <input asp-for="Ficha.Precio" asp-format="{0:0}" type="number" min="1" step="1" />
+                    </span>
+                </div>
+
+                @for (var i = 0; i < Model.Ficha.Packs.Count; i++)
                 {
-                    @for (var i = 0; i < Model.Ficha.Packs.Count; i++)
-                    {
-                        var j = i;
-                        <div class="reng">
-                            @* con parentesis: pegado a la x, Razor lee el @@ como literal *@
-                            <span class="et">Pack x@(Model.Ficha.Packs[j].Unidades)</span>
-                            <span class="va conplata">
-                                <input type="hidden" asp-for="Ficha.Packs[j].Unidades" />
-                                <span class="signo">$</span>
-                                @* sin decimales: ningun precio de la carta los tiene *@
-                                <input asp-for="Ficha.Packs[j].Precio" asp-format="{0:0}" type="number" min="1" step="1" />
-                            </span>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="reng">
-                        <span class="et">Precio</span>
-                        @* el signo va afuera del campo: asi lo que se guarda sigue
-                           siendo un numero y no hay que limpiarle nada al leerlo *@
+                    var j = i;
+                    <div class="reng" data-precio="pack" hidden="@(!Model.Ficha.SeCobraPorPack)">
+                        @* con parentesis: pegado a la x, Razor lee el @@ como literal *@
+                        <span class="et">Pack x@(Model.Ficha.Packs[j].Unidades)</span>
                         <span class="va conplata">
+                            <input type="hidden" asp-for="Ficha.Packs[j].Unidades" />
                             <span class="signo">$</span>
-                            <input asp-for="Ficha.Precio" asp-format="{0:0}" type="number" min="1" step="1" />
+                            @* sin decimales: ningun precio de la carta los tiene *@
+                            <input asp-for="Ficha.Packs[j].Precio" asp-format="{0:0}" type="number" min="1" step="1" />
                         </span>
                     </div>
                 }
@@ -164,10 +168,7 @@
             </div>
         </form>
 
-        @if (Model.Ficha.SeCobraPorPack)
-        {
-            <p class="nota-f">Los dos precios valen para todos los gustos.</p>
-        }
+        <p class="nota-f" data-precio="pack" hidden="@(!Model.Ficha.SeCobraPorPack)">Los dos precios valen para todos los gustos.</p>
 
         @* La receta entera acá: qué lleva, cuánto y qué se le puede sacar. Los
            tres juntos porque cuando cargás una pizza la pregunta es esa; ir a
