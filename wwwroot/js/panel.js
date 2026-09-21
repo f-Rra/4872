@@ -69,6 +69,20 @@
         '<input class="rc" type="text" name="cantidad" form="sumar-ingrediente" ' +
         'inputmode="decimal" placeholder="0"><span class="ru"></span>';
       buscar.parentElement.insertBefore(cuanto, buscar.nextSibling);
+
+      // El Enter hay que mandarlo a mano. Por este camino el buscador se queda
+      // en el formulario con su name, asi que son dos campos de texto, y con
+      // mas de uno el navegador no manda solo: busca un boton de envio, y el
+      // primero que encuentra es un candidato de la lista —escondido, y con su
+      // propio nombre— que sumaria el ingrediente equivocado.
+      //
+      // requestSubmit() sin boton manda el formulario sin el valor de ninguno,
+      // asi que el nombre sale del buscador, que es el que el cliente eligio.
+      cuanto.querySelector(".rc").addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        document.getElementById("sumar-ingrediente").requestSubmit();
+      });
     }
 
     var unidad = opciones.filter(function (b) { return b.dataset.elegir === nombre; })[0];
