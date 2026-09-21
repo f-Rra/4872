@@ -78,6 +78,15 @@ body{
   font-family:var(--ui);
 }
 
+/* El navegador esconde lo que tiene hidden con una regla de su propia hoja, y
+   cualquier display que escribamos nosotros le gana: un .reng es un flex, asi
+   que el renglon del precio seguia a la vista aunque el servidor lo mandara
+   escondido. Pasa con los 27 lugares donde usamos el atributo.
+
+   Es la unica excepcion donde el !important esta bien puesto: hidden no es un
+   estilo que se pueda discutir, es un estado. */
+[hidden]{display:none !important}
+
 /* la columna mide 520 px, pero el verde de la confirmación tiene que llegar al
    borde de la ventana: si no, en una pantalla ancha queda una franja */
 body.final{background:var(--verde)}
