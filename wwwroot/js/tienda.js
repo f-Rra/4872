@@ -102,7 +102,17 @@
       if (cuantas[f]) partes.push(cuantas[f] + " " + NOMBRES[f][cuantas[f] === 1 ? 0 : 1]);
     });
 
-    document.getElementById("cuenta-n").textContent = partes.join(" · ") || "0 cosas";
+    // Con una sola familia el desglose entra siempre. Con dos ya no entra en un
+    // telefono de 360 y con tres no entra en ninguno: al rotulo le quedan 118 px
+    // y «3 pizzas · 2 focaccias · 2 packs» pide 192, asi que se cortaba por los
+    // dos lados. Cuando hay mas de una se dice cuantos productos son; el detalle
+    // esta una pantalla mas adelante, que es la que existe para mirarlo.
+    //
+    // Siempre plural: si hay dos familias hay dos productos por lo menos.
+    var piezas = cuantas.pizza + cuantas.focaccia + cuantas.pack;
+    var rotulo = partes.length > 1 ? piezas + " productos" : partes.join("");
+
+    document.getElementById("cuenta-n").textContent = rotulo || "0 productos";
     document.getElementById("cuenta-t").textContent = "$" + total.toLocaleString("es-AR");
     pedido.classList.toggle("visible", partes.length > 0);
   }
