@@ -8,8 +8,8 @@ Cincuenta y tres commits chicos en vez de veinte grandes. Tarda lo mismo, pero s
 
 Es un plan, no un contrato — si aparece algo mejor a mitad de camino, se cambia.
 
-**Entraron del 0 al 52; falta solo el README.** El plan tenía 53 renglones y se
-hicieron 77 commits: lo que apareció a mitad de camino está anotado al final.
+**Entraron los cincuenta y cuatro, del 0 al 53.** El plan tenía 54 renglones y se
+cerró con 79 commits: lo que apareció a mitad de camino está anotado al final.
 
 ---
 
@@ -280,15 +280,17 @@ Sacarla de la máquina. La cadena de conexión pasa a variable de entorno y las 
 
 Fueron cinco commits, no uno. Se sumaron el puerto que manda el servicio, las cabeceras del proxy, un `Dockerfile` propio —Nixpacks no daba garantías con .NET 9— y las llaves de la cookie del panel, que terminaron en la base. Está arriba en **[4872-production.up.railway.app](https://4872-production.up.railway.app)**, con la tienda cerrada hasta que entre la carta.
 
-**53 ·** `docs(app): escribir el README`
+**53 ·** `docs(app): escribir el README` — [x]
 
 Va al final porque recién ahí se sabe qué se hizo de verdad. Qué es, cómo se levanta, capturas.
+
+Las capturas quedaron afuera: las únicas que se podían sacar hoy muestran la carta inventada, y esa no es la tienda. Van cuando entre la carta de verdad.
 
 ---
 
 ## Lo que no estaba en el plan
 
-Las veinticuatro de diferencia, por temas:
+Los commits que no salieron de ningún renglón, por temas:
 
 **Las maquetas se separaron de la app.** Siete commits para volver a alinearlas. Tenían una copia a mano del CSS, así que cada cambio en la app las dejaba atrás sin que se notara; ahora las dos traen el CSS de la app portado y los archivos embebidos.
 
