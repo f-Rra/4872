@@ -15,11 +15,11 @@ Los dos archivos **se explican solos**: cada pantalla trae al costado por qué q
 
 **No queda nada abierto de diseño.** La entrada del panel, que era lo único que faltaba, está maquetada junto con las otras seis.
 
-**En producción** desde el 2026-09-20, en Railway: **[4872-production.up.railway.app](https://4872-production.up.railway.app)**. La imagen la arma el `Dockerfile` del repo y **cada push a `main` despliega solo**. La base es un Postgres del mismo proyecto: la cadena llega en `ConnectionStrings__Postgres` como dirección `postgresql://` y `Program.cs` la traduce, y las migraciones corren al arrancar. Las llaves con las que se firma la cookie del panel viven en una tabla, no en un disco, así que la sesión sobrevive a cada publicación.
+**En producción** desde el 2026-09-20, y desde el 2026-09-22 en **[4872.com.ar](https://4872.com.ar)**. La imagen la arma el `Dockerfile` del repo y **cada push a `main` despliega solo**. La base es un Postgres del mismo proyecto: la cadena llega en `ConnectionStrings__Postgres` como dirección `postgresql://` y `Program.cs` la traduce, y las migraciones corren al arrancar. Las llaves con las que se firma la cookie del panel viven en una tabla, no en un disco, así que la sesión sobrevive a cada publicación.
+
+**El dominio** está registrado en NIC Argentina —se administra desde Trámites a Distancia— y delegado a **Cloudflare**, que lo pasa por su proxy a Railway (`4872.up.railway.app`). Dos cosas que, si se tocan, tiran el sitio: el cifrado de Cloudflare va en **Full**, ni **Flexible**, que entra en un bucle de redirecciones, ni **Full (strict)**, que según Railway no anda; y el TXT `_railway-verify` se queda, porque sin él Railway devuelve 404 aunque el CNAME esté bien.
 
 Las variables del servicio son cuatro —`ConnectionStrings__Postgres`, `Panel__Clave`, `Telegram__Token` y `Telegram__Chat`— y **ninguna vive en el repo**. En la máquina de uno, las mismas van por `dotnet user-secrets`.
-
-La tienda está **cerrada** hasta que entre la carta de verdad.
 
 ## Stack
 

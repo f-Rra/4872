@@ -278,7 +278,7 @@ El interruptor que enciende el commit 28. Vive en la cabecera de Inicio, con el 
 
 Sacarla de la máquina. La cadena de conexión pasa a variable de entorno y las migraciones corren al arrancar, así publicar es un push y no un trámite.
 
-Fueron cinco commits, no uno. Se sumaron el puerto que manda el servicio, las cabeceras del proxy, un `Dockerfile` propio —Nixpacks no daba garantías con .NET 9— y las llaves de la cookie del panel, que terminaron en la base. Está arriba en **[4872-production.up.railway.app](https://4872-production.up.railway.app)**, con la tienda cerrada hasta que entre la carta.
+Fueron cinco commits, no uno. Se sumaron el puerto que manda el servicio, las cabeceras del proxy, un `Dockerfile` propio —Nixpacks no daba garantías con .NET 9— y las llaves de la cookie del panel, que terminaron en la base. Está arriba en **[4872.com.ar](https://4872.com.ar)**, con Cloudflare adelante.
 
 **53 ·** `docs(app): escribir el README` — [x]
 
@@ -306,6 +306,8 @@ Los commits que no salieron de ningún renglón, por temas:
 
 ## Lo que no depende del código
 
-El **logo**, las **fotos cenitales** (centradas, mismo fondo, misma altura, misma luz), los **precios reales** y el **dominio** — los `.com.ar` estaban libres el 2026-08-25 y eso cambia.
+El **logo**, las **fotos cenitales** (centradas, mismo fondo, misma altura, misma luz) y los **precios reales**.
+
+El **dominio**, `4872.com.ar`: registrado el 2026-09-22 y andando ese mismo día, delegado a Cloudflare y apuntado a Railway.
 
 La **carta de verdad** es lo único que falta para abrir: nombres, precios, gustos, ingredientes de cada producto, cuáles se pueden sacar y cómo se compra cada uno con su precio. Se carga desde Productos e Ingredientes, que están hechas justo para eso.
