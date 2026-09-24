@@ -42,7 +42,7 @@
             {
                 <tr>
                     <td colspan="4" class="sinCargar">
-                        Ningún ingrediente entra en los pedidos que hay. Probá «Ver todos».
+                        Todavía no hay ingredientes. El primero se suma con «Ingrediente nuevo», acá abajo.
                     </td>
                 </tr>
             }
@@ -55,7 +55,7 @@
                            abrirla no cambia nada, y así se puede compartir y
                            volver con el botón de atrás *@
                         <a class="abre" asp-action="Ingredientes"
-                           asp-route-todos="@Model.Todos" asp-route-ingrediente="@i.IdIngrediente">@i.Nombre</a>
+                           asp-route-ingrediente="@i.IdIngrediente">@i.Nombre</a>
                         <span class="bajo">@i.Donde</span>
                     </td>
 
@@ -63,7 +63,7 @@
                         @* un formulario por renglón: se guarda solo el número que
                            se tocó y no la tabla entera *@
                         <form method="post" asp-action="Stock"
-                              asp-route-id="@i.IdIngrediente" asp-route-todos="@Model.Todos">
+                              asp-route-id="@i.IdIngrediente">
                             @* el campo lleva la unidad escrita —«11 kg», «24 u»—
                                y crece con lo que diga. Con piso: casi todos los
                                valores entran en seis caracteres y así la columna
@@ -98,17 +98,12 @@
 
 <div class="pie-tabla">
     @* abre la misma ficha en blanco: no hay una pantalla de alta distinta *@
-    <a class="abrir" asp-action="Ingredientes" asp-route-todos="@Model.Todos" asp-route-nuevo="true">
+    <a class="abrir" asp-action="Ingredientes" asp-route-nuevo="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
              stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Ingrediente nuevo
     </a>
 
-    <span class="cuantos">
-        @Model.Cuantos de @Model.EnTotal ingredientes
-        <a asp-action="Ingredientes" asp-route-todos="@(!Model.Todos)">
-            @(Model.Todos ? "Solo los del finde" : "Ver todos")
-        </a>
-    </span>
+    <span class="cuantos">@Model.EnTotal @(Model.EnTotal == 1 ? "ingrediente" : "ingredientes")</span>
 </div>
 
 @* La ficha, encima de la grilla. Se dibuja en el servidor cuando viene un
@@ -118,8 +113,7 @@
     <div class="telon">
         @* el telón es un enlace: hacer clic afuera cierra, que es lo que
            espera cualquiera, y sin depender de que corra un script *@
-        <a class="tapa" asp-action="Ingredientes" asp-route-todos="@Model.Todos"
-           aria-label="Cerrar"></a>
+        <a class="tapa" asp-action="Ingredientes" aria-label="Cerrar"></a>
 
         <div class="modal" role="dialog" aria-label="@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)">
             <div class="det-tope"><h2>@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)</h2></div>
@@ -133,7 +127,7 @@
                 <p class="aviso" role="alert">@error</p>
             }
 
-            <form method="post" asp-action="GuardarIngrediente" asp-route-todos="@Model.Todos">
+            <form method="post" asp-action="GuardarIngrediente">
                 <input type="hidden" asp-for="Ficha!.IdIngrediente" />
 
                 <div class="renglones">
@@ -230,7 +224,7 @@
                     <button class="btn" type="submit">
                         @(f.EsNuevo ? "Crear ingrediente" : "Guardar cambios")
                     </button>
-                    <a class="btn flaco" asp-action="Ingredientes" asp-route-todos="@Model.Todos">Cancelar</a>
+                    <a class="btn flaco" asp-action="Ingredientes">Cancelar</a>
                 </div>
             </form>
 
@@ -249,7 +243,7 @@
                     else
                     {
                         <form method="post" asp-action="BorrarIngrediente"
-                              asp-route-id="@f.IdIngrediente" asp-route-todos="@Model.Todos">
+                              asp-route-id="@f.IdIngrediente">
                             <button class="enlace" type="submit"
                                     data-confirmar="¿Borrar @f.Titulo? No se puede deshacer.">
                                 Borrar ingrediente

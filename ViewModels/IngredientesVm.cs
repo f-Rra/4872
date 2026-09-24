@@ -11,11 +11,6 @@ public class IngredientesVm : PanelVm
     public int Pedidos { get; set; }
     public int Faltantes { get; set; }
 
-    // Ver todos, o solo los que entran en algún pedido sin entregar. De fábrica
-    // solo los del fin de semana: la pantalla es la lista de compras, no el
-    // inventario, y de treinta y siete ingredientes la mayoría no se toca.
-    public bool Todos { get; set; }
-
     // La ficha del ingrediente elegido. Nula con la grilla sola: la pantalla
     // funciona sin ella y el modal es una segunda capa, no el estado normal.
     public FichaIngrediente? Ficha { get; set; }
@@ -23,7 +18,6 @@ public class IngredientesVm : PanelVm
     // lo que salio mal al guardar, con el texto que va a leer una persona
     public string? Error { get; set; }
 
-    public int Cuantos { get; set; }
     public int EnTotal { get; set; }
 
     // Los que estan en alguna receta. Distinto de EnTotal: uno recien dado de

@@ -1066,7 +1066,7 @@
   var ranura1 = "masa", ranura3 = "pedidos";
   var famProd = "todo", prodElegido = "Margarita", sumando = false;
   var tiendaAbierta = true;
-  var verTodos = false, ingElegido = undefined, uniNueva = null, prodCosto = "Margarita";
+  var ingElegido = undefined, uniNueva = null, prodCosto = "Margarita";
   var vistaCostos2 = "producto";
   var ranuras = ["nuevos", "comprar", "masa", "costo", "total"];
   var BORRADOR = {f:"pizza", n:"", p:0, ing:[]}, TIPEADO = null;
@@ -1839,7 +1839,7 @@
     var usados = porIngrediente();
     var cache = {};
     function cta(n){ return cache[n] || (cache[n] = cuentaIng(n)); }
-    var base = verTodos ? INGR.slice() : INGR.filter(function(x){ return entraEnPedidos(x.n); });
+    var base = INGR.slice();
     base.sort(function(a, b){ return cta(b.n).total - cta(a.n).total || a.n.localeCompare(b.n); });
 
     function necesita(x){ return cta(x.n).total; }
@@ -1876,8 +1876,7 @@
 
     var pie = '<div class="pie-tabla"><button class="abrir" type="button" data-ingnuevo="1">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ingrediente nuevo</button>' +
-      '<span class="cuantos">' + base.length + ' de ' + INGR.length + ' ingredientes' +
-      '<button type="button" data-todos="1">' + (verTodos ? "Solo los del finde" : "Ver todos") + '</button></span></div>';
+      '<span class="cuantos">' + INGR.length + ' ingredientes</span></div>';
 
     return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
       '<th>Ingrediente</th><th class="g-num">Stock</th>' +
@@ -2220,12 +2219,12 @@
     },
 
     ingredientes: function(){
-      return uso('Es la lista de compras, no el inventario. De f\u00e1brica muestra solo lo que entra en los pedidos sin entregar.', [
+      return uso('Est\u00e1n todos, haya pedidos o no. Lo que hay que comprar para los pedidos sin entregar va arriba.', [
         'Las tres columnas son la resta: <b>Stock</b> menos <b>Necesito</b> da <b>Falta</b>, que es lo que hay que ir a buscar.',
         'El <b>stock</b> se edita en el rengl\u00f3n: escrib\u00ed el n\u00famero y sal\u00ed del campo. La unidad va adentro, as\u00ed que \u00ab2 kg\u00bb tambi\u00e9n entra.',
         'Toc\u00e1 el nombre para abrir la ficha. Ah\u00ed carg\u00e1s <b>c\u00f3mo se compra</b> \u2014cu\u00e1nto trae el bulto y cu\u00e1nto sale\u2014, que es de donde salen los costos.',
         'Abajo de la ficha, el desglose dice <b>de d\u00f3nde sale</b> lo que hace falta: qu\u00e9 producto lo lleva y cu\u00e1ntas piezas.',
-        '<b>Ver todos</b> muestra los que no entran en ning\u00fan pedido. Al pie, <b>Ingrediente nuevo</b>.'
+        'Al pie, <b>Ingrediente nuevo</b>.'
       ]);
     },
 
@@ -2396,8 +2395,8 @@
       'no traducido a mano.</p></div>' +
 
       '<div class="bloque"><h3>El bollo es una receta, no un n\u00famero</h3>' +
-      '<p>Se carga <b>por tanda entera con un rinde</b>, como se amasa. Abr\u00ed <b>Harina 000</b> con ' +
-      '<b>Ver todos</b>: el rengl\u00f3n dice <b>rinde 6</b> y la cantidad son los 1000 g de la tanda; ' +
+      '<p>Se carga <b>por tanda entera con un rinde</b>, como se amasa. Abr\u00ed <b>Harina 000</b>: ' +
+      'el rengl\u00f3n dice <b>rinde 6</b> y la cantidad son los 1000 g de la tanda; ' +
       'al costado el panel divide en 166,7 g por bollo.</p>' +
       '<p>Son <b>dos masas y no una</b>: la pizza y la focaccia no comparten bollo. Las dos llevan ' +
       '1 kg de harina, 100 g de masa madre y 30 g de sal. La pizza va con <b>600 g de agua</b> y ' +
@@ -2578,9 +2577,6 @@
     });
     document.querySelectorAll("#marco [data-tienda]").forEach(function(b){
       b.addEventListener("click", function(){ tiendaAbierta = !tiendaAbierta; pintar(); });
-    });
-    document.querySelectorAll("#marco [data-todos]").forEach(function(b){
-      b.addEventListener("click", function(){ verTodos = !verTodos; pintar(); });
     });
     document.querySelectorAll("#marco [data-stock]").forEach(function(b){
       b.addEventListener("change", function(){
