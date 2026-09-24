@@ -30,7 +30,9 @@ public class CostosVm : PanelVm
     // La banda de la vista por mes: el mes que está corriendo, cuánto hay
     // todavía sin entregar, y el margen promedio de los meses ya cerrados.
     public MesDeCostos? EnCurso { get; set; }
-    public string SinEntregarPlata { get; set; } = "";
+
+    // nulo cuando no queda nada: «quedan $0 sin entregar» no dice nada
+    public string? SinEntregarPlata { get; set; }
     public string? PromedioCerrados { get; set; }
 
     // Por debajo de esto el margen se marca flojo. Es una constante y no un
@@ -84,9 +86,6 @@ public class RenglonDeCosto
 
     // «120 g». Vacío en el renglón de la base, que no lleva una cantidad suya
     public string Cuanto { get; set; } = "";
-
-    // «$32.000 cada 25 kg», o vacío si no está cargado
-    public string Bulto { get; set; } = "";
 
     public decimal? Sale { get; set; }
 

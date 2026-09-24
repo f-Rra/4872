@@ -682,9 +682,9 @@
    en una lista de diecinueve seria diecinueve carteles */
 .columna .pct.flojo{color:#8C3B2E}
 
-/* El desglose: que lleva, cuanto, a cuanto se compra y cuanto sale. Cuatro
-   columnas y no dos porque la pregunta no es solo cuanto sale: es de donde
-   sale, para poder discutirlo con el almacen. */
+/* El desglose: que lleva, cuanto y cuanto sale. El precio al que se compra
+   cada cosa no va: esta en la ficha de cada ingrediente, y aca le comia lugar
+   al nombre. */
 .desglose{list-style:none;margin:0 0 1.1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
 .desglose li{
   display:flex;align-items:baseline;gap:.7rem;
@@ -695,12 +695,6 @@
 .desglose .cuanto{
   flex:none;min-width:3.4rem;text-align:right;
   font-size:.82rem;opacity:.7;font-variant-numeric:tabular-nums;
-}
-/* medido: «$32.000 cada 25 kg» es el mas largo que puede aparecer y entra en
-   estas 7,2rem. Lo que sobraba se lo estaba comiendo al nombre */
-.desglose .bulto{
-  flex:none;min-width:7.2rem;text-align:right;
-  font-size:.74rem;font-weight:600;opacity:.5;font-variant-numeric:tabular-nums;
 }
 .desglose .sub{
   flex:none;min-width:4.4rem;text-align:right;
@@ -715,7 +709,6 @@
 .desglose li.sangria{border-bottom-style:dotted}
 .desglose li.sangria .qn{padding-left:1.1rem;font-size:.85rem;font-weight:600;opacity:.78}
 .desglose li.sangria .cuanto,
-.desglose li.sangria .bulto,
 .desglose li.sangria .sub{font-size:.8rem;opacity:.7}
 .desglose li.sangria .sub{font-weight:700}
 

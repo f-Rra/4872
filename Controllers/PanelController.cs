@@ -86,6 +86,10 @@ public class PanelController : Controller
         // mueve y arrastraria el numero para cualquier lado
         var cerrados = meses.Where(x => !x.Abierto && x.Porcentaje is not null).ToList();
 
+        var queda = await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+            .SumAsync(x => (decimal?)(x.Cantidad * x.PrecioUnitario)) ?? 0m;
+
         return View(new CostosVm
         {
             Abierta = marco.Abierta,
@@ -94,9 +98,7 @@ public class PanelController : Controller
             Lista = lista,
             Meses = meses,
             EnCurso = meses.FirstOrDefault(x => x.Abierto),
-            SinEntregarPlata = (await _contexto.ItemPedidos
-                .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
-                .SumAsync(x => (decimal?)(x.Cantidad * x.PrecioUnitario)) ?? 0m).ToString("C"),
+            SinEntregarPlata = queda > 0 ? queda.ToString("C") : null,
             PromedioCerrados = cerrados.Count > 0
                 ? $"{Math.Round(cerrados.Average(x => (double)x.Porcentaje!.Value))}%"
                 : null,

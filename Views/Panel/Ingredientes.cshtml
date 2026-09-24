@@ -16,12 +16,20 @@
    sentido a las tres columnas: no es el inventario, es lo que hace falta para
    lo que hay pedido. *@
 <div class="banda">
-    <b>@Model.Pedidos @(Model.Pedidos == 1 ? "pedido sin entregar" : "pedidos sin entregar")</b>
-    <span>
-        · @(Model.Faltantes == 0
-            ? "alcanza con lo que hay"
-            : $"comprar {Model.Faltantes} {(Model.Faltantes == 1 ? "ingrediente" : "ingredientes")}")
-    </span>
+    @if (Model.Pedidos == 0)
+    {
+        <b>No hay pedidos por hacer</b>
+        <span>· Necesito y Falta se llenan cuando entren</span>
+    }
+    else
+    {
+        <b>@Model.Pedidos @(Model.Pedidos == 1 ? "pedido sin entregar" : "pedidos sin entregar")</b>
+        <span>
+            · @(Model.Faltantes == 0
+                ? "alcanza con lo que hay"
+                : $"comprar {Model.Faltantes} {(Model.Faltantes == 1 ? "ingrediente" : "ingredientes")}")
+        </span>
+    }
 </div>
 
 @* Stock · Necesito · Falta, en el orden de la resta. El stock se edita en el

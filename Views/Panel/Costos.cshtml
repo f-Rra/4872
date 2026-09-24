@@ -1,6 +1,6 @@
 @model f4872.ViewModels.CostosVm
 @{
-    ViewData["Title"] = "Costos";
+    ViewData["Title"] = "Costos & Márgenes";
     ViewData["Seccion"] = "costos";
     Layout = "_Marco";
 
@@ -19,9 +19,9 @@
 }
 
 <div class="cabecera">
+    @* sin subtítulo: las dos solapas de al lado ya dicen qué es cada una *@
     <span class="cab-titulo">
-        <h1>Costos</h1>
-        <span class="sub">@(Model.PorMes ? "Lo cobrado contra lo que costó" : "Qué cuesta y qué deja")</span>
+        <h1>Costos &amp; Márgenes</h1>
     </span>
 
     @* Enlaces y no botones: cambian qué se está mirando, igual que los
@@ -43,13 +43,19 @@
             <b>@Mes(hoy.Mes) va @hoy.Cobro.ToString("C") cobrados</b>
             <span>
                 · @hoy.Pedidos @(hoy.Pedidos == 1 ? "pedido entregado" : "pedidos entregados")
-                · quedan @Model.SinEntregarPlata sin entregar
+                @if (Model.SinEntregarPlata is string queda)
+                {
+                    <text>· quedan @queda sin entregar</text>
+                }
             </span>
         }
         else
         {
             <b>Todavía no entregaste ningún pedido este mes</b>
-            <span>· quedan @Model.SinEntregarPlata sin entregar</span>
+            @if (Model.SinEntregarPlata is string queda)
+            {
+                <span>· quedan @queda sin entregar</span>
+            }
         }
 
         @if (Model.PromedioCerrados is string prom)
@@ -117,8 +123,18 @@ else
 @* Lo único de la pantalla que mira los pedidos: qué sale hacer lo que hay
    pedido. Lo de abajo es por unidad y no depende de la semana. *@
 <div class="banda">
-    <b>Hacer todo lo que hay pedido cuesta @Model.Cuesta</b>
-    <span>· se cobra @Model.SeCobra · deja @Model.Deja@(Model.Margen is string m ? $" ({m})" : "")</span>
+    @if (Model.SinEntregar == 0)
+    {
+        @* sin pedidos, «cuesta $0 · se cobra $0 · deja $0» es cierto y no dice
+           nada: mejor decir qué va a aparecer acá *@
+        <b>No hay pedidos por hacer</b>
+        <span>· cuando entren, acá va cuánto cuesta hacerlos y cuánto dejan</span>
+    }
+    else
+    {
+        <b>Hacer todo lo que hay pedido cuesta @Model.Cuesta</b>
+        <span>· se cobra @Model.SeCobra · deja @Model.Deja@(Model.Margen is string m ? $" ({m})" : "")</span>
+    }
     <span class="aparte">@Model.Aparte</span>
 </div>
 
@@ -186,15 +202,6 @@ else
                     <li class="@(r.EsBase ? "fija" : r.DeLaBase ? "sangria" : null)">
                         <span class="qn">@r.Nombre</span>
                         <span class="cuanto">@r.Cuanto</span>
-                        @* «sin precio» solo cuando de verdad no se sabe: el agua
-                           y la masa madre no tienen bulto porque no se compran,
-                           y cuestan cero de verdad *@
-                        <span class="bulto">
-                            @if (!r.EsBase)
-                            {
-                                @(r.Bulto.Length > 0 ? r.Bulto : r.Sale is null ? "sin precio" : "")
-                            }
-                        </span>
                         <span class="sub">@(r.Sale is decimal s ? s.ToString("C") : "—")</span>
                     </li>
                 }

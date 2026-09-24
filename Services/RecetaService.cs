@@ -382,7 +382,6 @@ public class RecetaService
                     {
                         Nombre = r.Nombre,
                         Cuanto = Cantidades.Bonito(cuanto, r.Unidad),
-                        Bulto = Bulto(r.CantidadDeCompra, r.PrecioDeCompra, r.Unidad),
                         Sale = sale,
                         DeLaBase = true
                     });
@@ -410,7 +409,6 @@ public class RecetaService
                 {
                     Nombre = r.Nombre,
                     Cuanto = Cantidades.Bonito(r.Cantidad, r.Unidad),
-                    Bulto = Bulto(r.CantidadDeCompra, r.PrecioDeCompra, r.Unidad),
                     Sale = sale
                 });
             }
@@ -510,13 +508,6 @@ public class RecetaService
 
         return bulto > 0 && precio.HasValue ? cantidad * (precio.Value / bulto.Value) : null;
     }
-
-    // «$32.000 cada 25 kg»: de donde sale el precio por gramo, dicho como se
-    // compra en el almacen y no como se usa en la receta.
-    private static string Bulto(decimal? cantidad, decimal? precio, Medida unidad) =>
-        cantidad > 0 && precio.HasValue
-            ? $"{precio.Value.ToString("C")} cada {Cantidades.Bonito(cantidad.Value, unidad)}"
-            : "";
 
     // Que hay que ir a comprar: lo que se come menos lo que hay en stock.
     //

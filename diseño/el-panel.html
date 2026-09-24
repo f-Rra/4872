@@ -839,9 +839,9 @@
      en una lista de diecinueve seria diecinueve carteles */
   .columna .pct.flojo{color:#8C3B2E}
 
-  /* El desglose: que lleva, cuanto, a cuanto se compra y cuanto sale. Cuatro
-     columnas y no dos porque la pregunta no es solo cuanto sale: es de donde
-     sale, para poder discutirlo con el almacen. */
+  /* El desglose: que lleva, cuanto y cuanto sale. El precio al que se compra
+     cada cosa no va: esta en la ficha de cada ingrediente, y aca le comia lugar
+     al nombre. */
   .desglose{list-style:none;margin:0 0 1.1rem;padding:0;border-top:1.5px solid rgba(30,82,69,.3)}
   .desglose li{
     display:flex;align-items:baseline;gap:.7rem;
@@ -852,12 +852,6 @@
   .desglose .cuanto{
     flex:none;min-width:3.4rem;text-align:right;
     font-size:.82rem;opacity:.7;font-variant-numeric:tabular-nums;
-  }
-  /* medido: «$32.000 cada 25 kg» es el mas largo que puede aparecer y entra en
-     estas 7,2rem. Lo que sobraba se lo estaba comiendo al nombre */
-  .desglose .bulto{
-    flex:none;min-width:7.2rem;text-align:right;
-    font-size:.74rem;font-weight:600;opacity:.5;font-variant-numeric:tabular-nums;
   }
   .desglose .sub{
     flex:none;min-width:4.4rem;text-align:right;
@@ -872,7 +866,6 @@
   .desglose li.sangria{border-bottom-style:dotted}
   .desglose li.sangria .qn{padding-left:1.1rem;font-size:.85rem;font-weight:600;opacity:.78}
   .desglose li.sangria .cuanto,
-  .desglose li.sangria .bulto,
   .desglose li.sangria .sub{font-size:.8rem;opacity:.7}
   .desglose li.sangria .sub{font-weight:700}
 
@@ -1802,10 +1795,6 @@
   })();
   // cuanto cuesta UNA unidad de medida del ingrediente (un gramo, un ml, una unidad)
   function porMedida(x){ return x && x.trae ? x.sale / x.trae : 0; }
-  function precioBulto(x){
-    if(!x || !x.trae) return "";
-    return plata(x.sale) + " cada " + bonito(x.trae, x.u);
-  }
   function buscaIng(n){ return INGR.filter(function(x){ return x.n === n; })[0]; }
   function unidadLarga(u){ return u === "u" ? "unidades" : u; }
   function porUnidad(u){ return u === "u" ? "unidad" : u === "ml" ? "litro" : "kilo"; }
@@ -1871,10 +1860,12 @@
     function necesita(x){ return cta(x.n).total; }
 
     var faltantes = base.filter(function(x){ return !x.libre && cta(x.n).con && necesita(x) > x.stock; }).length;
-    var banda = '<div class="banda"><b>' + activos().length +
-      (activos().length === 1 ? ' pedido sin entregar' : ' pedidos sin entregar') + '</b>' +
-      '<span>&middot; ' + (faltantes === 0 ? 'alcanza con lo que hay'
-        : 'comprar ' + faltantes + (faltantes === 1 ? ' ingrediente' : ' ingredientes')) + '</span></div>';
+    var banda = '<div class="banda">' + (activos().length === 0
+      ? '<b>No hay pedidos por hacer</b><span>&middot; Necesito y Falta se llenan cuando entren</span>'
+      : '<b>' + activos().length +
+        (activos().length === 1 ? ' pedido sin entregar' : ' pedidos sin entregar') + '</b>' +
+        '<span>&middot; ' + (faltantes === 0 ? 'alcanza con lo que hay'
+          : 'comprar ' + faltantes + (faltantes === 1 ? ' ingrediente' : ' ingredientes')) + '</span>') + '</div>';
 
     var cuerpo = base.map(function(x){
       var k = cta(x.n);
@@ -2104,9 +2095,9 @@
         ? '<b>' + nombreMes(enCurso.d) + ' va ' + plata(enCurso.factura) + ' cobrados</b>' +
           '<span>&middot; ' + enCurso.pedidos +
           (enCurso.pedidos === 1 ? ' pedido entregado' : ' pedidos entregados') +
-          ' &middot; quedan ' + plata(sinEntregar) + ' sin entregar</span>'
+          (sinEntregar ? ' &middot; quedan ' + plata(sinEntregar) + ' sin entregar' : '') + '</span>'
         : '<b>Todav\u00eda no entregaste ning\u00fan pedido este mes</b>' +
-          '<span>&middot; quedan ' + plata(sinEntregar) + ' sin entregar</span>') +
+          (sinEntregar ? '<span>&middot; quedan ' + plata(sinEntregar) + ' sin entregar</span>' : '')) +
       (media === null ? '' : '<span class="aparte">margen de los meses cerrados: ' + media + '%</span>') +
       '</div>';
 
@@ -2145,9 +2136,12 @@
     var flojos = datos.filter(function(d){ return d.pct < CONF.margenMin && !d.sinPrecio; }).length;
     var incompletos = datos.filter(function(d){ return d.sinPrecio; }).length;
 
-    var banda = '<div class="banda"><b>Hacer todo lo que hay pedido cuesta ' + plata(tandaCosto) + '</b>' +
-      '<span>&middot; se cobra ' + plata(tandaVenta) + ' &middot; deja ' + plata(tandaVenta - tandaCosto) +
-      (tandaVenta ? ' (' + Math.round((tandaVenta - tandaCosto) / tandaVenta * 100) + '%)' : '') + '</span>' +
+    var banda = '<div class="banda">' + (activos().length === 0
+      ? '<b>No hay pedidos por hacer</b>' +
+        '<span>&middot; cuando entren, ac\u00e1 va cu\u00e1nto cuesta hacerlos y cu\u00e1nto dejan</span>'
+      : '<b>Hacer todo lo que hay pedido cuesta ' + plata(tandaCosto) + '</b>' +
+        '<span>&middot; se cobra ' + plata(tandaVenta) + ' &middot; deja ' + plata(tandaVenta - tandaCosto) +
+        (tandaVenta ? ' (' + Math.round((tandaVenta - tandaCosto) / tandaVenta * 100) + '%)' : '') + '</span>') +
       '<span class="aparte">' + (incompletos
         ? incompletos + (incompletos === 1 ? ' producto sin terminar de cargar' : ' productos sin terminar de cargar')
         : flojos ? flojos + (flojos === 1 ? ' producto' : ' productos') + ' bajo el ' + CONF.margenMin + '%'
@@ -2180,11 +2174,9 @@
         (d.sinPrecio ? "margen sin confirmar" : Math.round(d.pct) + '% de margen') + '</span></div>' +
       '<p class="det-meta">' + FAM[d.p.f] + (d.p.f === "emp" ? " \u00b7 precio por unidad, del pack de 12" : "") + '</p>' +
       '<ul class="desglose">' + d.filas.map(function(r){
-        var x = buscaIng(r.ing);
         return '<li class="' + (r.base ? "fija" : r.sangria ? "sangria" : "") + '">' +
           '<span class="qn">' + r.ing + '</span>' +
           '<span class="cuanto">' + (r.base ? "" : (r.cuanto ? bonito(r.cuanto, r.u) : '<i>sin medida</i>')) + '</span>' +
-          '<span class="bulto">' + (r.base ? "" : x && x.trae ? precioBulto(x) : '<i>sin precio</i>') + '</span>' +
           '<span class="sub">' + (r.sub ? plata(r.sub) : r.base ? "\u2014" : (r.pm === 0 && r.cuanto ? plata(0) : "\u2014")) + '</span></li>';
       }).join("") + '</ul>' +
       '<dl class="cuentas">' +
@@ -2266,7 +2258,7 @@
     costos: function(){
       return uso('Dos preguntas distintas, una en cada solapa.', [
         '<b>Por producto</b>: qu\u00e9 cuesta hacer uno y qu\u00e9 deja. La lista va por tipo, y cada tipo arranca por el que menos deja, que es el que hay que mirar.',
-        'El desglose dice de d\u00f3nde sale cada peso, con el <b>precio del bulto</b> al lado para poder discutirlo con el almac\u00e9n.',
+        'El desglose dice de d\u00f3nde sale cada peso: cu\u00e1nto lleva una pieza de cada cosa y cu\u00e1nto sale. El precio al que se compra est\u00e1 en la ficha de cada ingrediente.',
         'El asterisco avisa que a ese producto le falta cargar el precio de alg\u00fan ingrediente: el costo que se ve es un piso, no el real.',
         '<b>Por mes</b>: lo cobrado contra lo que cost\u00f3, de los pedidos entregados.',
         'Ojo con esa tabla: lo cobrado es hist\u00f3rico \u2014el precio con el que se confirm\u00f3 cada pedido\u2014 pero lo que cost\u00f3 se calcula con los precios de compra de <b>hoy</b>.'
@@ -2572,8 +2564,7 @@
     }
     else if(seccion === "costos"){
       var NOMK = {producto:"Por producto", mes:"Por mes"};
-      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Costos</h3>' +
-        '<span class="sub">' + (vistaCostos2 === "mes" ? "Lo cobrado contra lo que cost\u00f3" : "Qu\u00e9 cuesta y qu\u00e9 deja") + '</span></span>' +
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Costos &amp; M\u00e1rgenes</h3></span>' +
         '<div class="filtros">' + Object.keys(NOMK).map(function(v){
           return '<a href="#" data-vk="' + v + '" aria-pressed="' + (vistaCostos2 === v) + '">' + NOMK[v] + '</a>';
         }).join("") + '</div></div>' +
