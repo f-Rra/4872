@@ -478,9 +478,11 @@
   .columna .rollo{flex:1;overflow-y:auto;min-height:0}
   .fila-p{display:flex;align-items:baseline;gap:.55rem;width:100%;min-width:0}
   .fila-p .nom{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .fila-p .fam{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
   .fila-p .plata{margin-left:auto;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
-  .fila-p .plata.packs-dos{font-size:.86rem;letter-spacing:-.01em}
+  /* dos montos en el lugar de uno: los dos packs de las empanadas, y en Costos lo
+     que se cobra menos lo que cuesta */
+  .fila-p .plata.packs-dos,
+  .fila-p .plata.cuenta{font-size:.86rem;letter-spacing:-.01em}
   .agotado{
     font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;flex:none;
     border-radius:999px;padding:.14rem .48rem;box-shadow:inset 0 0 0 1.5px var(--piedra);color:var(--piedra);
@@ -2132,7 +2134,8 @@
     var ped = pedidasPorProducto();
     var datos = PRODUCTOS.map(function(p){ return costoProducto(p.n); })
       .filter(function(d){ return d; });
-    datos.sort(function(a, b){ return a.pct - b.pct; });
+    // por tipo, y adentro de cada tipo del peor margen al mejor
+    datos.sort(function(a, b){ return FAMS.indexOf(a.p.f) - FAMS.indexOf(b.p.f) || a.pct - b.pct; });
 
     var tandaCosto = 0, tandaVenta = 0;
     datos.forEach(function(d){
@@ -2150,17 +2153,25 @@
         : flojos ? flojos + (flojos === 1 ? ' producto' : ' productos') + ' bajo el ' + CONF.margenMin + '%'
         : 'ninguno bajo el ' + CONF.margenMin + '%') + '</span></div>';
 
-    var col = '<div class="columna"><ul>' + datos.map(function(d){
+    function renglonCosto(d){
       return '<li class="' + (d.p.n === prodCosto ? "elegido" : "") + '">' +
         '<a href="#" data-pc="' + d.p.n + '"><span class="izq">' +
         '<span class="fila-p"><span class="nom">' + d.p.n + '</span>' +
-        '<span class="pct' + (d.pct < CONF.margenMin ? " flojo" : "") + '">' + Math.round(d.pct) +
-        '%' + (d.sinPrecio ? '<span class="asterisco">*</span>' : '') + '</span></span>' +
-        '<span class="fila-p"><span class="fam">' + (d.sinPrecio
-          ? 'falta cargar ' + d.sinPrecio : FAM[d.p.f]) + '</span>' +
-        '<span class="plata">' + plata(d.venta) + ' &minus; ' + plata(d.costo) + '</span></span>' +
-        '</span></button></li>';
-    }).join("") + '</ul></div>';
+        '<span class="plata cuenta">' + plata(d.venta) + ' &minus; ' + plata(d.costo) + '</span>' +
+        '<span class="pct' + (d.pct < CONF.margenMin ? " flojo" : "") + '">' + Math.round(d.pct) + '%' +
+        // \u00abfalta cargar\u00bb no entra en el rengl\u00f3n: lo dice el asterisco
+        (d.sinPrecio ? '<span class="asterisco" title="falta cargar el precio de ' +
+          (d.sinPrecio === 1 ? 'un ingrediente' : d.sinPrecio + ' ingredientes') + '">*</span>' : '') +
+        '</span></span></span></a></li>';
+    }
+    // un grupo por tipo, con la banda de Productos
+    var col = '<div class="columna">' + FAMS.map(function(f){
+      var deEste = datos.filter(function(d){ return d.p.f === f; });
+      if(!deEste.length) return '';
+      return '<section class="grupo-lista"><h2 class="cab-grupo">' + FAM[f] +
+        '<span class="cuantos">&middot; ' + deEste.length + '</span></h2>' +
+        '<ul class="en-una-linea">' + deEste.map(renglonCosto).join("") + '</ul></section>';
+    }).join("") + '</div>';
 
     var d = costoProducto(prodCosto) || datos[0];
     var det = '<div class="detalle">' +
@@ -2254,7 +2265,7 @@
 
     costos: function(){
       return uso('Dos preguntas distintas, una en cada solapa.', [
-        '<b>Por producto</b>: qu\u00e9 cuesta hacer uno y qu\u00e9 deja. La lista arranca por el que menos deja, que es el que hay que mirar.',
+        '<b>Por producto</b>: qu\u00e9 cuesta hacer uno y qu\u00e9 deja. La lista va por tipo, y cada tipo arranca por el que menos deja, que es el que hay que mirar.',
         'El desglose dice de d\u00f3nde sale cada peso, con el <b>precio del bulto</b> al lado para poder discutirlo con el almac\u00e9n.',
         'El asterisco avisa que a ese producto le falta cargar el precio de alg\u00fan ingrediente: el costo que se ve es un piso, no el real.',
         '<b>Por mes</b>: lo cobrado contra lo que cost\u00f3, de los pedidos entregados.',
@@ -2451,8 +2462,10 @@
       '<p>Todo sale de multiplicar <b>la receta por el precio de compra</b>. Es lo que una planilla no puede ' +
       'hacer sola: el panel ya tiene las recetas, los gramos y los precios de venta.</p></div>' +
 
-      '<div class="bloque"><h3>Del peor margen al mejor</h3>' +
-      '<p>Es el orden en que conviene mirarla. Abr\u00ed la primera: el desglose muestra <b>la base sangrada</b> ' +
+      '<div class="bloque"><h3>Por tipo, del peor margen al mejor</h3>' +
+      '<p>Una pizza se compara con otra pizza, no con una empanada: cada tipo lleva su t\u00edtulo, como en ' +
+      'Productos, y adentro va del que menos deja al que m\u00e1s. Es el orden en que conviene mirarla.</p>' +
+      '<p>Abr\u00ed la primera: el desglose muestra <b>la base sangrada</b> ' +
       '&mdash; el bollo con sus cuatro ingredientes adentro &mdash; y despu\u00e9s lo que lleva el producto.</p>' +
       '<p>El <b>margen m\u00ednimo est\u00e1 fijo en 55%</b>. Abajo de eso, el producto queda marcado.</p></div>' +
 

@@ -321,9 +321,11 @@
 .columna .rollo{flex:1;overflow-y:auto;min-height:0}
 .fila-p{display:flex;align-items:baseline;gap:.55rem;width:100%;min-width:0}
 .fila-p .nom{font-weight:700;font-size:.95rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fila-p .fam{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
 .fila-p .plata{margin-left:auto;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
-.fila-p .plata.packs-dos{font-size:.86rem;letter-spacing:-.01em}
+/* dos montos en el lugar de uno: los dos packs de las empanadas, y en Costos lo
+   que se cobra menos lo que cuesta */
+.fila-p .plata.packs-dos,
+.fila-p .plata.cuenta{font-size:.86rem;letter-spacing:-.01em}
 .agotado{
   font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;flex:none;
   border-radius:999px;padding:.14rem .48rem;box-shadow:inset 0 0 0 1.5px var(--piedra);color:var(--piedra);

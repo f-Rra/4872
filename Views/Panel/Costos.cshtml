@@ -11,6 +11,9 @@
         _ => "Empanada"
     };
 
+    // el título de cada grupo, con el mismo nombre que su chip en Productos
+    string Titulo(f4872.Models.Familia f) => f4872.ViewModels.ProductosVm.Chips.First(x => x.Clave == f.ToString()).Nombre;
+
     // «Septiembre»: es-AR lo devuelve en minúscula y acá encabeza el renglón
     string Mes(DateOnly d) => char.ToUpper(d.ToString("MMMM")[0]) + d.ToString("MMMM")[1..];
 }
@@ -120,38 +123,46 @@ else
 </div>
 
 <div class="doble">
+    @* Sin el .rollo de Productos: acá la que se desplaza es la columna, y la
+       banda fija se pega a su contenedor que se desplaza. Adentro de un rollo
+       que no se mueve, la banda se iba con la lista. *@
     <div class="columna">
-        <div class="rollo">
-            <ul>
-                @foreach (var c in Model.Lista)
-                {
-                    <li class="@(c.IdProducto == Model.Elegido?.IdProducto ? "elegido" : null)">
-                        <a asp-action="Costos" asp-route-producto="@c.IdProducto">
-                            <span class="izq">
-                                <span class="fila-p">
-                                    <span class="nom">@c.Nombre</span>
-                                    @* el porcentaje va acá arriba porque es el
-                                       dato por el que está ordenada la lista *@
-                                    <span class="pct @(c.Flojo ? "flojo" : null)">
-                                        @(c.Porcentaje is int p ? $"{p}%" : "—")
-                                        @if (c.SinPrecio > 0)
-                                        {
-                                            <span class="asterisco">*</span>
-                                        }
+        @* Un grupo por tipo, con la banda de Productos. Adentro de cada uno
+           sigue el orden del margen: el que menos deja, arriba. *@
+        @foreach (var grupo in Model.Lista.GroupBy(x => x.Familia))
+        {
+            <section class="grupo-lista">
+                <h2 class="cab-grupo">@Titulo(grupo.Key)<span class="cuantos">· @grupo.Count()</span></h2>
+                <ul class="en-una-linea">
+                    @foreach (var c in grupo)
+                    {
+                        <li class="@(c.IdProducto == Model.Elegido?.IdProducto ? "elegido" : null)">
+                            <a asp-action="Costos" asp-route-producto="@c.IdProducto">
+                                <span class="izq">
+                                    @* En una línea, como Productos: el nombre, la
+                                       cuenta y el porcentaje contra el borde, que es
+                                       el dato por el que está ordenada la lista. *@
+                                    <span class="fila-p">
+                                        <span class="nom">@c.Nombre</span>
+                                        <span class="plata cuenta">@c.Venta.ToString("C") − @c.Costo.ToString("C")</span>
+                                        <span class="pct @(c.Flojo ? "flojo" : null)">
+                                            @(c.Porcentaje is int p ? $"{p}%" : "—")
+                                            @if (c.SinPrecio > 0)
+                                            {
+                                                @* «falta cargar» no entra en el renglón:
+                                                   lo dice el asterisco al pasar el mouse *@
+                                                <span class="asterisco"
+                                                      title="@(c.SinPrecio == 1 ? "falta cargar el precio de un ingrediente" : $"falta cargar el precio de {c.SinPrecio} ingredientes")">*</span>
+                                            }
+                                        </span>
                                     </span>
                                 </span>
-                                <span class="fila-p">
-                                    <span class="fam">
-                                        @(c.SinPrecio > 0 ? $"falta cargar {c.SinPrecio}" : Fam(c.Familia))
-                                    </span>
-                                    <span class="plata">@c.Venta.ToString("C") − @c.Costo.ToString("C")</span>
-                                </span>
-                            </span>
-                        </a>
-                    </li>
-                }
-            </ul>
-        </div>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
     </div>
 
     @if (Model.Elegido is f4872.ViewModels.CostoDeProducto d)

@@ -54,13 +54,18 @@ public class PanelController : Controller
 
     // Que cuesta hacer cada producto y que deja.
     //
-    // La lista va por margen de menor a mayor: la pantalla es para ver que
-    // revisar, y lo primero que se mira es lo que menos deja.
+    // La lista va por tipo, y adentro de cada tipo por margen de menor a mayor:
+    // la pantalla es para ver que revisar, y una pizza se compara con otra
+    // pizza, no con una empanada.
     [HttpGet("costos")]
     public async Task<IActionResult> Costos(int? producto = null, string vista = "producto")
     {
         var marco = await Marco();
-        var lista = await _recetas.Costos();
+
+        // Costos() ya viene del peor margen al mejor, y OrderBy es estable:
+        // ese orden sigue igual adentro de cada tipo. Se ordena aca y no en la
+        // vista para que el elegido de entrada sea el primer renglon que se ve
+        var lista = (await _recetas.Costos()).OrderBy(x => x.Familia).ToList();
         var meses = vista == "mes" ? await _recetas.PorMes() : [];
 
         // la banda es lo unico de la pantalla que mira los pedidos: el resto es
