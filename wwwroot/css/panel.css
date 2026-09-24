@@ -338,6 +338,21 @@
 .alta:hover{background:rgba(30,82,69,.09)}
 .alta[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
 
+/* ---------- los titulos por tipo ----------
+   Con «Todo», la lista va en un grupo por tipo con su titulo arriba. Es la
+   banda de los grupos de Produccion, pero maciza: queda fija mientras la lista
+   corre, y transparente dejaria leer lo que pasa por abajo. */
+.cab-grupo{
+  position:sticky;top:0;z-index:1;margin:0;
+  display:flex;align-items:baseline;gap:.4rem;padding:.6rem .9rem;
+  font-size:.66rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  background:color-mix(in srgb, var(--verde) 9%, var(--papel));
+  border-bottom:1px solid rgba(30,82,69,.22);
+}
+.cab-grupo .cuantos{letter-spacing:.06em;opacity:.6}
+/* con el tipo en el titulo, el renglon queda en una linea: nombre y precio */
+.columna .en-una-linea a{padding-block:.62rem}
+
 /* ---------- productos: la ficha ----------
    Renglon etiquetado: etiqueta a la izquierda, valor a la derecha, un filete
    entre cada uno. Como una planilla: todo alineado en una sola columna y el ojo

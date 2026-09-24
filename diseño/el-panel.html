@@ -495,6 +495,21 @@
   .alta:hover{background:rgba(30,82,69,.09)}
   .alta[aria-pressed="true"]{background:var(--verde);color:var(--papel)}
 
+  /* ---------- los titulos por tipo ----------
+     Con «Todo», la lista va en un grupo por tipo con su titulo arriba. Es la
+     banda de los grupos de Produccion, pero maciza: queda fija mientras la lista
+     corre, y transparente dejaria leer lo que pasa por abajo. */
+  .cab-grupo{
+    position:sticky;top:0;z-index:1;margin:0;
+    display:flex;align-items:baseline;gap:.4rem;padding:.6rem .9rem;
+    font-size:.66rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+    background:color-mix(in srgb, var(--verde) 9%, var(--papel));
+    border-bottom:1px solid rgba(30,82,69,.22);
+  }
+  .cab-grupo .cuantos{letter-spacing:.06em;opacity:.6}
+  /* con el tipo en el titulo, el renglon queda en una linea: nombre y precio */
+  .columna .en-una-linea a{padding-block:.62rem}
+
   /* ---------- productos: la ficha ----------
      Renglon etiquetado: etiqueta a la izquierda, valor a la derecha, un filete
      entre cada uno. Como una planilla: todo alineado en una sola columna y el ojo
@@ -1595,18 +1610,27 @@
     var el = nuevo ? BORRADOR : (buscaProd(prodElegido) || listaProd()[0] || PRODUCTOS[0]);
     var ing = nuevo ? BORRADOR.ing : (RECETA[el.n] || []);
 
-    var col = '<div class="columna con-pie"><div class="rollo"><ul>' + listaProd().map(function(x){
+    function renglonProd(x){
       return '<li class="' + (!nuevo && x.n === prodElegido ? "elegido" : "") + '">' +
         '<a href="#" data-ep="' + x.n + '"><span class="izq">' +
         '<span class="fila-p"><span class="nom">' + x.n + '</span>' +
-        (x.act ? '' : '<span class="agotado">Agotado</span>') + '</span>' +
-        '<span class="fila-p"><span class="fam">' + FAM[x.f] + '</span>' +
+        (x.act ? '' : '<span class="agotado">Agotado</span>') +
         (x.p
           ? '<span class="plata">' + pesos(x.p) + '</span>'
           : '<span class="plata packs-dos">' + pesos(P.pack[6]) + '<i>/</i>' + pesos(P.pack[12]) + '</span>') +
-        '</span>' +
-        '</span></button></li>';
-    }).join("") + '</ul></div>' +
+        '</span></span></a></li>';
+    }
+    // Un grupo por tipo. El t\u00edtulo sale solo con \u00abTodo\u00bb: con un tipo
+    // elegido arriba repetir\u00eda el chip
+    var grupos = FAMS.map(function(f){
+      var deEste = listaProd().filter(function(x){ return x.f === f; });
+      if(!deEste.length) return '';
+      return '<section class="grupo-lista">' +
+        (famProd === "todo" ? '<h2 class="cab-grupo">' + FAM[f] + '<span class="cuantos">&middot; ' + deEste.length + '</span></h2>' : '') +
+        '<ul class="en-una-linea">' + deEste.map(renglonProd).join("") + '</ul></section>';
+    }).join("");
+
+    var col = '<div class="columna con-pie"><div class="rollo">' + grupos + '</div>' +
     '<button class="alta" type="button" data-nuevo="1" aria-pressed="' + nuevo + '">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Producto nuevo</button></div>';
 
@@ -2357,6 +2381,13 @@
       'Gan\u00f3 esta porque <b>todo queda alineado en una sola columna</b> y el ojo baja comparando.</p>' +
       '<p>El costo es que los campos no parecen editables hasta que pas\u00e1s el mouse. Se aprende una vez.</p></div>' +
 
+      '<div class="bloque"><h3>La lista va por tipo</h3>' +
+      '<p>Con <b>Todo</b>, cada tipo lleva su t\u00edtulo arriba &mdash; <b>Pizzas &middot; 4</b> &mdash; y queda fijo ' +
+      'mientras la lista corre: siempre se sabe qu\u00e9 se est\u00e1 mirando. Con un tipo elegido en los chips no hay ' +
+      't\u00edtulo, porque repetir\u00eda el chip.</p>' +
+      '<p>Con el tipo en el t\u00edtulo, el rengl\u00f3n ya no dice <b>Pizza</b> y queda en <b>una sola l\u00ednea</b>: ' +
+      'nombre y precio.</p></div>' +
+
       '<div class="bloque"><h3>El alta al pie de la columna</h3>' +
       '<p><b>+ Producto nuevo</b> queda fijo abajo aunque la lista scrollee, y abre <b>la misma ficha en blanco</b>. ' +
       'No hay una pantalla de alta distinta de la de edici\u00f3n.</p></div>' +
@@ -2540,7 +2571,9 @@
       cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>'+nom+'</h3></span></div>' +
         '<p class="placeholder">Esta pantalla todavía no está diseñada.</p></div>';
     }
-    document.getElementById("marco").innerHTML = menu() + cont;
+    // adentro de .panel, como en _Marco.cshtml: la hoja portada pone la barra
+    // y la pantalla lado a lado desde ahi, y sin el iban una abajo de la otra
+    document.getElementById("marco").innerHTML = '<div class="panel">' + menu() + cont + '</div>';
 
     document.getElementById("lado").innerHTML = USO[seccion]() + NOTAS[seccion]() + REGLAS;
     pintarPasos();

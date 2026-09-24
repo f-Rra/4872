@@ -11,6 +11,9 @@
         Familia.Focaccia => "Focaccia",
         _ => "Empanada"
     };
+
+    // el título de cada grupo dice lo mismo que su chip de arriba
+    string Titulo(Familia f) => f4872.ViewModels.ProductosVm.Chips.First(x => x.Clave == f.ToString()).Nombre;
 }
 
 <div class="cabecera">
@@ -34,37 +37,47 @@
        en blanco: no hay una pantalla de alta distinta de la de edición. *@
     <div class="columna con-pie">
         <div class="rollo">
-            <ul>
-                @foreach (var p in Model.Lista)
-                {
-                    <li class="@(!Model.EsNuevo && p.IdProducto == Model.Ficha.IdProducto ? "elegido" : null)">
-                        <a asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-producto="@p.IdProducto">
-                            <span class="izq">
-                                <span class="fila-p">
-                                    <span class="nom">@p.Nombre</span>
-                                    @if (!p.Activo)
-                                    {
-                                        <span class="agotado">Agotado</span>
-                                    }
-                                </span>
-                                <span class="fila-p">
-                                    <span class="fam">@Fam(p.Familia)</span>
-                                    @if (p.Precio is decimal plata)
-                                    {
-                                        <span class="plata">@plata.ToString("C")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="plata packs-dos">
-                                            @string.Join(" / ", Model.Ficha.Packs.Select(x => x.Precio.ToString("C")))
+            @* Un grupo por tipo, en el orden en que ya viene la lista. El título
+               sale solo con «Todo»: con un tipo elegido arriba repetiría el chip.
+               Y con el tipo en el título, el renglón ya no lo dice: queda en una
+               línea, nombre y precio. *@
+            @foreach (var grupo in Model.Lista.GroupBy(x => x.Familia))
+            {
+                <section class="grupo-lista">
+                    @if (Model.Familia == "todo")
+                    {
+                        <h2 class="cab-grupo">@Titulo(grupo.Key)<span class="cuantos">· @grupo.Count()</span></h2>
+                    }
+                    <ul class="en-una-linea">
+                        @foreach (var p in grupo)
+                        {
+                            <li class="@(!Model.EsNuevo && p.IdProducto == Model.Ficha.IdProducto ? "elegido" : null)">
+                                <a asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-producto="@p.IdProducto">
+                                    <span class="izq">
+                                        <span class="fila-p">
+                                            <span class="nom">@p.Nombre</span>
+                                            @if (!p.Activo)
+                                            {
+                                                <span class="agotado">Agotado</span>
+                                            }
+                                            @if (p.Precio is decimal plata)
+                                            {
+                                                <span class="plata">@plata.ToString("C")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="plata packs-dos">
+                                                    @string.Join(" / ", Model.Ficha.Packs.Select(x => x.Precio.ToString("C")))
+                                                </span>
+                                            }
                                         </span>
-                                    }
-                                </span>
-                            </span>
-                        </a>
-                    </li>
-                }
-            </ul>
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
         </div>
 
         <a class="alta" asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-nuevo="true"
