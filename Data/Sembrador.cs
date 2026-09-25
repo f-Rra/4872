@@ -185,7 +185,7 @@ public static class Sembrador
             logger.LogInformation("Sembrados {Cuantos} tamanos de pack, sin precio.", faltan.Count);
         }
 
-        if (await contexto.Bases.AnyAsync())
+        if (await contexto.Recetas.AnyAsync(x => x.Tipo == TipoReceta.Base))
         {
             return;
         }
@@ -210,12 +210,13 @@ public static class Sembrador
             ingredientes[n] = nuevo;
         }
 
-        contexto.Bases.AddRange(LasBases.Select(b => new Base
+        contexto.Recetas.AddRange(LasBases.Select(b => new Receta
         {
             Nombre = b.N,
+            Tipo = TipoReceta.Base,
             Familia = b.Fam,
             Rinde = b.Rinde,
-            Receta = [.. b.Receta.Select(r => new BaseIngrediente
+            Ingredientes = [.. b.Receta.Select(r => new RecetaIngrediente
             {
                 Ingrediente = ingredientes[r.Ing],
                 Cantidad = r.Cant
@@ -259,7 +260,9 @@ public static class Sembrador
         }
 
         // las masas ya estan sembradas: corren antes y siempre
-        var bases = await contexto.Bases.ToDictionaryAsync(x => x.Nombre);
+        var bases = await contexto.Recetas
+            .Where(x => x.Tipo == TipoReceta.Base)
+            .ToDictionaryAsync(x => x.Nombre);
 
         var ingredientes = await contexto.Ingredientes.ToDictionaryAsync(x => x.Nombre);
         foreach (var x in LosIngredientes)
@@ -309,7 +312,7 @@ public static class Sembrador
             "Sembrada la carta INVENTADA de la maqueta: {Productos} productos y {Ingredientes} " +
             "ingredientes. Ninguno de esos nombres ni precios es real. Las masas no salen de " +
             "aca: esas son de verdad. Para borrar lo inventado: " +
-            "TRUNCATE \"Productos\", \"Ingredientes\", \"Bases\" CASCADE",
+            "TRUNCATE \"Productos\", \"Ingredientes\", \"Recetas\" CASCADE",
             LosProductos.Length, LosIngredientes.Length);
     }
 }

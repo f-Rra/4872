@@ -12,9 +12,9 @@ public class Contexto : DbContext, IDataProtectionKeyContext
 
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Ingrediente> Ingredientes => Set<Ingrediente>();
-    public DbSet<Base> Bases => Set<Base>();
+    public DbSet<Receta> Recetas => Set<Receta>();
     public DbSet<ProductoIngrediente> ProductoIngredientes => Set<ProductoIngrediente>();
-    public DbSet<BaseIngrediente> BaseIngredientes => Set<BaseIngrediente>();
+    public DbSet<RecetaIngrediente> RecetaIngredientes => Set<RecetaIngrediente>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<ItemPedido> ItemPedidos => Set<ItemPedido>();
     public DbSet<ItemQuitado> ItemQuitados => Set<ItemQuitado>();

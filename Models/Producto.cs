@@ -18,10 +18,11 @@ public class Producto
 
     public bool Activo { get; set; } = true;
 
-    // la sub-receta que consume: el bollo en pizzas y focaccias, la tapa en
-    // empanadas. Una unidad por producto, que es como se arma
+    // la masa que consume, que es una receta de tipo Base: el bollo en pizzas
+    // y focaccias. Una por producto, que es como se arma. Nula en las
+    // empanadas, que no amasan
     public int? IdBase { get; set; }
-    public Base? Base { get; set; }
+    public Receta? Base { get; set; }
 
     // se llama Receta y no Ingredientes porque cada renglon no es un ingrediente:
     // es un ingrediente con su cantidad y con si se puede sacar

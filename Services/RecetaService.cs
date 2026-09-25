@@ -129,7 +129,7 @@ public class RecetaService
         var ids = piezas.Keys.ToList();
         var bases = await _contexto.Productos
             .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null && x.Base!.Rinde > 0)
-            .Select(x => new { x.IdProducto, x.Base!.IdBase, x.Base.Nombre, x.Base.Rinde })
+            .Select(x => new { x.IdProducto, x.Base!.IdReceta, x.Base.Nombre, x.Base.Rinde })
             .ToListAsync();
 
         if (bases.Count == 0)
@@ -141,7 +141,7 @@ public class RecetaService
         // son masas distintas, y juntarlas porque las dos rindieran seis seria
         // mandarlo a amasar una sola tanda de dos cosas que no se mezclan.
         var porBase = bases
-            .GroupBy(x => new { x.IdBase, x.Nombre, x.Rinde })
+            .GroupBy(x => new { x.IdReceta, x.Nombre, x.Rinde })
             .Select(g => new
             {
                 g.Key.Nombre,
@@ -242,7 +242,7 @@ public class RecetaService
 
         var deBase = await _contexto.Productos
             .Where(x => ids.Contains(x.IdProducto) && x.IdBase != null)
-            .SelectMany(p => p.Base!.Receta.Select(r => new
+            .SelectMany(p => p.Base!.Ingredientes.Select(r => new
             {
                 p.IdProducto,
                 Base = p.Base.Nombre,
@@ -319,7 +319,7 @@ public class RecetaService
                 {
                     p.Base.Nombre,
                     p.Base.Rinde,
-                    Receta = p.Base.Receta.Select(r => new
+                    Receta = p.Base.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
                         r.Ingrediente.Unidad,

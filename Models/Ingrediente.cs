@@ -27,9 +27,9 @@ public class Ingrediente
 
     // en que recetas aparece: es por donde la lista de compras averigua cuanto
     // hace falta de cada cosa. Van separadas porque se cuentan distinto: la de
-    // productos es por unidad y la de bases es por tanda
+    // productos es por unidad y la de las recetas va entera
     public ICollection<ProductoIngrediente> UsosEnProductos { get; set; } = new List<ProductoIngrediente>();
-    public ICollection<BaseIngrediente> UsosEnBases { get; set; } = new List<BaseIngrediente>();
+    public ICollection<RecetaIngrediente> UsosEnRecetas { get; set; } = new List<RecetaIngrediente>();
 
     // el precio por gramo no se guarda: se divide. Guardarlo seria tener dos
     // numeros que pueden contradecirse el dia que cambie el precio

@@ -141,7 +141,7 @@ public class PanelController : Controller
                 // en el bollo y en ninguna pizza, y decir «todavia en ninguna
                 // receta» al lado de «necesito 2 kg» seria falso
                 EnProductos = x.UsosEnProductos.Count,
-                Bases = x.UsosEnBases.Select(u => u.Base.Nombre).ToList()
+                Bases = x.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
             })
             .ToListAsync();
 
@@ -207,7 +207,7 @@ public class PanelController : Controller
                 i.PrecioDeCompra,
                 i.PrecioPorMedida,
                 EnProductos = i.UsosEnProductos.Count,
-                Bases = i.UsosEnBases.Select(u => u.Base.Nombre).ToList()
+                Bases = i.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
             })
             .FirstOrDefaultAsync();
 
@@ -356,11 +356,11 @@ public class PanelController : Controller
     {
         var ingrediente = await _contexto.Ingredientes
             .Include(x => x.UsosEnProductos)
-            .Include(x => x.UsosEnBases)
+            .Include(x => x.UsosEnRecetas)
             .FirstOrDefaultAsync(x => x.IdIngrediente == id)
             ?? throw new InvalidOperationException($"No existe el ingrediente {id}.");
 
-        var usos = ingrediente.UsosEnProductos.Count + ingrediente.UsosEnBases.Count;
+        var usos = ingrediente.UsosEnProductos.Count + ingrediente.UsosEnRecetas.Count;
 
         if (usos > 0)
         {
@@ -664,9 +664,9 @@ public class PanelController : Controller
     // usan: en una base recien puesta en marcha no hay ninguno, y la primera
     // pizza quedaba sin masa. Nulo en empanadas, que no amasan: no tienen fila.
     private async Task<int?> BaseDe(Familia familia) =>
-        await _contexto.Bases
-            .Where(x => x.Familia == familia)
-            .Select(x => (int?)x.IdBase)
+        await _contexto.Recetas
+            .Where(x => x.Tipo == TipoReceta.Base && x.Familia == familia)
+            .Select(x => (int?)x.IdReceta)
             .FirstOrDefaultAsync();
 
     // Lo que le toca de masa a una pieza. Nulo en las empanadas, que no amasan.
@@ -681,7 +681,7 @@ public class PanelController : Controller
             .Select(p => new
             {
                 p.Base!.Rinde,
-                Receta = p.Base.Receta
+                Receta = p.Base.Ingredientes
                     .OrderByDescending(r => r.Cantidad)
                     .Select(r => new { r.Ingrediente.Nombre, r.Ingrediente.Unidad, r.Cantidad })
                     .ToList()
