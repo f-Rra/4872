@@ -154,6 +154,42 @@
 })();
 
 
+// En que se cuenta el rinde de una receta sigue al tipo elegido, como el precio
+// de un producto sigue a su familia: pasar una salsa a relleno cambia «pizzas»
+// por «empanadas» ahi mismo, y no recien al guardar. En una receta nueva cambia
+// tambien el rinde, si todavia es el que vino puesto: una salsa rinde 6 y un
+// relleno 12.
+(function () {
+  var chips = [].slice.call(document.querySelectorAll("input[name='Ficha.Tipo'][type='radio']"));
+  var rinde = document.querySelector("[data-rinde]");
+  if (!chips.length || !rinde) return;
+
+  var pieza = { Salsa: ["pizza", "pizzas"], Relleno: ["empanada", "empanadas"] };
+  var deFabrica = { Salsa: "6", Relleno: "12" };
+  var nueva = rinde.dataset.nueva === "true";
+
+  function elegido() {
+    return (chips.filter(function (c) { return c.checked; })[0] || chips[0]).value;
+  }
+
+  var antes = elegido();
+
+  function nombrar() {
+    var tipo = elegido();
+    if (nueva && rinde.value.trim() === deFabrica[antes]) rinde.value = deFabrica[tipo];
+    antes = tipo;
+
+    var p = pieza[tipo];
+    document.querySelectorAll("[data-cual]").forEach(function (e) {
+      e.textContent = rinde.value.trim() === "1" ? p[0] : p[1];
+    });
+    document.querySelectorAll("[data-pieza]").forEach(function (e) { e.textContent = p[0]; });
+  }
+
+  chips.forEach(function (c) { c.addEventListener("change", nombrar); });
+  rinde.addEventListener("input", nombrar);
+})();
+
 // El renglon del precio cambia con el tipo, igual que la medida de aca arriba.
 // Las empanadas no tienen precio propio: se cobran por pack, y esos dos precios
 // son del tamano y no del gusto. El servidor dibuja los dos renglones y esconde

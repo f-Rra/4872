@@ -142,9 +142,9 @@ public class RenglonDesglose
     // «rinde 6», solo en las bases
     public string? Rinde { get; set; }
 
-    // «4 u», o «700 ml la tanda» si es una base
+    // «4 u», o «1 kg la receta» si es una receta
     public string Cuanto { get; set; } = null!;
 
-    // «× 2 = 8 u», o el total pelado si es una base
+    // «× 2 = 8 u»: por cuántas piezas, o por cuántas veces la receta
     public string Sale { get; set; } = null!;
 }

@@ -517,6 +517,20 @@
 .nota-suelta{display:inline-block;margin:0;opacity:.6}
 
 
+/* ---------- las recetas ---------- */
+/* lo que le toca a una pieza, en la ficha de la receta: es derivado, asi que
+   va sin pastilla, como la base en la ficha del producto */
+.receta .porpieza{
+  flex:none;min-width:8.4rem;text-align:right;
+  font-size:.8rem;font-weight:600;opacity:.6;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+/* el rinde y en que se cuenta: bollos, pizzas o empanadas */
+.rinde-reng .va{display:flex;align-items:baseline;gap:.5rem}
+.rinde-reng .cual{font-size:.9rem;font-weight:700;opacity:.8}
+/* borrar va aparte y abajo, como en la ficha de un ingrediente */
+.detalle .secundarias{margin-top:.9rem}
+
+
 /* ---------- ingredientes: la grilla ----------
    Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
    maneras de contarla -lo que queda despues de la tanda, una barra de consumo y

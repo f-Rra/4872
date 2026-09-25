@@ -1,0 +1,301 @@
+@using f4872.Models
+@using f4872.ViewModels
+@model RecetasVm
+@{
+    ViewData["Title"] = "Recetas";
+    ViewData["Seccion"] = "recetas";
+    Layout = "_Marco";
+
+    var f = Model.Ficha;
+
+    // el título de cada grupo dice lo mismo que su chip de arriba
+    string Titulo(TipoReceta t) => RecetasVm.Chips.First(x => x.Clave == t.ToString()).Nombre;
+}
+
+<div class="cabecera">
+    <span class="cab-titulo">
+        <h1>Recetas</h1>
+        <span class="sub">@Model.Lista.Count @(Model.Lista.Count == 1 ? "receta" : "recetas")</span>
+    </span>
+
+    <div class="filtros">
+        @foreach (var (clave, nombre) in RecetasVm.Chips)
+        {
+            <a asp-action="Recetas" asp-route-tipo="@clave"
+               aria-pressed="@((clave == Model.Tipo).ToString().ToLowerInvariant())">@nombre</a>
+        }
+    </div>
+</div>
+
+<div class="doble">
+
+    <div class="columna con-pie">
+        <div class="rollo">
+            @* Un grupo por tipo, como en Productos. Al lado del nombre, cuánto
+               sale una pieza y no el rinde, que está en la ficha: es el número
+               que después aparece en Costos adentro de cada producto. *@
+            @foreach (var grupo in Model.Lista.GroupBy(x => x.Tipo))
+            {
+                <section class="grupo-lista">
+                    @if (Model.Tipo == "todo")
+                    {
+                        <h2 class="cab-grupo">@Titulo(grupo.Key)<span class="cuantos">· @grupo.Count()</span></h2>
+                    }
+                    <ul class="en-una-linea">
+                        @foreach (var r in grupo)
+                        {
+                            <li class="@(!Model.EsNueva && r.IdReceta == f.IdReceta ? "elegido" : null)">
+                                <a asp-action="Recetas" asp-route-tipo="@Model.Tipo" asp-route-receta="@r.IdReceta">
+                                    <span class="izq">
+                                        <span class="fila-p">
+                                            <span class="nom">@r.Nombre</span>
+                                            <span class="plata cuenta">
+                                                @(r.CadaUna ?? "—")
+                                                @if (r.SinPrecio > 0)
+                                                {
+                                                    @* como en Costos: el número es un piso *@
+                                                    <span class="asterisco"
+                                                          title="@(r.SinPrecio == 1 ? "falta cargar el precio de un ingrediente" : $"falta cargar el precio de {r.SinPrecio} ingredientes")">*</span>
+                                                }
+                                            </span>
+                                        </span>
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+        </div>
+
+        <a class="alta" asp-action="Recetas" asp-route-tipo="@Model.Tipo" asp-route-nueva="true"
+           aria-pressed="@Model.EsNueva.ToString().ToLowerInvariant()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Receta nueva
+        </a>
+    </div>
+
+    <div class="detalle">
+        @* La ficha se cierra antes de los ingredientes, como en la de un
+           producto: sumar y quitar son formularios propios, y un formulario no
+           puede ir adentro de otro. *@
+        <form id="ficha" method="post" asp-action="GuardarReceta"
+              asp-route-tipo="@Model.Tipo" asp-route-nueva="@Model.EsNueva">
+
+            <input type="hidden" asp-for="Ficha.IdReceta" />
+
+            @if (Model.EsNueva)
+            {
+                <div class="det-tope"><h2>Receta nueva</h2></div>
+                <p class="det-meta">Queda en la lista apenas la crees.</p>
+            }
+            else
+            {
+                <div class="det-tope"><h2>@Model.Titulo</h2></div>
+                <p class="det-meta">@Model.Subtitulo</p>
+            }
+
+            @if (Model.Error is string error)
+            {
+                <p class="aviso" role="alert">@error</p>
+            }
+
+            <div class="renglones">
+
+                <div class="reng">
+                    <span class="et">Nombre</span>
+                    <span class="va"><input asp-for="Ficha.Nombre" maxlength="60" autocomplete="off" /></span>
+                </div>
+
+                @* Las bases no cambian de tipo: hay una por familia, y cada pizza o
+                   focaccia toma la suya sola. En un bollo el renglón no está, y
+                   una receta nueva es una salsa o un relleno. *@
+                @if (f.EsBase)
+                {
+                    <input type="hidden" asp-for="Ficha.Tipo" />
+                }
+                else
+                {
+                    <div class="reng">
+                        <span class="et">Tipo</span>
+                        <span class="va">
+                            <span class="chips-fam">
+                                @foreach (var t in new[] { TipoReceta.Salsa, TipoReceta.Relleno })
+                                {
+                                    <label class="chip-fam">
+                                        <input type="radio" asp-for="Ficha.Tipo" value="@t" />
+                                        <span>@t</span>
+                                    </label>
+                                }
+                            </span>
+                        </span>
+                    </div>
+                }
+
+                @* El rinde va en pastilla, como las cantidades: es otro número
+                   que se toca. Al lado, en qué se cuenta. *@
+                <div class="reng rinde-reng">
+                    <span class="et">Rinde</span>
+                    <span class="va">
+                        <span class="rcaja">
+                            <input class="rc" asp-for="Ficha.Rinde" type="text" inputmode="numeric"
+                                   autocomplete="off" data-rinde data-nueva="@Model.EsNueva.ToString().ToLowerInvariant()" />
+                        </span>
+                        <span class="cual" data-cual>@RecetasVm.Pieza(f.Tipo, f.Rinde)</span>
+                    </span>
+                </div>
+
+            </div>
+        </form>
+
+        @* Las cantidades son de la receta entera, como se pesan. Al lado va lo
+           que le toca a una pieza, que es lo que después muestra la ficha de
+           cada producto. *@
+        <div class="renglones sigue">
+            <div class="reng alto receta-reng">
+                <span class="et">Ingredientes</span>
+                <span class="va">
+                    @if (Model.EsNueva)
+                    {
+                        <span class="nota-f nota-suelta">Se cargan después de crearla.</span>
+                    }
+                    else
+                    {
+                        @* El mismo renglón de sumar que en la ficha de un producto,
+                           y el mismo script: el (+) en reposo, el buscador cuando
+                           se abre, y el elegido esperando el cuánto. *@
+                        <ul class="receta tope">
+                            <li>
+                                <button class="mas" type="button" data-abrir-ingrediente
+                                        title="Sumar un ingrediente" aria-label="Sumar un ingrediente" hidden>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                                         stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                                </button>
+
+                                <button class="dice" type="button" data-abrir-ingrediente hidden>
+                                    Sumar un ingrediente
+                                </button>
+
+                                @if (f.Sumando is null)
+                                {
+                                    <input class="buscar-linea" type="text" name="nombre" form="sumar-ingrediente"
+                                           data-buscar placeholder="Buscar…" autocomplete="off" />
+                                }
+                                else
+                                {
+                                    <span class="elegido">@f.Sumando.Nombre</span>
+                                    <input type="hidden" name="nombre" form="sumar-ingrediente"
+                                           value="@f.Sumando.Nombre" />
+                                    <span class="rcaja">
+                                        <input class="rc" type="text" name="cantidad" form="sumar-ingrediente"
+                                               inputmode="decimal" placeholder="0" autofocus />
+                                        <span class="ru">@f.Sumando.Unidad</span>
+                                    </span>
+                                }
+
+                                <span class="hueco"></span><span class="rx"></span>
+                            </li>
+                        </ul>
+
+                        @if (f.Sumando is null)
+                        {
+                            <ul class="candidatos" data-candidatos>
+                                @foreach (var d in f.Disponibles)
+                                {
+                                    <li>
+                                        <button type="submit" name="nombre" value="@d.Nombre"
+                                                form="sumar-ingrediente"
+                                                data-elegir="@d.Nombre" data-unidad="@d.Unidad">@d.Nombre</button>
+                                    </li>
+                                }
+                                <li class="nada" hidden>
+                                    No hay ninguno con ese nombre. Los ingredientes se dan de alta en <b>Ingredientes</b>.
+                                </li>
+                            </ul>
+                        }
+
+                        <ul class="receta">
+                            @for (var i = 0; i < f.Ingredientes.Count; i++)
+                            {
+                                var j = i;
+                                var r = f.Ingredientes[j];
+
+                                <li>
+                                    <span class="rn">@r.Nombre</span>
+
+                                    @* derivado: sin pastilla, porque no se toca *@
+                                    <span class="porpieza">@r.PorPieza por <span data-pieza>@RecetasVm.Pieza(f.Tipo)</span></span>
+
+                                    <input type="hidden" form="ficha" asp-for="Ficha.Ingredientes[j].IdIngrediente" />
+                                    <input type="hidden" form="ficha" asp-for="Ficha.Ingredientes[j].Nombre" />
+
+                                    <span class="rcaja">
+                                        <input class="rc" form="ficha" inputmode="decimal"
+                                               asp-for="Ficha.Ingredientes[j].Cantidad" asp-format="{0:0.##}" />
+                                        <span class="ru">@r.Unidad</span>
+                                    </span>
+
+                                    <button class="rx" type="submit" form="quitar-@r.IdIngrediente"
+                                            title="Quitar" aria-label="Quitar @r.Nombre">×</button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </span>
+            </div>
+        </div>
+
+        @if (f.Cuesta is string cuesta)
+        {
+            <p class="nota-f">@cuesta @f.Falta</p>
+        }
+
+        @if (!Model.EsNueva)
+        {
+            <form id="sumar-ingrediente" method="post" asp-action="SumarAReceta"
+                  asp-route-id="@f.IdReceta" asp-route-tipo="@Model.Tipo"></form>
+
+            @foreach (var r in f.Ingredientes)
+            {
+                <form id="quitar-@r.IdIngrediente" method="post" asp-action="QuitarDeReceta"
+                      asp-route-id="@f.IdReceta" asp-route-idIngrediente="@r.IdIngrediente"
+                      asp-route-tipo="@Model.Tipo"></form>
+            }
+        }
+
+        <div class="acciones en-fila">
+            <button class="btn" type="submit" form="ficha">@(Model.EsNueva ? "Crear receta" : "Guardar cambios")</button>
+
+            @if (Model.EsNueva)
+            {
+                <a class="btn flaco" asp-action="Recetas" asp-route-tipo="@Model.Tipo">Cancelar</a>
+            }
+        </div>
+
+        @* Borrar, aparte y abajo, como en la ficha de un ingrediente. Las bases
+           no se borran nunca, y una receta que usa algún producto tampoco:
+           primero hay que sacársela. *@
+        @if (!Model.EsNueva && !f.EsBase)
+        {
+            <div class="secundarias">
+                @if (f.Usos > 0)
+                {
+                    <span class="noBorra">
+                        No se puede borrar: la @(f.Usos == 1 ? "usa un producto" : $"usan {f.Usos} productos")
+                    </span>
+                }
+                else
+                {
+                    <form method="post" asp-action="BorrarReceta"
+                          asp-route-id="@f.IdReceta" asp-route-tipo="@Model.Tipo">
+                        <button class="enlace" type="submit"
+                                data-confirmar="¿Borrar @Model.Titulo? No se puede deshacer.">
+                            Borrar receta
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+
+</div>

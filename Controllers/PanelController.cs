@@ -137,11 +137,11 @@ public class PanelController : Controller
                 x.Stock,
                 x.Libre,
                 x.Unidad,
-                // en cuantas recetas aparece. Las bases cuentan: la harina esta
-                // en el bollo y en ninguna pizza, y decir «todavia en ninguna
-                // receta» al lado de «necesito 2 kg» seria falso
+                // en cuantos productos y en cuantas recetas aparece. Las recetas
+                // cuentan: la harina esta en el bollo y en ninguna pizza, y decir
+                // «todavia en ninguna receta» al lado de «necesito 2 kg» seria falso
                 EnProductos = x.UsosEnProductos.Count,
-                Bases = x.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
+                Recetas = x.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
             })
             .ToListAsync();
 
@@ -163,7 +163,7 @@ public class PanelController : Controller
                     Necesito = cuanto > 0 ? Cantidades.Bonito(cuanto, x.Unidad) : "—",
                     Falta = falta > 0 ? Cantidades.Bonito(falta, x.Unidad) : "—",
                     HayQueComprar = !x.Libre && falta > 0,
-                    Donde = Donde(x.EnProductos, x.Bases)
+                    Donde = Donde(x.EnProductos, x.Recetas)
                 };
             })
             // primero lo que mas falta, y despues por nombre: es el orden en que
@@ -184,7 +184,7 @@ public class PanelController : Controller
                 : ingrediente is int elegido ? await Ficha(elegido)
                 : null,
             EnTotal = ingredientes.Count,
-            EnRecetas = ingredientes.Count(x => x.EnProductos > 0 || x.Bases.Count > 0)
+            EnRecetas = ingredientes.Count(x => x.EnProductos > 0 || x.Recetas.Count > 0)
         });
     }
 
@@ -207,7 +207,7 @@ public class PanelController : Controller
                 i.PrecioDeCompra,
                 i.PrecioPorMedida,
                 EnProductos = i.UsosEnProductos.Count,
-                Bases = i.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
+                Recetas = i.UsosEnRecetas.Select(u => u.Receta.Nombre).ToList()
             })
             .FirstOrDefaultAsync();
 
@@ -228,8 +228,8 @@ public class PanelController : Controller
             Bulto = x.CantidadDeCompra is decimal trae ? trae.ToString("0.###") : "",
             Precio = x.PrecioDeCompra,
             Titulo = x.Nombre,
-            Donde = Donde(x.EnProductos, x.Bases),
-            Usos = x.EnProductos + x.Bases.Count,
+            Donde = Donde(x.EnProductos, x.Recetas),
+            Usos = x.EnProductos + x.Recetas.Count,
             Desglose = [.. partes.Select(p => Renglon(p, x.Unidad))],
             HaceFalta = Cantidades.Bonito(partes.Sum(p => p.Total), x.Unidad)
         };
@@ -237,24 +237,23 @@ public class PanelController : Controller
 
     // Como se lee un renglon del desglose.
     //
-    // La base multiplica por tandas y no por piezas: se amasa de a tandas
-    // enteras, asi que lo que se gasta es la receta por cuantas tandas salgan.
+    // Una receta multiplica por cuantas veces hay que hacerla y no por piezas:
+    // se hace entera, asi que lo que se gasta es lo que lleva toda por esas
+    // veces. «1 kg la receta × 2 = 2 kg», con el rinde al lado del nombre.
     private static RenglonDesglose Renglon(ParteDeReceta p, Medida unidad) => new()
     {
         Donde = p.Donde,
         Rinde = p.EsBase ? $"rinde {p.Rinde}" : null,
         Cuanto = p.EsBase
-            ? $"{Cantidades.Bonito(p.Cantidad, unidad)} la tanda"
+            ? $"{Cantidades.Bonito(p.Cantidad, unidad)} la receta"
             : Cantidades.Bonito(p.Cantidad, unidad),
-        Sale = p.EsBase
-            ? $"× {p.Tandas} {(p.Tandas == 1 ? "tanda" : "tandas")} = {Cantidades.Bonito(p.Total, unidad)}"
-            : $"× {p.Piezas} = {Cantidades.Bonito(p.Total, unidad)}"
+        Sale = $"× {(p.EsBase ? p.Tandas : p.Piezas)} = {Cantidades.Bonito(p.Total, unidad)}"
     };
 
-    // Donde se usa un ingrediente. Las bases van nombradas cuando es una sola:
-    // «en el bollo de masa» dice mas que «en 1 base», y son dos en todo el
-    // sistema. Con mas de una se cuentan, para no armar un renglon largo.
-    private static string Donde(int productos, IReadOnlyList<string> bases)
+    // Donde se usa un ingrediente. Las recetas van nombradas cuando es una sola:
+    // «en bollo de pizza» dice mas que «en 1 receta». Con mas de una se cuentan,
+    // para no armar un renglon largo.
+    private static string Donde(int productos, IReadOnlyList<string> recetas)
     {
         var partes = new List<string>();
 
@@ -263,13 +262,13 @@ public class PanelController : Controller
             partes.Add($"en {productos} {(productos == 1 ? "producto" : "productos")}");
         }
 
-        if (bases.Count == 1)
+        if (recetas.Count == 1)
         {
-            partes.Add($"en {bases[0].ToLowerInvariant()}");
+            partes.Add($"en {recetas[0].ToLowerInvariant()}");
         }
-        else if (bases.Count > 1)
+        else if (recetas.Count > 1)
         {
-            partes.Add($"en {bases.Count} bases");
+            partes.Add($"en {recetas.Count} recetas");
         }
 
         return partes.Count == 0 ? "todavía en ninguna receta" : string.Join(" y ", partes);
@@ -819,6 +818,411 @@ public class PanelController : Controller
                     Sumando = enEspera
                 }
         };
+    }
+
+    // Recetas: lo que se prepara aparte y usan varios productos. Las bases, las
+    // salsas y los rellenos, cada una con lo que lleva.
+    //
+    // Se carga entera, como se hace, y la pantalla divide: al lado de cada
+    // cantidad va lo que le toca a una pieza. Como en Productos, no hay pantalla
+    // de alta distinta: con ?nueva=true es la misma ficha en blanco.
+    [HttpGet("recetas")]
+    public async Task<IActionResult> Recetas(string? tipo = null, int? receta = null,
+        bool nueva = false, int? sumando = null)
+    {
+        return View(await Recetario(tipo, receta, nueva, sumando));
+    }
+
+    // Guardar la ficha, de alta o de edición: el nombre, el tipo, el rinde y
+    // las cantidades, todo con el mismo botón.
+    [HttpPost("recetas")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GuardarReceta(FichaReceta ficha, string? tipo = null, bool nueva = false)
+    {
+        var nombre = (ficha.Nombre ?? "").Trim();
+
+        if (nombre.Length < 2)
+        {
+            return await VolverAReceta(tipo, ficha, nueva, "Falta el nombre de la receta.");
+        }
+
+        // toda la cuenta de una receta es dividir por el rinde, y en piezas: no
+        // hay media pizza
+        if (ficha.Rinde <= 0)
+        {
+            return await VolverAReceta(tipo, ficha, nueva, "El rinde tiene que ser un número entero mayor que cero.");
+        }
+
+        var receta = nueva
+            ? new Receta()
+            : await _contexto.Recetas.FindAsync(ficha.IdReceta)
+                ?? throw new InvalidOperationException($"No existe la receta {ficha.IdReceta}.");
+
+        // Las bases no se crean ni cambian de tipo: hay una por familia y cada
+        // pizza o focaccia toma la suya sola. Una receta nueva es una salsa o un
+        // relleno, diga lo que diga el formulario.
+        var nuevoTipo = !nueva && receta.Tipo == TipoReceta.Base ? TipoReceta.Base
+            : ficha.Tipo == TipoReceta.Relleno ? TipoReceta.Relleno
+            : TipoReceta.Salsa;
+
+        // Una que usa algún producto no cambia de tipo: la pizza se quedaría con
+        // un relleno como salsa. Primero hay que sacársela.
+        if (!nueva && nuevoTipo != receta.Tipo)
+        {
+            var usan = await UsanLaReceta(receta.IdReceta);
+
+            if (usan.Count > 0)
+            {
+                return await VolverAReceta(tipo, ficha, nueva,
+                    $"«{receta.Nombre}» no puede dejar de ser {receta.Tipo.ToString().ToLowerInvariant()}: " +
+                    $"la {(usan.Count == 1 ? "usa" : "usan")} {EnLista(usan)}. " +
+                    $"Primero cambiales {(receta.Tipo == TipoReceta.Salsa ? "la salsa" : "el relleno")}.");
+            }
+        }
+
+        receta.Nombre = nombre;
+        receta.Tipo = nuevoTipo;
+        receta.Rinde = ficha.Rinde;
+
+        if (nueva)
+        {
+            _contexto.Recetas.Add(receta);
+        }
+
+        // las cantidades viajan con la ficha, igual que en la de un producto
+        foreach (var renglon in ficha.Ingredientes ?? [])
+        {
+            if (renglon.Cantidad <= 0)
+            {
+                return await VolverAReceta(tipo, ficha, nueva,
+                    $"La cantidad de {renglon.Nombre.ToLowerInvariant()} tiene que ser mayor que cero.");
+            }
+
+            var fila = await _contexto.RecetaIngredientes
+                .FirstOrDefaultAsync(x => x.IdReceta == ficha.IdReceta && x.IdIngrediente == renglon.IdIngrediente);
+
+            if (fila is not null)
+            {
+                fila.Cantidad = renglon.Cantidad;
+            }
+        }
+
+        try
+        {
+            await _contexto.SaveChangesAsync();
+        }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: "23505" })
+        {
+            // el nombre es único entre todas, de cualquier tipo
+            return await VolverAReceta(tipo, ficha, nueva, $"Ya hay una receta que se llama «{nombre}».");
+        }
+
+        // si el chip de arriba la dejaba afuera -una salsa nueva con «Rellenos»
+        // encendido-, se pasa al de su tipo: si no, la que se acaba de guardar
+        // no aparecería en la lista
+        var filtro = tipo is null or "todo" || tipo == receta.Tipo.ToString() ? tipo : receta.Tipo.ToString();
+
+        return RedirectToAction(nameof(Recetas), new { tipo = filtro, receta = receta.IdReceta });
+    }
+
+    // Sumar un ingrediente a la receta. Es el mismo camino que en la ficha de un
+    // producto, en dos pasos: primero el nombre, que tiene que existir, y
+    // después cuánto lleva.
+    [HttpPost("recetas/sumar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SumarAReceta(int id, string? nombre, decimal? cantidad, string? tipo = null)
+    {
+        var buscado = (nombre ?? "").Trim();
+
+        var ingrediente = await _contexto.Ingredientes
+            .FirstOrDefaultAsync(x => x.Nombre.ToLower() == buscado.ToLower());
+
+        if (ingrediente is null)
+        {
+            return await VolverAReceta(tipo, id, buscado.Length == 0
+                ? "Escribí el nombre del ingrediente."
+                : $"No hay ningún ingrediente que se llame «{buscado}». Se dan de alta en Ingredientes.");
+        }
+
+        if (cantidad is not > 0)
+        {
+            return RedirectToAction(nameof(Recetas),
+                new { tipo, receta = id, sumando = ingrediente.IdIngrediente });
+        }
+
+        var fila = await _contexto.RecetaIngredientes
+            .FirstOrDefaultAsync(x => x.IdReceta == id && x.IdIngrediente == ingrediente.IdIngrediente);
+
+        if (fila is null)
+        {
+            _contexto.RecetaIngredientes.Add(new RecetaIngrediente
+            {
+                IdReceta = id,
+                IdIngrediente = ingrediente.IdIngrediente,
+                Cantidad = cantidad.Value
+            });
+        }
+        else
+        {
+            // ya estaba: sumarlo de nuevo corrige la cantidad en vez de rebotar
+            fila.Cantidad = cantidad.Value;
+        }
+
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Recetas), new { tipo, receta = id });
+    }
+
+    [HttpPost("recetas/quitar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarDeReceta(int id, int idIngrediente, string? tipo = null)
+    {
+        var fila = await _contexto.RecetaIngredientes
+            .FirstOrDefaultAsync(x => x.IdReceta == id && x.IdIngrediente == idIngrediente);
+
+        if (fila is not null)
+        {
+            _contexto.RecetaIngredientes.Remove(fila);
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Recetas), new { tipo, receta = id });
+    }
+
+    // Borrar una receta que no usa nadie. Las bases no se borran: sin la masa,
+    // la próxima pizza que se cargue queda sin bollo. El enlace no se dibuja en
+    // esos casos, así que llegar acá con una es que algo cambió mientras tanto.
+    [HttpPost("recetas/borrar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BorrarReceta(int id, string? tipo = null)
+    {
+        var receta = await _contexto.Recetas.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe la receta {id}.");
+
+        if (receta.Tipo == TipoReceta.Base)
+        {
+            throw new InvalidOperationException($"«{receta.Nombre}» es una masa: las masas no se borran.");
+        }
+
+        var usan = await UsanLaReceta(id);
+
+        if (usan.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"«{receta.Nombre}» la {(usan.Count == 1 ? "usa" : "usan")} {EnLista(usan)}: " +
+                "hay que sacársela antes de borrarla.");
+        }
+
+        // sus ingredientes se van con ella: la cascada está en la base
+        _contexto.Recetas.Remove(receta);
+        await _contexto.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Recetas), new { tipo });
+    }
+
+    // el error de sumar no tiene nada tipeado que conservar: alcanza con volver
+    // a la ficha y decir qué pasó
+    private async Task<IActionResult> VolverAReceta(string? tipo, int receta, string error)
+    {
+        var vm = await Recetario(tipo, receta, false);
+        vm.Error = error;
+        return View(nameof(Recetas), vm);
+    }
+
+    // Vuelve a dibujar la ficha con lo tipeado y el motivo. De lo guardado se
+    // queda con lo que no se escribe -la unidad, lo de una pieza, lo que
+    // cuesta- y a cada renglón le pone la cantidad que vino del formulario.
+    private async Task<IActionResult> VolverAReceta(string? tipo, FichaReceta ficha, bool nueva, string error)
+    {
+        var vm = await Recetario(tipo, nueva ? null : ficha.IdReceta, nueva);
+
+        var tipeadas = (ficha.Ingredientes ?? [])
+            .GroupBy(x => x.IdIngrediente)
+            .ToDictionary(g => g.Key, g => g.Last().Cantidad);
+
+        foreach (var r in vm.Ficha.Ingredientes)
+        {
+            if (tipeadas.TryGetValue(r.IdIngrediente, out var cantidad))
+            {
+                r.Cantidad = cantidad;
+            }
+        }
+
+        vm.Ficha.Nombre = ficha.Nombre ?? "";
+        vm.Ficha.Rinde = ficha.Rinde;
+
+        // una base sigue siendo base aunque el formulario diga otra cosa
+        if (!vm.Ficha.EsBase)
+        {
+            vm.Ficha.Tipo = ficha.Tipo;
+        }
+
+        vm.Error = error;
+
+        // con el nombre puesto: sin el, MVC busca la vista de la accion que se
+        // esta ejecutando y no la que arma la pantalla
+        return View(nameof(Recetas), vm);
+    }
+
+    // Los productos que usan una receta, en el orden en que se cargaron. Con
+    // alguno, la receta no se borra ni cambia de tipo.
+    private async Task<List<string>> UsanLaReceta(int id) =>
+        await _contexto.Productos
+            .Where(x => x.IdBase == id)
+            .OrderBy(x => x.IdProducto)
+            .Select(x => x.Nombre)
+            .ToListAsync();
+
+    // Quiénes la usan, en una línea: «Salsa · la usan Margarita y Marinara».
+    // La base no nombra a cada pizza: la usan todas las de su familia, y la
+    // lista entera sería un renglón de siete nombres.
+    private static string Subtitulo(TipoReceta tipo, Familia? familia, IReadOnlyList<string> usan)
+    {
+        if (tipo == TipoReceta.Base)
+        {
+            var cuales = ProductosVm.Chips.FirstOrDefault(x => x.Clave == familia?.ToString()).Nombre?.ToLowerInvariant();
+
+            return "Base · " + (usan.Count > 1 ? $"la usan las {usan.Count} {cuales}"
+                : usan.Count == 1 ? $"la usa {usan[0]}"
+                : $"todavía no hay {cuales}");
+        }
+
+        return (tipo == TipoReceta.Salsa ? "Salsa · " : "Relleno · ") + (usan.Count == 0
+            ? "todavía no la usa ningún producto"
+            : $"la {(usan.Count == 1 ? "usa" : "usan")} {EnLista(usan)}");
+    }
+
+    // «Margarita, Marinara y Napolitana»
+    private static string EnLista(IReadOnlyList<string> nombres) =>
+        nombres.Count < 2
+            ? string.Join("", nombres)
+            : string.Join(", ", nombres.Take(nombres.Count - 1)) + " y " + nombres[^1];
+
+    private async Task<RecetasVm> Recetario(string? tipo, int? receta, bool nueva, int? sumando = null)
+    {
+        tipo = RecetasVm.Chips.Any(x => x.Clave == tipo) ? tipo! : "todo";
+
+        var todas = _contexto.Recetas.AsQueryable();
+        if (tipo != "todo" && Enum.TryParse<TipoReceta>(tipo, out var cual))
+        {
+            todas = todas.Where(x => x.Tipo == cual);
+        }
+
+        var recetas = await todas
+            .Select(x => new { x.IdReceta, x.Nombre, x.Tipo, x.Familia, x.Rinde })
+            .ToListAsync();
+
+        // Tipo se guarda como texto: ordenar en la base saldria alfabetico, y
+        // las bases van primero. Adentro de cada tipo, en el orden de carga.
+        recetas = [.. recetas.OrderBy(x => x.Tipo).ThenBy(x => x.IdReceta)];
+
+        var costos = await _recetas.CostoDeRecetas();
+
+        var lista = recetas
+            .Select(x =>
+            {
+                var costo = costos.GetValueOrDefault(x.IdReceta);
+
+                return new FilaReceta
+                {
+                    IdReceta = x.IdReceta,
+                    Nombre = x.Nombre,
+                    Tipo = x.Tipo,
+                    CadaUna = costo is null ? null : $"{costo.PorPieza.ToString("C")} cada {RecetasVm.Pieza(x.Tipo)}",
+                    SinPrecio = costo?.SinPrecio.Count ?? 0
+                };
+            })
+            .ToList();
+
+        var elegida = nueva
+            ? null
+            : recetas.FirstOrDefault(x => x.IdReceta == receta) ?? recetas.FirstOrDefault();
+
+        var marco = await Marco();
+        var vm = new RecetasVm
+        {
+            Abierta = marco.Abierta,
+            SinEntregar = marco.SinEntregar,
+            Tipo = tipo,
+            Lista = lista,
+            EsNueva = elegida is null
+        };
+
+        if (elegida is null)
+        {
+            // El alta arranca con el tipo del chip, si es uno que se puede
+            // crear, y con el rinde de siempre: una salsa rinde 6 pizzas, como
+            // el bollo, y un relleno 12 empanadas.
+            var alta = tipo == nameof(TipoReceta.Relleno) ? TipoReceta.Relleno : TipoReceta.Salsa;
+            vm.Ficha = new FichaReceta { Tipo = alta, Rinde = alta == TipoReceta.Relleno ? 12 : 6 };
+            return vm;
+        }
+
+        // sin columna de orden, van por nombre, como en la ficha del producto
+        var renglones = await _contexto.RecetaIngredientes
+            .Where(x => x.IdReceta == elegida.IdReceta)
+            .OrderBy(x => x.Ingrediente.Nombre)
+            .Select(x => new { x.IdIngrediente, x.Ingrediente.Nombre, x.Cantidad, x.Ingrediente.Unidad })
+            .ToListAsync();
+
+        // el que se eligio y esta esperando la cantidad, si hay alguno
+        var enEspera = sumando is null
+            ? null
+            : await _contexto.Ingredientes
+                .Where(x => x.IdIngrediente == sumando)
+                .Select(x => new IngredienteDeLaReceta
+                {
+                    IdIngrediente = x.IdIngrediente,
+                    Nombre = x.Nombre,
+                    Unidad = Cantidades.Abreviatura(x.Unidad)
+                })
+                .FirstOrDefaultAsync();
+
+        var puestos = renglones.Select(x => x.IdIngrediente).ToList();
+        var disponibles = await _contexto.Ingredientes
+            .Where(x => !puestos.Contains(x.IdIngrediente))
+            .OrderBy(x => x.Nombre)
+            .Select(x => new { x.Nombre, x.Unidad })
+            .ToListAsync();
+
+        var usan = await UsanLaReceta(elegida.IdReceta);
+        var cuesta = costos.GetValueOrDefault(elegida.IdReceta);
+
+        vm.Titulo = elegida.Nombre;
+        vm.Subtitulo = Subtitulo(elegida.Tipo, elegida.Familia, usan);
+        vm.Ficha = new FichaReceta
+        {
+            IdReceta = elegida.IdReceta,
+            Nombre = elegida.Nombre,
+            Tipo = elegida.Tipo,
+            Rinde = elegida.Rinde,
+            Ingredientes =
+            [
+                .. renglones.Select(r => new RenglonDeReceta
+                {
+                    IdIngrediente = r.IdIngrediente,
+                    Nombre = r.Nombre,
+                    Cantidad = r.Cantidad,
+                    Unidad = Cantidades.Abreviatura(r.Unidad),
+                    PorPieza = Cantidades.Bonito(r.Cantidad / elegida.Rinde, r.Unidad)
+                })
+            ],
+            Disponibles = [.. disponibles.Select(x => new IngredienteDisponible
+            {
+                Nombre = x.Nombre,
+                Unidad = Cantidades.Abreviatura(x.Unidad)
+            })],
+            Sumando = enEspera,
+            Cuesta = cuesta is null
+                ? null
+                : $"Hacerla cuesta {cuesta.Entera.ToString("C")}: {cuesta.PorPieza.ToString("C")} cada {RecetasVm.Pieza(elegida.Tipo)}.",
+            Falta = cuesta is null || cuesta.SinPrecio.Count == 0
+                ? null
+                : $"Falta el precio de {EnLista(cuesta.SinPrecio)}, así que es más.",
+            Usos = usan.Count
+        };
+
+        return vm;
     }
 
     // Produccion: lo mismo que Hornear pero con el desglose abierto. Es la

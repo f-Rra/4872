@@ -429,6 +429,50 @@ public class RecetaService
         return [.. costos.OrderBy(x => x.Porcentaje ?? int.MinValue).ThenBy(x => x.Nombre)];
     }
 
+    // Lo que cuesta cada receta: una pieza y la receta entera.
+    //
+    // La pieza se cuenta igual que la base en Costos -cada cantidad dividida
+    // por el rinde, contra el precio de compra- para que la pantalla de Recetas
+    // y el renglón del bollo en Costos no puedan decir números distintos.
+    public async Task<IReadOnlyDictionary<int, CostoDeReceta>> CostoDeRecetas()
+    {
+        var renglones = await _contexto.RecetaIngredientes
+            .Select(r => new
+            {
+                r.IdReceta,
+                r.Receta.Rinde,
+                r.Ingrediente.Nombre,
+                r.Ingrediente.Libre,
+                r.Ingrediente.CantidadDeCompra,
+                r.Ingrediente.PrecioDeCompra,
+                r.Cantidad
+            })
+            .ToListAsync();
+
+        return renglones
+            .GroupBy(x => x.IdReceta)
+            .ToDictionary(g => g.Key, g =>
+            {
+                var rinde = g.First().Rinde;
+                var porPieza = 0m;
+                var sinPrecio = new List<string>();
+
+                foreach (var r in g.OrderBy(x => x.Nombre))
+                {
+                    var sale = Cuanto(rinde > 0 ? r.Cantidad / rinde : 0m, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
+
+                    if (sale is null)
+                    {
+                        sinPrecio.Add(r.Nombre);
+                    }
+
+                    porPieza += sale ?? 0m;
+                }
+
+                return new CostoDeReceta { PorPieza = porPieza, Entera = porPieza * rinde, SinPrecio = sinPrecio };
+            });
+    }
+
     // Lo cobrado contra lo que costo, mes por mes, de los pedidos entregados.
     //
     // Lo cobrado es historico de verdad: el precio se copia al item cuando se

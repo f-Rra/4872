@@ -40,6 +40,10 @@
                 {
                     <a asp-action="Productos" aria-current="@(id == seccion ? "page" : null)">@Icono(dibujo)@nombre@globo</a>
                 }
+                else if (id == "recetas")
+                {
+                    <a asp-action="Recetas" aria-current="@(id == seccion ? "page" : null)">@Icono(dibujo)@nombre@globo</a>
+                }
                 else if (id == "ingredientes")
                 {
                     <a asp-action="Ingredientes" aria-current="@(id == seccion ? "page" : null)">@Icono(dibujo)@nombre@globo</a>
@@ -83,6 +87,7 @@
         ("pedidos", "Pedidos", "M5.5 3h13v18l-2.2-1.6L14 21l-2-1.6L10 21l-2.3-1.6L5.5 21ZM9 8h6M9 12h6"),
         ("produccion", "Producción", "M3.5 6.5h17v13h-17zM3.5 11h17M7 8.5h.01M10 8.5h.01M8 15h8"),
         ("productos", "Productos", "M12 3.5a8.5 8.5 0 1 0 .01 0M12 7a5 5 0 1 0 .01 0"),
+        ("recetas", "Recetas", "M6.5 3.5h10a1.5 1.5 0 0 1 1.5 1.5v14.5H8a1.5 1.5 0 0 1-1.5-1.5ZM6.5 18a1.5 1.5 0 0 1 1.5-1.5h10M10 7.5h5M10 11h5"),
         ("ingredientes", "Ingredientes", "M8 3h8l-1 3H9ZM9 6h6l1.5 4v9a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-9ZM8 13h8"),
         ("costos", "Costos", "M3.5 12.2 12.2 3.5H20.5v8.3l-8.7 8.7Z")
     ];
