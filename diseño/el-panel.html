@@ -674,6 +674,24 @@
   .nota-suelta{display:inline-block;margin:0;opacity:.6}
 
 
+  /* ---------- las recetas ----------
+     La base, la salsa y el relleno se leen como una receta aparte y no como
+     ingredientes sueltos: el nombre arriba y lo que lleva abajo, abierto */
+  .de-receta{display:block;font-size:.95rem;font-weight:700}
+  .receta-reng .va > .lectura{margin-top:.35rem}
+  /* lo que le toca a una pieza, en la ficha de la receta: es derivado, asi que
+     va sin pastilla, como la base en la ficha del producto */
+  .receta .porpieza{
+    flex:none;min-width:8.4rem;text-align:right;
+    font-size:.8rem;font-weight:600;opacity:.6;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  /* el rinde y en que se cuenta: bollos, pizzas o empanadas */
+  .rinde-reng .va{display:flex;align-items:baseline;gap:.5rem}
+  .rinde-reng .cual{font-size:.9rem;font-weight:700;opacity:.8}
+  /* borrar va aparte y abajo, como en la ficha de un ingrediente */
+  .detalle .secundarias{margin-top:.9rem}
+
+
   /* ---------- ingredientes: la grilla ----------
      Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
      maneras de contarla -lo que queda despues de la tanda, una barra de consumo y
@@ -948,13 +966,13 @@
   <header class="encabezado">
     <h1>El panel del vendedor</h1>
     <p>
-      Las seis pantallas del vendedor, navegables por la barra lateral, m&aacute;s la entrada, que va aparte
+      Las siete pantallas del vendedor, navegables por la barra lateral, m&aacute;s la entrada, que va aparte
       porque es la &uacute;nica sin barra. Todo funciona y todo sale de la misma fuente:
-      <b>avanzá o cancelá un pedido y los números de las otras cinco se recalculan</b>.
+      <b>avanzá o cancelá un pedido y los números de las otras pantallas se recalculan</b>.
       Es solo de escritorio &mdash; el vendedor no lo usa desde el celular.
     </p>
     <div class="pasos" id="pasos">
-      <button type="button" data-p="panel" aria-pressed="true">Las seis pantallas</button>
+      <button type="button" data-p="panel" aria-pressed="true">Las siete pantallas</button>
       <button type="button" data-p="entrada" aria-pressed="false">La entrada</button>
     </div>
   </header>
@@ -978,6 +996,7 @@
     {id:"pedidos", n:"Pedidos", i:'<path d="M5.5 3h13v18l-2.2-1.6L14 21l-2-1.6L10 21l-2.3-1.6L5.5 21Z"/><path d="M9 8h6M9 12h6"/>'},
     {id:"produccion", n:"Producción", i:'<rect x="3" y="5" width="18" height="15" rx="1.5"/><path d="M3 10h18"/><path d="M7 7.5h.01M10 7.5h.01"/><path d="M8 14h8"/>'},
     {id:"productos", n:"Productos", i:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><path d="M9.5 10h.01M14 11h.01M11.5 14.5h.01"/>'},
+    {id:"recetas", n:"Recetas", i:'<path d="M6.5 3.5h10a1.5 1.5 0 0 1 1.5 1.5v14.5H8a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M6.5 18a1.5 1.5 0 0 1 1.5-1.5h10"/><path d="M10 7.5h5M10 11h5"/>'},
     {id:"ingredientes", n:"Ingredientes", i:'<path d="M8 3h8l-1 3H9Z"/><path d="M9 6h6l1.5 4v9a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-9Z"/><path d="M8 13h8"/>'},
     {id:"costos", n:"Costos", i:'<path d="M3.5 12.2 12.2 3.5H20.5v8.3l-8.7 8.7Z"/><circle cx="16.6" cy="7.4" r="1.5"/>'},
   ];
@@ -1033,44 +1052,42 @@
   var SIG = {nuevo:"prep", prep:"entregado"};
   var ACC = {nuevo:"Empezar a preparar", prep:"Marcar entregado"};
 
+  // La base no se elige: cada tipo amasa la suya. La salsa s\u00ed, o ninguna. La
+  // empanada no lleva nada suelto: su relleno trae todo, tapas incluidas.
   var PRODUCTOS = [
-    {f:"pizza", n:"Margarita",           p:9800,  act:true},
-    {f:"pizza", n:"Marinara",            p:8900,  act:true},
+    {f:"pizza", n:"Margarita",           p:9800,  act:true,  salsa:"Pomodoro"},
+    {f:"pizza", n:"Marinara",            p:8900,  act:true,  salsa:"Pomodoro"},
     {f:"pizza", n:"Fugazzeta",           p:11200, act:true},
-    {f:"pizza", n:"Napolitana",          p:10800, act:true},
-    {f:"pizza", n:"Cuatro quesos",       p:12900, act:true},
+    {f:"pizza", n:"Napolitana",          p:10800, act:true,  salsa:"Pomodoro"},
+    {f:"pizza", n:"Cuatro quesos",       p:12900, act:true,  salsa:"Alioli"},
     {f:"pizza", n:"Jam\u00f3n crudo y r\u00facula", p:13400, act:true},
-    {f:"pizza", n:"Calabresa",           p:11900, act:false},
+    {f:"pizza", n:"Calabresa",           p:11900, act:false, salsa:"Pomodoro"},
     {f:"foc",   n:"Romero y sal",        p:6800,  act:true},
     {f:"foc",   n:"Cherry",              p:7900,  act:true},
-    {f:"emp",   n:"Carne suave",         act:true},
-    {f:"emp",   n:"Carne picante",       act:true},
-    {f:"emp",   n:"Jam\u00f3n y queso",      act:true},
-    {f:"emp",   n:"Humita",              act:true},
-    {f:"emp",   n:"Caprese",             act:true},
-    {f:"emp",   n:"Pollo",               act:false}
+    {f:"emp",   n:"Carne suave",         act:true,  relleno:"Carne suave"},
+    {f:"emp",   n:"Carne picante",       act:true,  relleno:"Carne picante"},
+    {f:"emp",   n:"Jam\u00f3n y queso",      act:true,  relleno:"Jam\u00f3n y queso"},
+    {f:"emp",   n:"Humita",              act:true,  relleno:"Humita"},
+    {f:"emp",   n:"Caprese",             act:true,  relleno:"Caprese"},
+    {f:"emp",   n:"Pollo",               act:false, relleno:"Pollo"}
   ];
   var FAM = {pizza:"Pizzas", foc:"Focaccias", emp:"Empanadas"};
   var FAMS = ["pizza", "foc", "emp"];
 
-  var RECETA = {
-    "Margarita":["Salsa de tomate","Muzzarella","Albahaca","Oliva"],
-    "Marinara":["Salsa de tomate","Ajo","Or\u00e9gano","Oliva"],
+  // lo que lleva arriba cada pizza o focaccia. La masa y la salsa no van ac\u00e1:
+  // son recetas
+  var LLEVA = {
+    "Margarita":["Muzzarella","Albahaca","Oliva"],
+    "Marinara":["Ajo","Or\u00e9gano","Oliva"],
     "Fugazzeta":["Muzzarella","Cebolla","Or\u00e9gano","Oliva"],
-    "Napolitana":["Salsa de tomate","Muzzarella","Tomate","Ajo"],
+    "Napolitana":["Muzzarella","Tomate","Ajo"],
     "Cuatro quesos":["Muzzarella","Provolone","Roquefort","Parmesano"],
     "Romero y sal":["Romero","Sal gruesa","Oliva","Semolin"],
     "Cherry":["Tomate cherry","Albahaca","Oliva","Sal"],
     "Jam\u00f3n crudo y r\u00facula":["Muzzarella","Jam\u00f3n crudo","R\u00facula","Oliva"],
-    "Calabresa":["Salsa de tomate","Muzzarella","Longaniza","Or\u00e9gano"],
-    "Carne suave":["Tapas de empanada","Carne","Cebolla","Huevo","Comino"],
-    "Carne picante":["Tapas de empanada","Carne","Cebolla","Piment\u00f3n","Aj\u00ed molido"],
-    "Jam\u00f3n y queso":["Tapas de empanada","Jam\u00f3n","Muzzarella","Or\u00e9gano"],
-    "Humita":["Tapas de empanada","Choclo","Salsa blanca","Cebolla de verdeo","Nuez moscada"],
-    "Caprese":["Tapas de empanada","Muzzarella","Tomate","Albahaca","Oliva"],
-    "Pollo":["Tapas de empanada","Pollo","Cebolla","Morr\u00f3n","Perejil"]
+    "Calabresa":["Muzzarella","Longaniza","Or\u00e9gano"]
   };
-  // panel | entrada. La entrada es la septima y no tiene barra lateral.
+  // panel | entrada. La entrada es la octava y no tiene barra lateral.
   var pantalla = "panel", sinClave = false, claveMal = false;
   var seccion = "inicio", filtro = "activos", elegido = "0147";
   var ranura1 = "masa", ranura3 = "pedidos";
@@ -1080,6 +1097,10 @@
   var vistaCostos2 = "producto";
   var ranuras = ["nuevos", "comprar", "masa", "costo", "total"];
   var BORRADOR = {f:"pizza", n:"", p:0, ing:[]}, TIPEADO = null;
+  var famRec = "todo", recElegida = "Pomodoro";
+  var BORRADOR_R = {t:"salsa", n:"", rinde:6, r:{}}, TIPEADO_R = null;
+  // los avisos duran un repintado: el que sigue ya no los muestra
+  var avisoProd = null, avisoRec = null;
 
   function plata(n){ return "$" + n.toLocaleString("es-AR"); }
   function precio(it){
@@ -1186,7 +1207,7 @@
   // gasta es la de la receta por cu\u00e1ntas tandas salgan
   function harinaDelDia(){
     return tandas().reduce(function(a, x){
-      return a + x.tandas * cuantoTanda(x.base, "Harina 000");
+      return a + x.tandas * cuantoReceta(x.base, "Harina 000");
     }, 0);
   }
 
@@ -1476,13 +1497,11 @@
     return listaProd().length + ' \u00b7 ' + (a === 0 ? 'ninguno agotado' : a === 1 ? '1 agotado' : a + ' agotados');
   }
 
-  // Un rengl\u00f3n por ingrediente: qu\u00e9 lleva, cu\u00e1nto y si se puede sacar.
-  // Los tres juntos porque cuando carg\u00e1s una pizza la pregunta es esa, e ir a
-  // Ingredientes por el cu\u00e1nto obliga a ir y volver por cada rengl\u00f3n.
-  function ingrHTML(lista, prod){
-    // el rengl\u00f3n de arriba nunca se mueve de lugar: el (+) en reposo y el
-    // buscador cuando se abre, tenga la receta cuatro ingredientes o doce
-    var tope = '<ul class="receta tope"><li>' +
+  // el rengl\u00f3n de arriba nunca se mueve de lugar: el (+) en reposo y el
+  // buscador cuando se abre, tenga la receta cuatro ingredientes o doce. Es el
+  // mismo en un producto y en una receta
+  function sumarHTML(yaPuestos){
+    return '<ul class="receta tope"><li>' +
       (sumando
         ? '<input class="buscar-linea" id="ing-nuevo" type="text" placeholder="Buscar\u2026" autocomplete="off">'
         : '<button class="mas" type="button" data-abrire="1" aria-label="Sumar un ingrediente">' +
@@ -1490,9 +1509,14 @@
           '<path d="M12 5v14M5 12h14"/></svg></button>' +
           '<button class="dice" type="button" data-abrire="1">Sumar un ingrediente</button>') +
       '<span class="hueco"></span><span class="rx"></span></li></ul>' +
-      (sumando ? candidatosHTML(lista) : '');
+      (sumando ? candidatosHTML(yaPuestos) : '');
+  }
 
-    return tope + '<ul class="receta">' + lista.map(function(g, k){
+  // Un rengl\u00f3n por ingrediente: qu\u00e9 lleva, cu\u00e1nto y si se puede sacar.
+  // Los tres juntos porque cuando carg\u00e1s una pizza la pregunta es esa, e ir a
+  // Ingredientes por el cu\u00e1nto obliga a ir y volver por cada rengl\u00f3n.
+  function ingrHTML(lista, prod){
+    return sumarHTML(lista) + '<ul class="receta">' + lista.map(function(g, k){
       var x = buscaIng(g), c = prod ? cuantoLleva(prod, g) : 0;
       return '<li><span class="rn">' + g + '</span>' +
         '<span class="rcaja"><input class="rc" value="' + redondo(c) + '" data-cant="' + g + '">' +
@@ -1525,10 +1549,10 @@
       p12: TIPEADO && TIPEADO.p12 ? TIPEADO.p12 : pesos(P.pack[12])
     };
   }
-  function inNom(v, c){ return '<input id="f-nombre"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="C\u00f3mo se llama">'; }
-  function inPre(v, c){ return '<input id="f-precio"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="$">'; }
-  function inP6(v){  return '<input id="f-p6" value="' + v + '">'; }
-  function inP12(v){ return '<input id="f-p12" value="' + v + '">'; }
+  function inNom(v, c){ return '<input type="text" id="f-nombre"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="C\u00f3mo se llama">'; }
+  function inPre(v, c){ return '<input type="text" id="f-precio"' + (c ? ' class="' + c + '"' : '') + ' value="' + v + '" placeholder="$">'; }
+  function inP6(v){  return '<input type="text" id="f-p6" value="' + v + '">'; }
+  function inP12(v){ return '<input type="text" id="f-p12" value="' + v + '">'; }
   // radios y no botones, igual que la app: el estado elegido lo lleva el
   // input y el estilo sale de .chip-fam input:checked + span
   function chipsFam(el){
@@ -1539,9 +1563,9 @@
   }
   function accionesHTML(nuevo, el){
     return nuevo
-      ? '<div class="acciones"><button class="btn" type="button" data-crear="1">Crear producto</button>' +
+      ? '<div class="acciones en-fila"><button class="btn" type="button" data-crear="1">Crear producto</button>' +
         '<button class="btn flaco" type="button" data-cancelar="1">Cancelar</button></div>'
-      : '<div class="acciones"><button class="btn" type="button" data-guardar="1">Guardar cambios</button>' +
+      : '<div class="acciones en-fila"><button class="btn" type="button" data-guardar="1">Guardar cambios</button>' +
         '<button class="btn flaco" type="button" data-tog="' + el.n + '">' +
         (el.act ? "Marcar agotado" : "Volver a la carta") + '</button></div>';
   }
@@ -1554,56 +1578,72 @@
   }
   var AVISO_PACK = 'Los dos precios valen para todos los gustos.';
 
-  // B \u00b7 rengl\u00f3n etiquetado
-  // Lo que le toca de masa a UNA pieza. Una pizza es un bollo.
+  // Lo que le toca a UNA pieza de una receta: la masa, la salsa o el relleno.
+  // Una pizza es un bollo.
   //
-  // La receta de la masa se carga por tanda entera, que es como se amasa,
-  // pero ac\u00e1 no se muestra as\u00ed: en esta ficha todo lo dem\u00e1s es por
-  // pieza —120 g de muzzarella son de una pizza— y mezclar las dos
-  // unidades obligaba a explicar el rinde. Dividida, las dos listas dicen lo
-  // mismo.
+  // Las recetas se cargan enteras, que es como se hacen, pero ac\u00e1 no se
+  // muestran as\u00ed: en esta ficha todo lo dem\u00e1s es por pieza \u2014120 g de
+  // muzzarella son de una pizza\u2014 y mezclar las dos cuentas obligaba a
+  // explicar el rinde. Divididas, las listas dicen lo mismo.
   //
-  // Va de lectura: son n\u00fameros derivados, y la receta de la masa no es de
-  // este producto sino de todos los que la amasan.
-  function baseHTML(el){
-    var bn = baseDe(el.f);
-    if(!bn) return '';
-    var b = BASES[bn];
-    var filas = Object.keys(b.r)
-      .sort(function(x, y){ return b.r[y] - b.r[x]; })
-      .map(function(g){
-        var x = buscaIng(g);
-        return '<li><span class="rn">' + g + '</span>' +
-          '<span class="rq">' + bonito(b.r[g] / b.rinde, x ? x.u : 'g') + '</span>' +
-          '<span class="hueco"></span><span class="rx"></span></li>';
-      }).join("");
-    return '<div class="reng alto receta-reng"><span class="et">Base</span>' +
-      '<span class="va"><ul class="receta lectura">' + filas + '</ul></span></div>';
+  // Va de lectura: son n\u00fameros derivados, y la receta no es de este producto
+  // sino de todos los que la usan. Se cambia en Recetas.
+  function lecturaHTML(nom){
+    var b = RECETAS[nom];
+    return '<ul class="receta lectura">' + Object.keys(b.r).map(function(g){
+      var x = buscaIng(g);
+      return '<li><span class="rn">' + g + '</span>' +
+        '<span class="rq">' + bonito(b.r[g] / b.rinde, x ? x.u : 'g') + '</span>' +
+        '<span class="hueco"></span><span class="rx"></span></li>';
+    }).join("") + '</ul>';
+  }
+  // La salsa o el relleno, en chips como el tipo y con lo que lleva abierto
+  // abajo. La salsa puede no estar; el relleno no, porque es todo lo que lleva
+  // la empanada.
+  function eligeHTML(tipo, elegida){
+    var nombres = Object.keys(RECETAS).filter(function(k){ return RECETAS[k].t === tipo; });
+    if(tipo === "salsa") nombres.push("");
+    return '<span class="chips-fam">' + nombres.map(function(k){
+      return '<label class="chip-fam"><input type="radio" name="' + tipo + '" data-elige="' + tipo +
+        '" value="' + k + '"' + ((elegida || "") === k ? ' checked' : '') + '><span>' +
+        (k || 'Sin salsa') + '</span></label>';
+    }).join("") + '</span>' + (elegida && RECETAS[elegida] ? lecturaHTML(elegida) : '');
   }
 
+  // B \u00b7 rengl\u00f3n etiquetado
   function fichaRenglones(nuevo, el, ing){
     var v = valores(el);
     function r(et, va, cls){ return '<div class="reng' + (cls ? ' ' + cls : '') + '">' +
       '<span class="et">' + et + '</span><span class="va">' + va + '</span></div>'; }
+    // cada bloque de abajo es su propia lista de renglones, como en la app
+    function bloque(et, va){ return '<div class="renglones sigue">' + r(et, va, "alto receta-reng") + '</div>'; }
+    var bn = baseDe(el.f);
     var precios = el.f === "emp"
       ? r("Pack x6", inP6(v.p6)) + r("Pack x12", inP12(v.p12))
       : r("Precio", inPre(v.p));
-    return topeHTML(nuevo, el) +
+    // el div es el formulario de la app: lo de arriba va adentro
+    return '<div>' + topeHTML(nuevo, el) +
+      (avisoProd ? '<p class="aviso" role="alert">' + avisoProd + '</p>' : '') +
       '<div class="renglones">' +
         r("Nombre", inNom(v.n)) +
         r("Tipo", chipsFam(el)) +
         precios +
-        r("Ingredientes", ingrHTML(ing, nuevo ? null : el.n), "alto receta-reng") +
-        (nuevo ? '' : baseHTML(el)) +
-      '</div>' +
-      (el.f === "emp" ? '<p class="nota-f" style="margin:-.9rem 0 1.3rem">' + AVISO_PACK + '</p>' : '') +
+      '</div></div>' +
+      // La empanada no lleva nada suelto: se le elige el relleno. La pizza y
+      // la focaccia llevan sus ingredientes, la base que les toca y la salsa,
+      // abajo, con la base.
+      (el.f === "emp"
+        ? '<p class="nota-f">' + AVISO_PACK + '</p>' + bloque("Relleno", eligeHTML("relleno", el.relleno))
+        : bloque("Ingredientes", ingrHTML(ing, nuevo ? null : el.n)) +
+          (nuevo || !bn ? '' : bloque("Base", '<span class="de-receta">' + bn + '</span>' + lecturaHTML(bn))) +
+          bloque("Salsa", eligeHTML("salsa", el.salsa))) +
       accionesHTML(nuevo, el);
   }
 
   function prodFicha(){
     var nuevo = prodElegido === null;
     var el = nuevo ? BORRADOR : (buscaProd(prodElegido) || listaProd()[0] || PRODUCTOS[0]);
-    var ing = nuevo ? BORRADOR.ing : (RECETA[el.n] || []);
+    var ing = nuevo ? BORRADOR.ing : (LLEVA[el.n] || []);
 
     function renglonProd(x){
       return '<li class="' + (!nuevo && x.n === prodElegido ? "elegido" : "") + '">' +
@@ -1627,7 +1667,7 @@
 
     var col = '<div class="columna con-pie"><div class="rollo">' + grupos + '</div>' +
     '<button class="alta" type="button" data-nuevo="1" aria-pressed="' + nuevo + '">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Producto nuevo</button></div>';
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Producto nuevo</button></div>';
 
     return '<div class="doble">' + col +
       '<div class="detalle">' + fichaRenglones(nuevo, el, ing) + '</div></div>';
@@ -1643,6 +1683,8 @@
   }
   // guarda lo tipeado antes de repintar, para no borrarlo a mitad de camino
   function sincronizar(){
+    var rn = document.getElementById("r-nombre");
+    if(rn){ TIPEADO_R = {n: rn.value}; return; }
     var n = document.getElementById("f-nombre");
     if(!n) return;
     var p = document.getElementById("f-precio");
@@ -1650,72 +1692,196 @@
     TIPEADO = {n: n.value, p: p ? p.value : "", p6: a ? a.value : "", p12: b ? b.value : ""};
   }
 
+  /* ---------- recetas ---------- */
+  function listaRec(){
+    return Object.keys(RECETAS).filter(function(k){ return famRec === "todo" || RECETAS[k].t === famRec; });
+  }
+  function recAbierta(){ return recElegida === null ? BORRADOR_R : RECETAS[recElegida]; }
+  // \u00abbollo\u00bb, \u00abpizzas\u00bb: en qu\u00e9 se cuenta el rinde de cada tipo
+  function nombrePieza(t, n){ return TIPOS[t].pieza[n === 1 ? 0 : 1]; }
+  function enLista(nombres){
+    return nombres.length < 2 ? nombres.join("")
+      : nombres.slice(0, -1).join(", ") + " y " + nombres[nombres.length - 1];
+  }
+  // los productos que usan una receta. La base, todos los de su tipo
+  function usanReceta(nom){
+    var b = RECETAS[nom];
+    return PRODUCTOS.filter(function(p){
+      return b.t === "base" ? b.fam.indexOf(p.f) >= 0
+           : b.t === "salsa" ? p.f !== "emp" && p.salsa === nom
+           : p.f === "emp" && p.relleno === nom;
+    }).map(function(p){ return p.n; });
+  }
+  // la base no nombra a cada pizza: las usan todas
+  function metaRec(nom){
+    var b = RECETAS[nom], usan = usanReceta(nom);
+    if(b.t === "base"){
+      var fam = FAM[b.fam[0]].toLowerCase();
+      return 'Base \u00b7 ' + (usan.length > 1 ? 'la usan las ' + usan.length + ' ' + fam
+        : usan.length ? 'la usa ' + usan[0] : 'todav\u00eda no hay ' + fam);
+    }
+    return TIPOS[b.t].uno + ' \u00b7 ' + (usan.length
+      ? (usan.length === 1 ? 'la usa ' : 'la usan ') + enLista(usan)
+      : 'todav\u00eda no la usa ning\u00fan producto');
+  }
+
+  // Al lado del nombre, cu\u00e1nto sale UNA pieza y no el rinde, que est\u00e1 en la
+  // ficha: es el n\u00famero que despu\u00e9s aparece en Costos adentro de cada
+  // producto. El asterisco, como all\u00e1: falta el precio de algo.
+  function recLista(){
+    var nuevo = recElegida === null;
+    var grupos = ORDEN_TIPOS.map(function(t){
+      var deEste = listaRec().filter(function(k){ return RECETAS[k].t === t; });
+      if(!deEste.length) return '';
+      return '<section class="grupo-lista">' +
+        (famRec === "todo" ? '<h2 class="cab-grupo">' + TIPOS[t].n + '<span class="cuantos">&middot; ' + deEste.length + '</span></h2>' : '') +
+        '<ul class="en-una-linea">' + deEste.map(function(k){
+          var b = RECETAS[k], c = costoReceta(b);
+          return '<li class="' + (!nuevo && k === recElegida ? "elegido" : "") + '">' +
+            '<a href="#" data-er="' + k + '"><span class="izq"><span class="fila-p">' +
+            '<span class="nom">' + k + '</span>' +
+            '<span class="plata cuenta">' + plata(c.costo) + ' cada ' + nombrePieza(b.t, 1) +
+            (c.falta ? '<span class="asterisco" title="falta cargar el precio de ' +
+              (c.falta === 1 ? 'un ingrediente' : c.falta + ' ingredientes') + '">*</span>' : '') +
+            '</span></span></span></a></li>';
+        }).join("") + '</ul></section>';
+    }).join("");
+    return '<div class="columna con-pie"><div class="rollo">' + grupos + '</div>' +
+      '<button class="alta" type="button" data-rnueva="1" aria-pressed="' + nuevo + '">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Receta nueva</button></div>';
+  }
+
+  // Las bases no se crean ni cambian de tipo: hay una por cada tipo de
+  // producto y la toma sola. Una receta nueva es una salsa o un relleno.
+  function chipsTipo(t){
+    return '<span class="chips-fam">' + ["salsa", "relleno"].map(function(k){
+      return '<label class="chip-fam"><input type="radio" name="tipo-rec" data-tipo="' + k + '"' +
+        (t === k ? ' checked' : '') + '><span>' + TIPOS[k].uno + '</span></label>';
+    }).join("") + '</span>';
+  }
+  function secundariasRec(nom){
+    if(RECETAS[nom].t === "base") return '';
+    var usan = usanReceta(nom);
+    return '<div class="secundarias">' + (usan.length
+      ? '<span class="noBorra">No se puede borrar: la ' +
+        (usan.length === 1 ? 'usa un producto' : 'usan ' + usan.length + ' productos') + '</span>'
+      : '<button class="enlace" type="button" data-rborrar="' + nom + '">Borrar receta</button>') + '</div>';
+  }
+
+  // La ficha de una receta. Las cantidades van por la receta entera, como se
+  // pesan; al lado, lo que le toca a una pieza, que es lo que muestra la ficha
+  // de cada producto.
+  function recFicha(){
+    var nuevo = recElegida === null;
+    var b = recAbierta();
+    var nombre = TIPEADO_R ? TIPEADO_R.n : nuevo ? BORRADOR_R.n : recElegida;
+    function r(et, va, cls){ return '<div class="reng' + (cls ? ' ' + cls : '') + '">' +
+      '<span class="et">' + et + '</span><span class="va">' + va + '</span></div>'; }
+
+    var filas = Object.keys(b.r).map(function(g){
+      var x = buscaIng(g), u = x ? x.u : "g";
+      return '<li><span class="rn">' + g + '</span>' +
+        '<span class="porpieza">' + bonito(b.r[g] / b.rinde, u) + ' por ' + nombrePieza(b.t, 1) + '</span>' +
+        '<span class="rcaja"><input class="rc" value="' + redondo(b.r[g]) + '" data-rcant="' + g + '">' +
+        '<span class="ru">' + u + '</span></span>' +
+        '<button class="rx" type="button" data-rquita="' + g + '" title="Quitar">\u00d7</button></li>';
+    }).join("");
+
+    // lo que cuesta hacerla, y lo que falta para que ese n\u00famero sea el real
+    var c = costoReceta(b);
+    var sinPrecio = Object.keys(b.r).filter(function(g){ var x = buscaIng(g); return !(x && x.trae); });
+    var cuesta = !filas ? '' :
+      '<p class="nota-f">Hacerla cuesta ' + plata(c.costo * b.rinde) + ': ' + plata(c.costo) +
+      ' cada ' + nombrePieza(b.t, 1) + '.' +
+      (sinPrecio.length ? ' Falta el precio de ' + enLista(sinPrecio) + ', as\u00ed que es m\u00e1s.' : '') + '</p>';
+
+    return '<div>' +
+      (nuevo
+        ? '<div class="det-tope"><h4>Receta nueva</h4></div><p class="det-meta">Queda en la lista apenas la crees.</p>'
+        : '<div class="det-tope"><h4>' + recElegida + '</h4></div><p class="det-meta">' + metaRec(recElegida) + '</p>') +
+      (avisoRec ? '<p class="aviso" role="alert">' + avisoRec + '</p>' : '') +
+      '<div class="renglones">' +
+        r("Nombre", '<input type="text" id="r-nombre" value="' + nombre + '" placeholder="C\u00f3mo se llama">') +
+        (b.t === "base" ? '' : r("Tipo", chipsTipo(b.t))) +
+        r("Rinde", '<span class="rcaja"><input class="rc" id="r-rinde" value="' + b.rinde + '"></span>' +
+          '<span class="cual">' + nombrePieza(b.t, b.rinde) + '</span>', "rinde-reng") +
+      '</div></div>' +
+      '<div class="renglones sigue">' +
+        r("Ingredientes", sumarHTML(Object.keys(b.r)) + '<ul class="receta">' + filas + '</ul>', "alto receta-reng") +
+      '</div>' + cuesta +
+      (nuevo
+        ? '<div class="acciones en-fila"><button class="btn" type="button" data-rcrear="1">Crear receta</button>' +
+          '<button class="btn flaco" type="button" data-rcancelar="1">Cancelar</button></div>'
+        : '<div class="acciones en-fila"><button class="btn" type="button" data-rguardar="1">Guardar cambios</button></div>' +
+          secundariasRec(recElegida));
+  }
+
   var UNIDADES = ["g", "ml", "u"];
   // Cuánto lleva UNA pieza. No hay renglones a medias: la tabla exige cantidad
   // mayor que cero, así que un ingrediente sin cuánto no es un ingrediente de la
   // receta: o lleva algo o no está.
   var CANT = {
-    "Margarita":            {"Salsa de tomate":80, "Muzzarella":120, "Albahaca":4, "Oliva":8},
-    "Marinara":             {"Salsa de tomate":90, "Ajo":6, "Orégano":1, "Oliva":10},
+    "Margarita":            {"Muzzarella":120, "Albahaca":4, "Oliva":8},
+    "Marinara":             {"Ajo":6, "Orégano":1, "Oliva":10},
     "Fugazzeta":            {"Muzzarella":140, "Cebolla":200, "Orégano":1, "Oliva":8},
-    "Napolitana":           {"Salsa de tomate":80, "Muzzarella":120, "Tomate":90, "Ajo":5},
+    "Napolitana":           {"Muzzarella":120, "Tomate":90, "Ajo":5},
     "Cuatro quesos":        {"Muzzarella":90, "Provolone":40, "Roquefort":35, "Parmesano":25},
     "Jamón crudo y rúcula": {"Muzzarella":110, "Jamón crudo":40, "Rúcula":20, "Oliva":8},
-    "Calabresa":            {"Salsa de tomate":80, "Muzzarella":120, "Longaniza":60, "Orégano":1},
+    "Calabresa":            {"Muzzarella":120, "Longaniza":60, "Orégano":1},
     "Romero y sal":         {"Romero":2, "Sal gruesa":3, "Oliva":12, "Semolin":5},
-    "Cherry":               {"Tomate cherry":60, "Albahaca":3, "Oliva":10, "Sal":1},
-    "Carne suave":          {"Tapas de empanada":1, "Carne":35, "Cebolla":15, "Huevo":6, "Comino":1},
-    "Carne picante":        {"Tapas de empanada":1, "Carne":35, "Cebolla":15, "Pimentón":1, "Ají molido":1},
-    "Jamón y queso":      {"Tapas de empanada":1, "Jamón":20, "Muzzarella":25, "Orégano":1},
-    "Humita":               {"Tapas de empanada":1, "Choclo":30, "Salsa blanca":20, "Cebolla de verdeo":0.2, "Nuez moscada":0.2},
-    "Caprese":              {"Tapas de empanada":1, "Muzzarella":25, "Tomate":20, "Albahaca":2, "Oliva":3},
-    "Pollo":                {"Tapas de empanada":1, "Pollo":30, "Cebolla":12, "Morrón":8, "Perejil":0.2}
+    "Cherry":               {"Tomate cherry":60, "Albahaca":3, "Oliva":10, "Sal":1}
   };
 
   // que puede pedirse "sin", producto por producto
   var QUITABLE = {};
   (function(){
-    var base = {"Tapas de empanada":1,
-                "Salsa de tomate":1, "Muzzarella":1, "Carne":1, "Choclo":1,
-                "Jam\u00f3n":1, "Pollo":1, "Semolin":1, "Salsa blanca":1};
-    Object.keys(RECETA).forEach(function(p){
+    var base = {"Muzzarella":1, "Semolin":1};
+    Object.keys(LLEVA).forEach(function(p){
       QUITABLE[p] = {};
-      RECETA[p].forEach(function(g){ QUITABLE[p][g] = !base[g]; });
+      LLEVA[p].forEach(function(g){ QUITABLE[p][g] = !base[g]; });
     });
   })();
-  function seSaca(prod, ing){ return !BASES[prod] && !!(QUITABLE[prod] && QUITABLE[prod][ing]); }
-  function contarSacables(ing){
-    var n = 0;
-    (porIngrediente()[ing] || []).forEach(function(p){ if(seSaca(p, ing)) n++; });
-    return n;
-  }
+  function seSaca(prod, ing){ return !!(QUITABLE[prod] && QUITABLE[prod][ing]); }
 
-  // lo que lleva UNA unidad: en una base, la tanda dividida por lo que rinde
-  function cuantoLleva(prod, ing){
-    if(BASES[prod]) return (BASES[prod].r[ing] || 0) / (BASES[prod].rinde || 1);
-    return (CANT[prod] && CANT[prod][ing]) || 0;
-  }
-  function cuantoTanda(prod, ing){ return (BASES[prod] && BASES[prod].r[ing]) || 0; }
-  function ponerBase(prod, ing, v){
-    if(v) BASES[prod].r[ing] = v; else delete BASES[prod].r[ing];
-  }
+  // lo que lleva UNA pieza de un producto, de lo que va arriba. Lo de la base,
+  // la salsa y el relleno sale de su receta
+  function cuantoLleva(prod, ing){ return (CANT[prod] && CANT[prod][ing]) || 0; }
+  // lo que le toca a una pieza de una receta: la receta entera dividida por lo
+  // que rinde
+  function porPieza(rec, ing){ return (RECETAS[rec].r[ing] || 0) / (RECETAS[rec].rinde || 1); }
+  function cuantoReceta(rec, ing){ return (RECETAS[rec] && RECETAS[rec].r[ing]) || 0; }
   function redondo(v){
     var n = Math.round(v * 10) / 10;
     return String(n).replace(".", ",");
   }
   function ponerCuanto(prod, ing, v){
-    if(BASES[prod]) return ponerBase(prod, ing, v);
     CANT[prod] = CANT[prod] || {};
     if(v) CANT[prod][ing] = v; else delete CANT[prod][ing];
   }
   // piezas pedidas de cada producto
   function pedidasPorProducto(){
-    var d = consolidar(), m = {}, pizzas = 0, focs = 0;
-    Object.keys(d.pizzas).forEach(function(k){ m[k] = d.pizzas[k].total; pizzas += m[k]; });
-    Object.keys(d.focs).forEach(function(k){ m[k] = d.focs[k].total; focs += m[k]; });
+    var d = consolidar(), m = {};
+    Object.keys(d.pizzas).forEach(function(k){ m[k] = d.pizzas[k].total; });
+    Object.keys(d.focs).forEach(function(k){ m[k] = d.focs[k].total; });
     Object.keys(d.emp).forEach(function(k){ m[k] = d.emp[k].unidades; });
-    m["Bollo de pizza"] = pizzas;
-    m["Bollo de focaccia"] = focs;
+    return m;
+  }
+  // Para cu\u00e1ntas piezas tiene que alcanzar cada receta: la base, para todas
+  // las de su tipo; la salsa, para las pizzas que la llevan; el relleno, para
+  // las empanadas de su gusto. Aparte de los productos porque un relleno suele
+  // llamarse como su empanada.
+  function piezasPorReceta(){
+    var d = consolidar(), m = {};
+    function sumar(rec, n){ if(rec) m[rec] = (m[rec] || 0) + n; }
+    Object.keys(d.pizzas).forEach(function(k){
+      sumar(baseDe("pizza"), d.pizzas[k].total);
+      sumar((buscaProd(k) || {}).salsa, d.pizzas[k].total);
+    });
+    Object.keys(d.focs).forEach(function(k){
+      sumar(baseDe("foc"), d.focs[k].total);
+      sumar((buscaProd(k) || {}).salsa, d.focs[k].total);
+    });
+    Object.keys(d.emp).forEach(function(k){ sumar((buscaProd(k) || {}).relleno, d.emp[k].unidades); });
     return m;
   }
 
@@ -1723,27 +1889,47 @@
   // porque media tanda no se amasa, y es la misma cuenta que usa la compra: si
   // se amasan tres tandas, se gasta harina para tres.
   function tandas(){
-    var m = pedidasPorProducto(), r = [];
-    Object.keys(BASES).forEach(function(b){
+    var m = piezasPorReceta(), r = [];
+    Object.keys(RECETAS).forEach(function(b){
+      // solo las masas: es la cuenta de cu\u00e1nto amasar
+      if(RECETAS[b].t !== "base") return;
       var piezas = m[b] || 0;
-      if(piezas) r.push({base:b, piezas:piezas, tandas:Math.ceil(piezas / BASES[b].rinde)});
+      if(piezas) r.push({base:b, piezas:piezas, tandas:Math.ceil(piezas / RECETAS[b].rinde)});
     });
     return r;
   }
 
-  // lo que hay que hacer o comprar antes de armar el producto
-  var BASES = {
-    // Se cargan como se amasan: una tanda entera, y en cu\u00e1ntos bollos se corta.
-    // La pizza y la focaccia NO comparten masa. La tapa de empanada no es una
-    // base: se compra hecha, as\u00ed que es un ingrediente m\u00e1s de cada gusto.
-    "Bollo de pizza":    {fam:["pizza"], rinde:6, pesa:288,
+  // Lo que se prepara antes de armar el producto. Tres tipos que se cargan
+  // igual: la receta entera, como se hace, y para cu\u00e1ntas piezas alcanza.
+  var TIPOS = {
+    base:    {n:"Bases",    uno:"Base",    pieza:["bollo", "bollos"]},
+    salsa:   {n:"Salsas",   uno:"Salsa",   pieza:["pizza", "pizzas"]},
+    relleno: {n:"Rellenos", uno:"Relleno", pieza:["empanada", "empanadas"]}
+  };
+  var ORDEN_TIPOS = ["base", "salsa", "relleno"];
+  var RECETAS = {
+    // Los dos bollos son lo \u00fanico real del sistema. La pizza y la focaccia NO
+    // comparten masa, y cada una toma la suya sola: la base no se elige.
+    "Bollo de pizza":    {t:"base", fam:["pizza"], rinde:6, pesa:288,
                           r:{"Harina 000":1000, "Agua":600, "Masa madre":100, "Sal fina":30}},
-    "Bollo de focaccia": {fam:["foc"], rinde:4, pesa:483,
-                          r:{"Harina 000":1000, "Agua":750, "Masa madre":100, "Sal fina":30, "Oliva":50}}
+    "Bollo de focaccia": {t:"base", fam:["foc"], rinde:4, pesa:483,
+                          r:{"Harina 000":1000, "Agua":750, "Masa madre":100, "Sal fina":30, "Oliva":50}},
+    // Las salsas y los rellenos son de ejemplo. Una salsa rinde 6 pizzas, como
+    // el bollo; un relleno, 12 empanadas, y trae las tapas.
+    "Pomodoro":      {t:"salsa", rinde:6, r:{"Tomate triturado":480, "Oliva":30, "Albahaca":6, "Sal fina":6}},
+    "Alioli":        {t:"salsa", rinde:6, r:{"Aceite":200, "Leche":100, "Ajo":20, "Sal fina":3, "Pimienta":1}},
+    "Carne suave":   {t:"relleno", rinde:12, r:{"Carne":420, "Cebolla":180, "Huevo":3, "Comino":6, "Tapas de empanada":12}},
+    "Carne picante": {t:"relleno", rinde:12, r:{"Carne":420, "Cebolla":180, "Piment\u00f3n":6, "Aj\u00ed molido":4, "Tapas de empanada":12}},
+    "Jam\u00f3n y queso": {t:"relleno", rinde:12, r:{"Muzzarella":300, "Jam\u00f3n":240, "Or\u00e9gano":2, "Tapas de empanada":12}},
+    "Humita":        {t:"relleno", rinde:12, r:{"Choclo":360, "Leche":150, "Cebolla de verdeo":30, "Nuez moscada":1, "Tapas de empanada":12}},
+    "Caprese":       {t:"relleno", rinde:12, r:{"Muzzarella":300, "Tomate":240, "Oliva":30, "Albahaca":12, "Tapas de empanada":12}},
+    "Pollo":         {t:"relleno", rinde:12, r:{"Pollo":360, "Cebolla":150, "Morr\u00f3n":100, "Perejil":3, "Tapas de empanada":12}}
   };
   function baseDe(fam){
     var r = null;
-    Object.keys(BASES).forEach(function(k){ if(BASES[k].fam.indexOf(fam) >= 0) r = k; });
+    Object.keys(RECETAS).forEach(function(k){
+      if(RECETAS[k].t === "base" && RECETAS[k].fam.indexOf(fam) >= 0) r = k;
+    });
     return r;
   }
   var INGR = [];
@@ -1756,7 +1942,7 @@
       "Masa madre":        {u:"g",  stock:400,   trae:200,   sale:64, libre:true},
       "Tapas de empanada": {u:"u",  stock:120,   trae:60,    sale:9000},
       "Muzzarella":        {u:"g",  stock:8500,  trae:3000,  sale:27600},
-      "Salsa de tomate":   {u:"g",  stock:14000, trae:4000,  sale:9600},
+      "Tomate triturado":  {u:"g",  stock:14000, trae:4000,  sale:9600},
       "Albahaca":          {u:"u",  stock:0,     trae:30,    sale:1200},
       "Oliva":             {u:"ml", stock:3000,  trae:5000,  sale:57500},
       "Cebolla":           {u:"g",  stock:11000, trae:10000, sale:13000},
@@ -1772,21 +1958,23 @@
       "Tomate":            {u:"g",  stock:3000,  trae:5000,  sale:9000},
       "Romero":            {u:"g",  stock:150,   trae:200,   sale:1800},
       "Semolin":           {u:"g",  stock:1800,  trae:5000,  sale:7500},
-      "Salsa blanca":      {u:"g",  stock:0,     trae:2000,  sale:6400},
       "Comino":            {u:"g",  stock:200,   trae:250,   sale:4500},
       "Sal":               {u:"g",  stock:4000,  trae:1000,  sale:900},
       "Jam\u00f3n":           {u:"g",  stock:1200,  trae:2000,  sale:17000},
       "Huevo":             {u:"u",  stock:24,    trae:30,    sale:7500},
       "Jam\u00f3n crudo":     {u:"g",  stock:0,     trae:1000,  sale:26000},
       "R\u00facula":          {u:"g",  stock:0,     trae:1000,  sale:4000},
-      "Longaniza":         {u:"g",  stock:0,     trae:1000,  sale:12000}
+      "Longaniza":         {u:"g",  stock:0,     trae:1000,  sale:12000},
+      "Leche":             {u:"ml", stock:0,     trae:1000,  sale:1400},
+      "Aceite":            {u:"ml", stock:1500,  trae:1500,  sale:3900},
+      "Pimienta":          {u:"g",  stock:100,   trae:100,   sale:2500}
     };
     var vistos = {};
     PRODUCTOS.forEach(function(p){
-      (RECETA[p.n] || []).forEach(function(g){ vistos[g] = true; });
+      (LLEVA[p.n] || []).forEach(function(g){ vistos[g] = true; });
     });
-    Object.keys(BASES).forEach(function(b){
-      Object.keys(BASES[b].r).forEach(function(g){ vistos[g] = true; });
+    Object.keys(RECETAS).forEach(function(b){
+      Object.keys(RECETAS[b].r).forEach(function(g){ vistos[g] = true; });
     });
     Object.keys(vistos).sort().forEach(function(g){
       var d = semilla[g] || {};
@@ -1815,39 +2003,54 @@
     }
     return (Math.round(cant * 10) / 10).toString().replace(".", ",") + " " + u;
   }
-  // ingrediente -> productos que lo llevan
+  // ingrediente -> qui\u00e9nes lo llevan: los productos, por lo que llevan
+  // arriba, y las recetas. Las recetas van marcadas porque un relleno suele
+  // llamarse como su empanada.
   function porIngrediente(){
     var m = {};
     PRODUCTOS.forEach(function(p){
-      (RECETA[p.n] || []).forEach(function(g){ (m[g] = m[g] || []).push(p.n); });
+      if(p.f === "emp") return;
+      (LLEVA[p.n] || []).forEach(function(g){ (m[g] = m[g] || []).push({n:p.n}); });
     });
-    Object.keys(BASES).forEach(function(b){
-      Object.keys(BASES[b].r).forEach(function(g){ (m[g] = m[g] || []).push(b); });
+    Object.keys(RECETAS).forEach(function(b){
+      Object.keys(RECETAS[b].r).forEach(function(g){ (m[g] = m[g] || []).push({n:b, receta:true}); });
     });
     return m;
   }
-  function esBase(n){ return !!BASES[n]; }
   // ingrediente -> {total, conCarga, sinCarga, productos:[...]}
   function cuentaIng(ing){
-    var ped = pedidasPorProducto(), total = 0, con = 0, sin = 0, filas = [];
-    (porIngrediente()[ing] || []).forEach(function(p){
-      var esBase = !!BASES[p], c = cuantoLleva(p, ing), n = ped[p] || 0;
+    var ped = pedidasPorProducto(), rec = piezasPorReceta(), total = 0, con = 0, sin = 0, filas = [];
+    (porIngrediente()[ing] || []).forEach(function(q){
+      var p = q.n, esReceta = !!q.receta;
+      var c = esReceta ? porPieza(p, ing) : cuantoLleva(p, ing), n = (esReceta ? rec[p] : ped[p]) || 0;
       if(c) con++; else sin++;
-      // La masa se amasa por tandas enteras: media tanda no se amasa, as\u00ed que
-      // lo que se gasta es la receta por cu\u00e1ntas tandas salgan, no la parte
-      // proporcional. Es la misma cuenta que hace Producci\u00f3n.
-      var tandas = esBase ? Math.ceil(n / BASES[p].rinde) : 0;
-      var sale = esBase ? cuantoTanda(p, ing) * tandas : c * n;
+      // Una receta se hace entera: media no se hace, as\u00ed que lo que se gasta
+      // es la receta por cu\u00e1ntas veces haya que hacerla, no la parte
+      // proporcional. Es la misma cuenta que hace Producci\u00f3n con la masa.
+      var tandas = esReceta ? Math.ceil(n / RECETAS[p].rinde) : 0;
+      var sale = esReceta ? cuantoReceta(p, ing) * tandas : c * n;
       total += sale;
-      filas.push({prod:p, cuanto:c, piezas:n, sale:sale, saca:seSaca(p, ing), base:esBase,
-                  tanda:cuantoTanda(p, ing), rinde:esBase ? BASES[p].rinde : 0, tandas:tandas});
+      filas.push({prod:p, cuanto:c, piezas:n, sale:sale, saca:!esReceta && seSaca(p, ing), receta:esReceta,
+                  tanda:cuantoReceta(p, ing), rinde:esReceta ? RECETAS[p].rinde : 0, tandas:tandas});
     });
     filas.sort(function(a, b){ return b.sale - a.sale; });
     return {total:total, con:con, sin:sin, filas:filas};
   }
   function entraEnPedidos(ing){
-    var ped = pedidasPorProducto();
-    return (porIngrediente()[ing] || []).some(function(p){ return ped[p]; });
+    var ped = pedidasPorProducto(), rec = piezasPorReceta();
+    return (porIngrediente()[ing] || []).some(function(q){ return q.receta ? rec[q.n] : ped[q.n]; });
+  }
+  // D\u00f3nde se usa, en pocas palabras. Las recetas van nombradas: la harina
+  // est\u00e1 en el bollo y en ninguna pizza, y decir \u00abtodav\u00eda en ninguna
+  // receta\u00bb ser\u00eda falso.
+  function dondeEsta(k){
+    var prods = k.filas.filter(function(r){ return !r.receta; }).length;
+    var recs = k.filas.filter(function(r){ return r.receta; });
+    var partes = [];
+    if(prods) partes.push("en " + prods + (prods === 1 ? " producto" : " productos"));
+    if(recs.length === 1) partes.push("en " + recs[0].prod.toLowerCase());
+    else if(recs.length > 1) partes.push("en " + recs.length + " recetas");
+    return partes.length ? partes.join(" y ") : "todav\u00eda en ninguna receta";
   }
   // ---------- lista de compras ----------
   function ingCompras(){
@@ -1868,16 +2071,7 @@
           : 'comprar ' + faltantes + (faltantes === 1 ? ' ingrediente' : ' ingredientes')) + '</span>') + '</div>';
 
     var cuerpo = base.map(function(x){
-      var k = cta(x.n);
-      // Las masas van nombradas: la harina est\u00e1 en el bollo y en ninguna
-      // pizza, y decir \u00abtodav\u00eda en ninguna receta\u00bb ser\u00eda falso.
-      var prods = k.filas.filter(function(r){ return !r.base; }).length;
-      var masas = k.filas.filter(function(r){ return r.base; });
-      var partes = [];
-      if(prods) partes.push("en " + prods + (prods === 1 ? " producto" : " productos"));
-      if(masas.length === 1) partes.push("en " + masas[0].prod.toLowerCase());
-      else if(masas.length > 1) partes.push("en " + masas.length + " bases");
-      var pie = partes.length ? partes.join(" y ") : "todav\u00eda en ninguna receta";
+      var k = cta(x.n), pie = dondeEsta(k);
       return '<tr>' +
         '<td class="g-nom"><button class="abre" type="button" data-ing="' + x.n + '">' + x.n + '</button>' +
         '<span class="bajo">' + pie + '</span></td>' +
@@ -1885,14 +2079,14 @@
           '" data-stock="' + x.n + '" data-auto="1" style="width:' + Math.max(6, v.length) + 'ch"></span></td>'; })(bonito(x.stock, x.u)) +
         '<td class="g-num g-flojo">' + (k.con ? bonito(k.total, x.u) : "\u2014") + '</td>' +
         // el agua y la masa madre no se compran, as\u00ed que nunca faltan. No hace
-        // falta decir por qu\u00e9: son dos de treinta y siete
+        // falta decir por qu\u00e9: son dos de treinta y nueve
         '<td class="g-fin g-num">' + (!x.libre && k.con && Math.max(0, k.total - x.stock)
           ? '<b class="urge">' + bonito(k.total - x.stock, x.u) + '</b>'
           : '<span class="sinCargar">&mdash;</span>') + '</td></tr>';
     }).join("");
 
     var pie = '<div class="pie-tabla"><button class="abrir" type="button" data-ingnuevo="1">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ingrediente nuevo</button>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Ingrediente nuevo</button>' +
       '<span class="cuantos">' + INGR.length + ' ingredientes</span></div>';
 
     return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
@@ -1923,15 +2117,7 @@
     var u = uniNueva || x.u;
     var k = nuevo ? {filas:[], total:0, con:0, sin:0} : cuentaIng(x.n);
 
-    // d\u00f3nde se usa. Las masas van nombradas: la harina est\u00e1 en el bollo y en
-    // ninguna pizza, y decir \u00abtodav\u00eda en ninguna receta\u00bb ser\u00eda falso
-    var prods = k.filas.filter(function(r){ return !r.base; }).length;
-    var masas = k.filas.filter(function(r){ return r.base; });
-    var partes = [];
-    if(prods) partes.push("en " + prods + (prods === 1 ? " producto" : " productos"));
-    if(masas.length === 1) partes.push("en " + masas[0].prod.toLowerCase());
-    else if(masas.length > 1) partes.push("en " + masas.length + " bases");
-    var donde = partes.length ? partes.join(" y ") : "todav\u00eda en ninguna receta";
+    var donde = dondeEsta(k);
 
     // El desglose es de lectura: de d\u00f3nde sale el n\u00famero que muestra la
     // grilla. Solo lo que entra en alg\u00fan pedido: un producto que nadie pidi\u00f3
@@ -1939,12 +2125,12 @@
     var entran = k.filas.filter(function(r){ return r.sale > 0; });
     var reparto = (nuevo || !entran.length) ? '' :
       '<div class="reparto">' + entran.map(function(r){
+        // una receta se cuenta entera: lo que lleva toda y cu\u00e1ntas veces
+        // hay que hacerla
         return '<div class="fila"><span class="qn">' + r.prod +
-          (r.base ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
-          '<span class="cu">' + (r.base ? bonito(r.tanda, u) + ' la tanda' : bonito(r.cuanto, u)) + '</span>' +
-          '<span class="sale">' + (r.base
-            ? '\u00d7 ' + r.tandas + (r.tandas === 1 ? ' tanda = ' : ' tandas = ') + bonito(r.sale, u)
-            : '\u00d7 ' + r.piezas + ' = ' + bonito(r.sale, u)) + '</span></div>';
+          (r.receta ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
+          '<span class="cu">' + (r.receta ? bonito(r.tanda, u) + ' la receta' : bonito(r.cuanto, u)) + '</span>' +
+          '<span class="sale">\u00d7 ' + (r.receta ? r.tandas : r.piezas) + ' = ' + bonito(r.sale, u) + '</span></div>';
       }).join("") +
       '<div class="fila total"><span class="qn">Hace falta</span>' +
       '<span class="sale">' + bonito(k.total, u) + '</span></div></div>';
@@ -1993,10 +2179,11 @@
   // ---------- costos ----------
 
 
-  function costoBase(nom){
+  // lo que cuesta UNA pieza de una receta, ingrediente por ingrediente
+  function costoReceta(b){
     var filas = [], falta = 0;
-    Object.keys(BASES[nom].r).forEach(function(g){
-      var x = buscaIng(g), c = cuantoLleva(nom, g), pm = porMedida(x);
+    Object.keys(b.r).forEach(function(g){
+      var x = buscaIng(g), c = (b.r[g] || 0) / (b.rinde || 1), pm = porMedida(x);
       if(!c || (!pm && !(x && x.trae))) falta++;
       filas.push({ing:g, cuanto:c, u:x ? x.u : "g", pm:pm, sub:c * pm, sangria:true});
     });
@@ -2006,13 +2193,18 @@
   function costoProducto(nom){
     var p = buscaProd(nom);
     if(!p) return null;
-    // las empanadas no amasan nada: la tapa se compra hecha y es un ingrediente
-    // más, así que no hay renglón de base
-    var bn = baseDe(p.f);
-    var b = bn ? costoBase(bn) : {filas:[], costo:0, falta:0};
-    var filas = bn ? [{ing:bn, cuanto:1, u:"", pm:0, sub:b.costo, base:true}].concat(b.filas) : [];
-    var sinPrecio = b.falta;
-    (RECETA[nom] || []).forEach(function(g){
+    // Primero las recetas que usa, cada una con lo suyo sangrado abajo: la
+    // base y la salsa en una pizza, el relleno en una empanada. Despu\u00e9s lo
+    // que lleva arriba, que en una empanada es nada.
+    var filas = [], sinPrecio = 0, emp = p.f === "emp";
+    [baseDe(p.f), emp ? null : p.salsa, emp ? p.relleno : null].forEach(function(rn){
+      if(!rn || !RECETAS[rn]) return;
+      var b = costoReceta(RECETAS[rn]);
+      filas.push({ing:rn, cuanto:1, u:"", pm:0, sub:b.costo, base:true});
+      filas = filas.concat(b.filas);
+      sinPrecio += b.falta;
+    });
+    (emp ? [] : LLEVA[nom] || []).forEach(function(g){
       var x = buscaIng(g), c = cuantoLleva(nom, g), pm = porMedida(x);
       if(!c || !pm) sinPrecio++;
       filas.push({ing:g, cuanto:c, u:x ? x.u : "g", pm:pm, sub:c * pm});
@@ -2238,10 +2430,21 @@
     productos: function(){
       return uso('Es la carta: lo que est\u00e9 ac\u00e1 y no est\u00e9 agotado es lo que el cliente ve.', [
         'Eleg\u00ed uno de la izquierda y edit\u00e1 nombre, precio y receta. Todo se guarda junto con <b>Guardar cambios</b>.',
-        'En la receta, el n\u00famero es <b>cu\u00e1nto lleva una pieza</b>. <b>Modificable</b> decide si el cliente lo puede pedir sin eso; <b>Fijo</b>, que no.',
-        '<b>Base</b> es la masa que lleva una pieza. Se ve pero no se toca: la receta de la masa va por tanda entera y se carga aparte.',
+        'En los ingredientes, el n\u00famero es <b>cu\u00e1nto lleva una pieza</b>. <b>Modificable</b> decide si el cliente lo puede pedir sin eso; <b>Fijo</b>, que no.',
+        '<b>Base</b> y <b>Salsa</b> dicen lo que le toca a una pieza de cada receta. La base se pone sola; la salsa se elige, o ninguna. Las dos se cargan en <b>Recetas</b>.',
+        'Una empanada no lleva ingredientes sueltos: se le elige el <b>relleno</b>, que trae todo, tapas incluidas.',
         '<b>Marcar agotado</b> lo saca de la tienda sin borrarlo. Nada que haya estado en un pedido se borra.',
         'Las empanadas no tienen precio propio: se cobran por pack, y los dos precios valen para todos los gustos.'
+      ]);
+    },
+
+    recetas: function(){
+      return uso('Lo que se prepara antes de armar un producto: las masas, las salsas y los rellenos. Se cargan una vez ac\u00e1 y cada producto usa la suya.', [
+        'A la izquierda, cu\u00e1nto sale <b>una pieza</b> de cada receta: un bollo, la salsa de una pizza, el relleno de una empanada.',
+        'En la ficha, <b>Rinde</b> dice para cu\u00e1ntas piezas alcanza. Las cantidades son las de la receta entera, como se hace; al lado, lo que le toca a una.',
+        'Los ingredientes se suman con el (+), igual que en un producto: entran los que ya existen en <b>Ingredientes</b>.',
+        '<b>Receta nueva</b> crea una salsa o un relleno. Las bases no se crean: hay una para las pizzas y otra para las focaccias.',
+        'Si alg\u00fan producto la usa, la receta no se borra ni cambia de tipo.'
       ]);
     },
 
@@ -2250,7 +2453,7 @@
         'Las tres columnas son la resta: <b>Stock</b> menos <b>Necesito</b> da <b>Falta</b>, que es lo que hay que ir a buscar.',
         'El <b>stock</b> se edita en el rengl\u00f3n: escrib\u00ed el n\u00famero y sal\u00ed del campo. La unidad va adentro, as\u00ed que \u00ab2 kg\u00bb tambi\u00e9n entra.',
         'Toc\u00e1 el nombre para abrir la ficha. Ah\u00ed carg\u00e1s <b>c\u00f3mo se compra</b> \u2014cu\u00e1nto trae el bulto y cu\u00e1nto sale\u2014, que es de donde salen los costos.',
-        'Abajo de la ficha, el desglose dice <b>de d\u00f3nde sale</b> lo que hace falta: qu\u00e9 producto lo lleva y cu\u00e1ntas piezas.',
+        'Abajo de la ficha, el desglose dice <b>de d\u00f3nde sale</b> lo que hace falta: qu\u00e9 productos y qu\u00e9 recetas lo llevan, y cu\u00e1ntas veces.',
         'Al pie, <b>Ingrediente nuevo</b>.'
       ]);
     },
@@ -2267,7 +2470,7 @@
   };
 
   var REGLAS =
-    '<div class="reglas"><b>Reglas que valen en las seis</b><ul>' +
+    '<div class="reglas"><b>Reglas que valen en las siete</b><ul>' +
     '<li><b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">Bowlby es del cliente, Archivo es del vendedor.</b> ' +
       'La tipograf\u00eda con personalidad se usa solo en la tienda; el panel va todo en Archivo, ' +
       'sin engrosado y con n\u00fameros tabulares. Se prob\u00f3 al rev\u00e9s y qued\u00f3 pesado.</li>' +
@@ -2399,6 +2602,13 @@
       '<p>El campo para sumar uno <b>ya est\u00e1 ah\u00ed</b>, con la misma l\u00ednea de puntos que los dem\u00e1s campos: ' +
       'escrib\u00eds y Enter. Antes era una pastilla punteada que parec\u00eda una pastilla rota entre las buenas.</p></div>' +
 
+      '<div class="bloque"><h3>La base se pone sola; la salsa y el relleno se eligen</h3>' +
+      '<p>Abajo de los ingredientes van la <b>base</b> y la <b>salsa</b>. La base no se elige: cada pizza toma el bollo ' +
+      'de pizza y cada focaccia el suyo. La salsa s\u00ed, entre las de Recetas, o ninguna. La empanada no lleva ' +
+      'ingredientes sueltos: se elige el <b>relleno</b>, que trae todo, tapas incluidas.</p>' +
+      '<p>Las tres van <b>abiertas</b>, con lo que le toca a una pieza, y se eligen con chips, como el tipo. Se ' +
+      'probaron una lista desplegable, el nombre solo y la salsa arriba de los ingredientes.</p></div>' +
+
       '<div class="bloque"><h3>Las empanadas no tienen precio propio</h3>' +
       '<p>Se cobran por pack. Los dos precios &mdash; <b>x6 y x12</b> &mdash; se editan en la ficha de cualquier ' +
       'gusto y valen para todos. Cambi\u00e1 el x12 y mir\u00e1 los totales en Pedidos.</p></div>' +
@@ -2409,8 +2619,51 @@
       'y sigue vivo en Pedidos y Producci\u00f3n.</p></div>';
     },
 
+    recetas: function(){
+      return '<h2>5 &middot; Recetas</h2>' +
+      '<div class="bloque"><h3>Tres tipos, cargados igual</h3>' +
+      '<p><b>Bases, salsas y rellenos</b> se cargan de la misma manera: lo que lleva la receta entera y para cu\u00e1ntas ' +
+      'piezas alcanza. Es como se cocina: el pomodoro se hace en la olla para varias pizzas, no de a una.</p>' +
+      '<p>El rinde se cuenta en lo que tiene sentido para cada una: <b>bollos, pizzas o empanadas</b>. Una salsa ' +
+      'alcanza para 6 pizzas, como el bollo; un relleno, para 12 empanadas.</p></div>' +
+
+      '<div class="bloque"><h3>Lo de una pieza, al lado</h3>' +
+      '<p>Las cantidades se escriben como se pesan, para la receta entera. Al costado, sin pastilla porque no se ' +
+      'toca, el panel divide: <b>80 g por pizza</b>. Es lo mismo que despu\u00e9s se lee en la ficha de cada producto.</p>' +
+      '<p>Se prob\u00f3 tambi\u00e9n sin esa columna.</p></div>' +
+
+      '<div class="bloque"><h3>La lista dice cu\u00e1nto sale una pieza</h3>' +
+      '<p><b>$291 cada pizza</b>, y no el rinde, que ya est\u00e1 en la ficha: en la lista se busca cu\u00e1nto pesa cada ' +
+      'receta en el costo. Es el mismo n\u00famero que Costos pone adentro de cada producto. El asterisco avisa que ' +
+      'falta el precio de alg\u00fan ingrediente, igual que all\u00e1.</p></div>' +
+
+      '<div class="bloque"><h3>Las bases no se crean</h3>' +
+      '<p>Hay una para las pizzas y otra para las focaccias, y cada producto toma la suya solo. Ac\u00e1 se corrigen ' +
+      '&mdash;lo que llevan y cu\u00e1nto rinden&mdash;, pero no se borran ni cambian de tipo. <b>Receta nueva</b> ' +
+      'crea salsas y rellenos.</p>' +
+      '<p>Una salsa o un relleno que usa alg\u00fan producto tampoco se borra ni cambia de tipo: primero hay que ' +
+      'sac\u00e1rsela. Prob\u00e1 pasar el pomodoro a relleno.</p></div>' +
+
+      '<div class="bloque"><h3>Las tapas van adentro del relleno</h3>' +
+      '<p>La empanada no lleva nada suelto: el relleno para 12 trae las 12 tapas. As\u00ed una empanada es una sola ' +
+      'receta, y su costo sale entero de ac\u00e1.</p></div>' +
+
+      '<div class="bloque"><h3>Se hacen enteras</h3>' +
+      '<p>Si hay 18 empanadas de carne suave y el relleno rinde 12, se compra para dos: media receta no se hace. ' +
+      'Es la cuenta que ya hac\u00eda la masa, y la que usan Ingredientes y la compra del Inicio.</p></div>' +
+
+      '<div class="bloque"><h3>Los dos bollos son de verdad</h3>' +
+      '<p>Son los \u00fanicos datos reales del sistema. Las salsas y los rellenos de esta maqueta son de ejemplo, ' +
+      'para ver c\u00f3mo se lee la pantalla.</p></div>' +
+
+      '<dl class="medidas">' +
+        '<div><dt>Columna por pieza</dt><dd>134 px</dd></div>' +
+        '<div><dt>Texto por pieza</dt><dd>12,8 px / 600</dd></div>' +
+      '</dl>';
+    },
+
     ingredientes: function(){
-      return '<h2>5 &middot; Ingredientes</h2>' +
+      return '<h2>6 &middot; Ingredientes</h2>' +
       '<div class="bloque"><h3>Es la lista de compras</h3>' +
       '<p><b>Stock \u00b7 Necesito \u00b7 Falta</b>, en el orden de la resta. El stock se edita en el rengl\u00f3n; ' +
       'las otras dos salen solas de los pedidos. La \u00faltima columna es la lista: lo que hay que ir a buscar.</p>' +
@@ -2419,8 +2672,8 @@
 
       '<div class="bloque"><h3>La cantidad es del par producto\u2013ingrediente</h3>' +
       '<p>Es la decisi\u00f3n que oblig\u00f3 a rehacer el modelo. <b>Una fugazzeta lleva 200 g de cebolla y una ' +
-      'empanada de carne, 15.</b> Abr\u00ed <b>Cebolla</b>: los cuatro productos que la llevan, con su n\u00famero ' +
-      'y lo que aporta cada uno.</p>' +
+      'empanada de carne, 15.</b> Abr\u00ed <b>Cebolla</b>: la fugazzeta y los rellenos que la llevan, cada uno ' +
+      'con lo que aporta.</p>' +
       '<p>El asterisco avisa que el total va corto porque falta cargar alg\u00fan producto.</p></div>' +
 
       '<div class="bloque"><h3>Se compra por bulto, se usa por gramo</h3>' +
@@ -2428,15 +2681,15 @@
       'Resuelve de una vez las tapas (60 u a $9.000) y la harina (25 kg a $32.000): se carga como compr\u00e1s, ' +
       'no traducido a mano.</p></div>' +
 
-      '<div class="bloque"><h3>El bollo es una receta, no un n\u00famero</h3>' +
-      '<p>Se carga <b>por tanda entera con un rinde</b>, como se amasa. Abr\u00ed <b>Harina 000</b>: ' +
-      'el rengl\u00f3n dice <b>rinde 6</b> y la cantidad son los 1000 g de la tanda; ' +
-      'al costado el panel divide en 166,7 g por bollo.</p>' +
+      '<div class="bloque"><h3>Las recetas se cuentan enteras</h3>' +
+      '<p>La masa, las salsas y los rellenos se hacen de a una receta entera, y as\u00ed se cuentan. Abr\u00ed ' +
+      '<b>Harina 000</b>: cada bollo dice cu\u00e1nto rinde, cu\u00e1nto lleva la receta y cu\u00e1ntas veces hay ' +
+      'que hacerla. Se redondea para arriba, porque media receta no se hace.</p>' +
       '<p>Son <b>dos masas y no una</b>: la pizza y la focaccia no comparten bollo. Las dos llevan ' +
       '1 kg de harina, 100 g de masa madre y 30 g de sal. La pizza va con <b>600 g de agua</b> y ' +
       'rinde 6 bollos de 288 g; la focaccia, con <b>750 g de agua y 50 de oliva</b>, rinde 4 de 483.</p>' +
-      '<p>El <b>peso del bollo dej\u00f3 de existir como dato</b>: la harina sale de ac\u00e1. Y las dos ' +
-      'recetas van <b>de lectura</b>: son lo \u00fanico real del sistema y no se tocan desde el panel.</p></div>' +
+      '<p>El <b>peso del bollo dej\u00f3 de existir como dato</b>: la harina sale de ac\u00e1. Las recetas se ' +
+      'cargan en <b>Recetas</b>.</p></div>' +
 
       '<div class="bloque"><h3>Qu\u00e9 se puede sacar</h3>' +
       '<p>Tambi\u00e9n por par: si el cliente puede pedir <b>ese</b> producto sin <b>ese</b> ingrediente. ' +
@@ -2449,7 +2702,7 @@
     },
 
     costos: function(){
-      return '<h2>6 &middot; Costos</h2>' +
+      return '<h2>7 &middot; Costos</h2>' +
       '<div class="bloque"><h3>Nada se carga ac\u00e1</h3>' +
       '<p>Todo sale de multiplicar <b>la receta por el precio de compra</b>. Es lo que una planilla no puede ' +
       'hacer sola: el panel ya tiene las recetas, los gramos y los precios de venta.</p></div>' +
@@ -2457,8 +2710,9 @@
       '<div class="bloque"><h3>Por tipo, del peor margen al mejor</h3>' +
       '<p>Una pizza se compara con otra pizza, no con una empanada: cada tipo lleva su t\u00edtulo, como en ' +
       'Productos, y adentro va del que menos deja al que m\u00e1s. Es el orden en que conviene mirarla.</p>' +
-      '<p>Abr\u00ed la primera: el desglose muestra <b>la base sangrada</b> ' +
-      '&mdash; el bollo con sus cuatro ingredientes adentro &mdash; y despu\u00e9s lo que lleva el producto.</p>' +
+      '<p>En la <b>Margarita</b>, que es la que se abre, el desglose muestra <b>las recetas sangradas</b> ' +
+      '&mdash; el bollo y la salsa, cada uno con sus ingredientes adentro &mdash; y despu\u00e9s lo que lleva ' +
+      'arriba. En una empanada, el relleno y nada m\u00e1s.</p>' +
       '<p>El <b>margen m\u00ednimo est\u00e1 fijo en 55%</b>. Abajo de eso, el producto queda marcado.</p></div>' +
 
       '<div class="bloque"><h3>El asterisco es una advertencia, no un detalle</h3>' +
@@ -2558,6 +2812,17 @@
           return '<a href="#" data-fp="' + o[0] + '" aria-pressed="' + (famProd === o[0]) + '">' + o[1] + '</a>';
         }).join("") + '</div></div>' + prodFicha() + '</div>';
     }
+    else if(seccion === "recetas"){
+      if(recElegida !== null && !RECETAS[recElegida]) recElegida = listaRec()[0] || Object.keys(RECETAS)[0];
+      var chipsR = [["todo","Todo"]].concat(ORDEN_TIPOS.map(function(k){ return [k, TIPOS[k].n]; }));
+      var nr = listaRec().length;
+      cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Recetas</h3>' +
+        '<span class="sub">' + nr + (nr === 1 ? ' receta' : ' recetas') + '</span></span>' +
+        '<div class="filtros">' + chipsR.map(function(o){
+          return '<a href="#" data-fr="' + o[0] + '" aria-pressed="' + (famRec === o[0]) + '">' + o[1] + '</a>';
+        }).join("") + '</div></div>' +
+        '<div class="doble">' + recLista() + '<div class="detalle">' + recFicha() + '</div></div></div>';
+    }
     else if(seccion === "ingredientes"){
       cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Ingredientes</h3>' +
         '<span class="sub">' + INGR.length + ' en las recetas</span></span></div>' + ingCompras() + '</div>';
@@ -2583,7 +2848,7 @@
     pintarPasos();
 
     document.querySelectorAll("#marco [data-s]").forEach(function(b){
-      b.addEventListener("click", function(){ seccion = b.dataset.s; pintar(); });
+      b.addEventListener("click", function(){ seccion = b.dataset.s; sumando = false; pintar(); });
     });
     document.querySelectorAll("#marco [data-f]").forEach(function(b){
       b.addEventListener("click", function(){ filtro = b.dataset.f; pintar(); });
@@ -2698,11 +2963,17 @@
           x.sale = pre; x.trae = tra;
           if(uniNueva) x.u = uniNueva;
           if(nom !== x.n){
-            Object.keys(RECETA).forEach(function(p){
-              RECETA[p] = RECETA[p].map(function(g){ return g === x.n ? nom : g; });
+            Object.keys(LLEVA).forEach(function(p){
+              LLEVA[p] = LLEVA[p].map(function(g){ return g === x.n ? nom : g; });
             });
             Object.keys(CANT).forEach(function(p){
               if(CANT[p][x.n] !== undefined){ CANT[p][nom] = CANT[p][x.n]; delete CANT[p][x.n]; }
+            });
+            // en las recetas, en el mismo lugar: el orden es el de la receta
+            Object.keys(RECETAS).forEach(function(k){
+              var viejo = RECETAS[k].r, r = {};
+              Object.keys(viejo).forEach(function(g){ r[g === x.n ? nom : g] = viejo[g]; });
+              RECETAS[k].r = r;
             });
             x.n = nom;
           }
@@ -2737,14 +3008,17 @@
         sincronizar();
         var k = +b.dataset.qi;
         if(prodElegido === null) BORRADOR.ing.splice(k, 1);
-        else{ RECETA[prodElegido] = (RECETA[prodElegido] || []).slice(); RECETA[prodElegido].splice(k, 1); }
+        else{ LLEVA[prodElegido] = (LLEVA[prodElegido] || []).slice(); LLEVA[prodElegido].splice(k, 1); }
         pintar();
       });
     });
     function sumarIngrediente(nombre){
       sincronizar();
-      if(prodElegido === null) BORRADOR.ing.push(nombre);
-      else RECETA[prodElegido] = (RECETA[prodElegido] || []).concat([nombre]);
+      // en una receta entra sin cantidad, igual que en un producto: se escribe
+      // despu\u00e9s, en la pastilla
+      if(seccion === "recetas") recAbierta().r[nombre] = 0;
+      else if(prodElegido === null) BORRADOR.ing.push(nombre);
+      else LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([nombre]);
       pintar();
       var c = document.getElementById("ing-nuevo"); if(c) c.focus();
     }
@@ -2807,14 +3081,18 @@
       b.addEventListener("click", function(){
         var v = leerFicha();
         if(!v.n){ var c = document.getElementById("f-nombre"); if(c) c.focus(); return; }
+        if(BORRADOR.f === "emp" && !BORRADOR.relleno){
+          sincronizar(); avisoProd = "Falta elegir el relleno."; pintar(); avisoProd = null; return;
+        }
         var p = {f:BORRADOR.f, n:v.n, act:true};
-        if(BORRADOR.f !== "emp"){ p.p = v.p; }
+        if(BORRADOR.f !== "emp"){ p.p = v.p; p.salsa = BORRADOR.salsa; }
         else{
+          p.relleno = BORRADOR.relleno;
           if(v.p6) P.pack[6] = v.p6;
           if(v.p12) P.pack[12] = v.p12;
         }
         PRODUCTOS.push(p);
-        RECETA[v.n] = BORRADOR.ing.slice();
+        LLEVA[v.n] = BORRADOR.f === "emp" ? [] : BORRADOR.ing.slice();
         prodElegido = v.n; TIPEADO = null;
         if(famProd !== "todo" && famProd !== BORRADOR.f) famProd = BORRADOR.f;
         pintar();
@@ -2836,7 +3114,7 @@
           if(v.p12) P.pack[12] = v.p12;
         }
         if(v.n && v.n !== x.n){
-          RECETA[v.n] = RECETA[x.n] || []; delete RECETA[x.n];
+          LLEVA[v.n] = LLEVA[x.n] || []; delete LLEVA[x.n];
           x.n = v.n; prodElegido = v.n;
         }
         TIPEADO = null;
@@ -2848,6 +3126,125 @@
         var x = buscaProd(b.dataset.tog); x.act = !x.act; TIPEADO = null; pintar();
       });
     });
+    // la salsa y el relleno se eligen en la ficha del producto
+    document.querySelectorAll("#marco [data-elige]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        var el = prodElegido === null ? BORRADOR : buscaProd(prodElegido);
+        el[b.dataset.elige] = b.value || null;
+        pintar();
+      });
+    });
+
+    // ---------- recetas ----------
+    document.querySelectorAll("#marco [data-fr]").forEach(function(b){
+      b.addEventListener("click", function(){
+        famRec = b.dataset.fr; TIPEADO_R = null; sumando = false;
+        if(recElegida !== null && listaRec().indexOf(recElegida) < 0 && listaRec().length) recElegida = listaRec()[0];
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-er]").forEach(function(b){
+      b.addEventListener("click", function(){ recElegida = b.dataset.er; TIPEADO_R = null; sumando = false; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-rnueva]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var t = famRec === "relleno" ? "relleno" : "salsa";
+        recElegida = null; TIPEADO_R = null; sumando = false;
+        BORRADOR_R = {t:t, n:"", rinde:t === "relleno" ? 12 : 6, r:{}};
+        pintar();
+        var c = document.getElementById("r-nombre"); if(c) c.focus();
+      });
+    });
+    // Una receta que usa alg\u00fan producto no cambia de tipo: la pizza se
+    // quedar\u00eda con un relleno de salsa. Lo dice y no la toca.
+    document.querySelectorAll("#marco [data-tipo]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        var t = b.dataset.tipo;
+        if(recElegida === null){ BORRADOR_R.t = t; BORRADOR_R.rinde = t === "relleno" ? 12 : 6; }
+        else if(t !== RECETAS[recElegida].t){
+          var usan = usanReceta(recElegida), era = RECETAS[recElegida].t;
+          if(usan.length){
+            avisoRec = '\u00ab' + recElegida + '\u00bb no puede dejar de ser ' + TIPOS[era].uno.toLowerCase() +
+              ': la ' + (usan.length === 1 ? 'usa ' : 'usan ') + enLista(usan) + '. Primero cambiales ' +
+              (era === "salsa" ? 'la salsa.' : 'el relleno.');
+          }
+          else RECETAS[recElegida].t = t;
+        }
+        pintar(); avisoRec = null;
+      });
+    });
+    var rinde = document.getElementById("r-rinde");
+    if(rinde) rinde.addEventListener("change", function(){
+      sincronizar();
+      var n = soloNum(rinde.value);
+      if(n > 0) recAbierta().rinde = n;
+      pintar();
+    });
+    // la cantidad es de la receta entera, como se pesa
+    document.querySelectorAll("#marco [data-rcant]").forEach(function(b){
+      b.addEventListener("change", function(){
+        sincronizar();
+        var g = b.dataset.rcant, x = buscaIng(g);
+        recAbierta().r[g] = leerMedida(b.value, x ? x.u : "g");
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-rquita]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        delete recAbierta().r[b.dataset.rquita];
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-rguardar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var n = document.getElementById("r-nombre").value.trim();
+        if(!n){ document.getElementById("r-nombre").focus(); return; }
+        if(n !== recElegida){
+          if(RECETAS[n]){
+            sincronizar(); avisoRec = 'Ya hay una receta que se llama \u00ab' + n + '\u00bb.'; pintar(); avisoRec = null; return;
+          }
+          // en el mismo lugar de la lista, y los productos que la usan la siguen
+          var nuevas = {};
+          Object.keys(RECETAS).forEach(function(k){ nuevas[k === recElegida ? n : k] = RECETAS[k]; });
+          RECETAS = nuevas;
+          PRODUCTOS.forEach(function(p){
+            if(p.salsa === recElegida) p.salsa = n;
+            if(p.relleno === recElegida) p.relleno = n;
+          });
+          recElegida = n;
+        }
+        TIPEADO_R = null; sumando = false; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-rcrear]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var n = document.getElementById("r-nombre").value.trim();
+        if(!n){ document.getElementById("r-nombre").focus(); return; }
+        if(RECETAS[n]){
+          sincronizar(); avisoRec = 'Ya hay una receta que se llama \u00ab' + n + '\u00bb.'; pintar(); avisoRec = null; return;
+        }
+        RECETAS[n] = {t:BORRADOR_R.t, rinde:BORRADOR_R.rinde, r:BORRADOR_R.r};
+        recElegida = n; TIPEADO_R = null; sumando = false;
+        if(famRec !== "todo" && famRec !== BORRADOR_R.t) famRec = BORRADOR_R.t;
+        pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-rcancelar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        recElegida = listaRec()[0] || Object.keys(RECETAS)[0]; TIPEADO_R = null; sumando = false; pintar();
+      });
+    });
+    document.querySelectorAll("#marco [data-rborrar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        delete RECETAS[b.dataset.rborrar];
+        if(!listaRec().length) famRec = "todo";
+        recElegida = listaRec()[0]; TIPEADO_R = null; pintar();
+      });
+    });
+
     document.querySelectorAll("#marco [data-can]").forEach(function(b){
       b.addEventListener("click", function(){
         var p = PEDIDOS.filter(function(x){ return x.n === b.dataset.can; })[0];
