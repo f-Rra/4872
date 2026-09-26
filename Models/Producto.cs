@@ -29,6 +29,11 @@ public class Producto
     public int? IdSalsa { get; set; }
     public Receta? Salsa { get; set; }
 
+    // el relleno, solo en las empanadas: una receta de tipo Relleno que trae
+    // todo lo que lleva, tapas incluidas. La empanada no lleva nada suelto
+    public int? IdRelleno { get; set; }
+    public Receta? Relleno { get; set; }
+
     // se llama Receta y no Ingredientes porque cada renglon no es un ingrediente:
     // es un ingrediente con su cantidad y con si se puede sacar
     public ICollection<ProductoIngrediente> Receta { get; set; } = new List<ProductoIngrediente>();

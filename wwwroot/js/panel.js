@@ -196,12 +196,12 @@
 // el que no va, pero decide con la familia GUARDADA: al dar de alta una
 // empanada todavia la cree una pizza, asi que el cambio lo hace el chip.
 //
-// La salsa va con el precio suelto: es de las pizzas y las focaccias, y una
-// empanada lleva relleno.
+// Con el precio van los bloques de abajo: los ingredientes, la base y la salsa
+// son de las pizzas y las focaccias, y el relleno es de las empanadas.
 (function () {
   var chips = [].slice.call(document.querySelectorAll("input[name='Ficha.Familia']"));
-  var sueltos = [].slice.call(document.querySelectorAll("[data-precio='suelto'], [data-salsa]"));
-  var packs = [].slice.call(document.querySelectorAll("[data-precio='pack']"));
+  var sueltos = [].slice.call(document.querySelectorAll("[data-precio='suelto'], [data-no-empanada]"));
+  var packs = [].slice.call(document.querySelectorAll("[data-precio='pack'], [data-empanada]"));
   if (!chips.length || !sueltos.length) return;
 
   function acomodar() {
@@ -214,17 +214,17 @@
   chips.forEach(function (c) { c.addEventListener("change", acomodar); });
 })();
 
-// Lo que lleva la salsa elegida, abierto. Vienen dibujadas todas y escondidas
-// menos la guardada, asi que al tocar otro chip se abre la suya sin esperar a
-// guardar. «Sin salsa» no abre nada.
+// Lo que lleva la salsa o el relleno elegido, abierto. Vienen dibujados todos
+// y escondidos menos el guardado, asi que al tocar otro chip se abre el suyo sin
+// esperar a guardar. «Sin salsa» no abre nada.
 (function () {
-  var chips = [].slice.call(document.querySelectorAll("input[name='Ficha.IdSalsa']"));
-  var listas = [].slice.call(document.querySelectorAll("[data-salsa] [data-lectura]"));
-  if (!chips.length) return;
+  document.querySelectorAll("[data-elige]").forEach(function (bloque) {
+    var listas = [].slice.call(bloque.querySelectorAll("[data-lectura]"));
 
-  chips.forEach(function (c) {
-    c.addEventListener("change", function () {
-      listas.forEach(function (l) { l.hidden = l.dataset.lectura !== c.value; });
+    bloque.querySelectorAll("input[type='radio']").forEach(function (c) {
+      c.addEventListener("change", function () {
+        listas.forEach(function (l) { l.hidden = l.dataset.lectura !== c.value; });
+      });
     });
   });
 })();

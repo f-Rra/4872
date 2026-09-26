@@ -189,8 +189,11 @@
 
            Las cantidades son campos de la ficha —se guardan con «Guardar
            cambios»— y por eso llevan form="ficha". Quitar y marcar modificable
-           son formularios propios, que no pueden ir adentro de otro. *@
-        <div class="renglones sigue">
+           son formularios propios, que no pueden ir adentro de otro.
+
+           Una empanada no lleva: todo lo suyo viene en el relleno, y el bloque
+           se esconde con el tipo, como el precio. *@
+        <div class="renglones sigue" data-no-empanada hidden="@Model.Ficha.SeCobraPorPack">
             <div class="reng alto receta-reng">
                 <span class="et">Ingredientes</span>
                 <span class="va">
@@ -306,7 +309,7 @@
            Recetas. *@
         @if (Model.Ficha.Base is f4872.ViewModels.RecetaPorPieza laBase)
         {
-            <div class="renglones sigue">
+            <div class="renglones sigue" data-no-empanada>
                 <div class="reng alto receta-reng">
                     <span class="et">Base</span>
                     <span class="va">
@@ -322,7 +325,7 @@
            ve la elegida, así al tocar otra se abre la suya sin esperar a guardar.
            Los chips van con form="ficha", como las cantidades, y el bloque se
            esconde con el tipo, como el precio: una empanada lleva relleno. *@
-        <div class="renglones sigue" data-salsa hidden="@Model.Ficha.SeCobraPorPack">
+        <div class="renglones sigue" data-no-empanada data-elige hidden="@Model.Ficha.SeCobraPorPack">
             <div class="reng alto receta-reng">
                 <span class="et">Salsa</span>
                 <span class="va">
@@ -345,6 +348,39 @@
                     {
                         <partial name="_PorPieza" model="s"
                                  view-data='new ViewDataDictionary(ViewData) { ["Escondida"] = Model.Ficha.IdSalsa != s.IdReceta }' />
+                    }
+                </span>
+            </div>
+        </div>
+
+        @* El relleno de una empanada: todo lo que lleva, tapas incluidas. Se
+           elige como la salsa y se ve abierto, lo de una empanada. No hay «sin
+           relleno»: una empanada sin relleno no es una empanada. *@
+        <div class="renglones sigue" data-empanada data-elige hidden="@(!Model.Ficha.SeCobraPorPack)">
+            <div class="reng alto receta-reng">
+                <span class="et">Relleno</span>
+                <span class="va">
+                    @if (Model.Ficha.Rellenos.Count == 0)
+                    {
+                        <span class="nota-f nota-suelta">Todavía no hay rellenos: se cargan en Recetas.</span>
+                    }
+                    else
+                    {
+                        <span class="chips-fam">
+                            @foreach (var r in Model.Ficha.Rellenos)
+                            {
+                                <label class="chip-fam">
+                                    <input type="radio" name="Ficha.IdRelleno" value="@r.IdReceta" form="ficha"
+                                           checked="@(Model.Ficha.IdRelleno == r.IdReceta)" />
+                                    <span>@r.Nombre</span>
+                                </label>
+                            }
+                        </span>
+                        @foreach (var r in Model.Ficha.Rellenos)
+                        {
+                            <partial name="_PorPieza" model="r"
+                                     view-data='new ViewDataDictionary(ViewData) { ["Escondida"] = Model.Ficha.IdRelleno != r.IdReceta }' />
+                        }
                     }
                 </span>
             </div>

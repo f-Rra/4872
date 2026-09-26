@@ -1,6 +1,7 @@
 @model f4872.ViewModels.RecetaPorPieza
-@* Lo que le toca a una pieza de una receta, de lectura: la base y cada salsa de
-   la ficha del producto. Sin pastilla, porque no se toca desde ahí. *@
+@* Lo que le toca a una pieza de una receta, de lectura: la base, cada salsa y
+   cada relleno de la ficha del producto. Sin pastilla, porque no se toca desde
+   ahí. *@
 <ul class="receta lectura" data-lectura="@Model.IdReceta" hidden="@(ViewData["Escondida"] is true)">
     @foreach (var r in Model.Renglones)
     {

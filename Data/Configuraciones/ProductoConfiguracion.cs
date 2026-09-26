@@ -45,5 +45,10 @@ public class ProductoConfiguracion : IEntityTypeConfiguration<Producto>
             .WithMany()
             .HasForeignKey(x => x.IdSalsa)
             .OnDelete(DeleteBehavior.Restrict);
+
+        producto.HasOne(x => x.Relleno)
+            .WithMany()
+            .HasForeignKey(x => x.IdRelleno)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

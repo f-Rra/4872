@@ -92,6 +92,11 @@ public class FichaProducto
     // guardar.
     public IReadOnlyList<RecetaPorPieza> Salsas { get; set; } = [];
 
+    // El relleno de una empanada, y todos para elegir, igual que la salsa. Es
+    // todo lo que lleva la empanada: no tiene ingredientes sueltos.
+    public int? IdRelleno { get; set; }
+    public IReadOnlyList<RecetaPorPieza> Rellenos { get; set; } = [];
+
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
     public string NombreDeFamilia => Familia switch

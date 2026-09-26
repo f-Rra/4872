@@ -188,8 +188,10 @@ public class RecetaService
         // el nombre del ingrediente viene con la receta porque el quitado guarda
         // el nombre y no una clave -asi el pedido se lee aunque el ingrediente ya
         // no exista- y es por ahi por donde hay que cruzarlos
+        // lo suelto de una empanada no cuenta: todo lo que lleva viene en su
+        // relleno, y si le quedo algo suelto de cuando era otra cosa, no se hace
         var deProducto = await _contexto.ProductoIngredientes
-            .Where(x => ids.Contains(x.IdProducto))
+            .Where(x => ids.Contains(x.IdProducto) && x.Producto.Familia != Familia.Empanada)
             .Select(x => new
             {
                 x.IdProducto,
@@ -264,11 +266,24 @@ public class RecetaService
             }))
             .ToListAsync();
 
+        var deRelleno = await _contexto.Productos
+            .Where(x => ids.Contains(x.IdProducto) && x.IdRelleno != null)
+            .SelectMany(p => p.Relleno!.Ingredientes.Select(r => new
+            {
+                p.IdProducto,
+                Receta = p.Relleno.Nombre,
+                p.Relleno.Rinde,
+                r.IdIngrediente,
+                r.Cantidad
+            }))
+            .ToListAsync();
+
         // Agrupado por receta y no por producto: el bollo es uno solo y se amasa
-        // para todas las piezas que lo llevan juntas, y la salsa se hace en la
-        // olla para todas las pizzas que la llevan. Tampoco se descuentan: una
-        // pizza sin albahaca se hace con el bollo y la salsa enteros igual.
-        partes.AddRange(deBase.Concat(deSalsa)
+        // para todas las piezas que lo llevan juntas, la salsa se hace en la
+        // olla para todas las pizzas que la llevan, y el relleno para todas las
+        // empanadas de su gusto. Tampoco se descuentan: una pizza sin albahaca
+        // se hace con el bollo y la salsa enteros igual.
+        partes.AddRange(deBase.Concat(deSalsa).Concat(deRelleno)
             .GroupBy(x => new { x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad })
             .Select(g =>
             {
@@ -317,8 +332,8 @@ public class RecetaService
     //
     // No mira los pedidos: es la receta contra el precio al que se compra cada
     // ingrediente. Vive aca porque recorre las mismas recetas que el resto -la
-    // del producto, su base y su salsa- y son las mismas reglas: una receta se
-    // carga entera y hay que dividirla por el rinde.
+    // del producto, su base, su salsa y su relleno- y son las mismas reglas: una
+    // receta se carga entera y hay que dividirla por el rinde.
     public async Task<IReadOnlyList<CostoDeProducto>> Costos()
     {
         var productos = await _contexto.Productos
@@ -342,12 +357,27 @@ public class RecetaService
                         r.Cantidad
                     }).ToList()
                 },
-                // la salsa es otra receta entera: se cuenta igual que la base
+                // la salsa y el relleno son otras recetas enteras: se cuentan
+                // igual que la base
                 Salsa = p.Salsa == null ? null : new
                 {
                     p.Salsa.Nombre,
                     p.Salsa.Rinde,
                     Receta = p.Salsa.Ingredientes.Select(r => new
+                    {
+                        r.Ingrediente.Nombre,
+                        r.Ingrediente.Unidad,
+                        r.Ingrediente.Libre,
+                        r.Ingrediente.CantidadDeCompra,
+                        r.Ingrediente.PrecioDeCompra,
+                        r.Cantidad
+                    }).ToList()
+                },
+                Relleno = p.Relleno == null ? null : new
+                {
+                    p.Relleno.Nombre,
+                    p.Relleno.Rinde,
+                    Receta = p.Relleno.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
                         r.Ingrediente.Unidad,
@@ -387,9 +417,9 @@ public class RecetaService
             var sinPrecio = 0;
             var costo = 0m;
 
-            // Primero las recetas que usa -la base y la salsa-, cada una con lo
-            // suyo colgando abajo. Después lo que lleva arriba.
-            foreach (var receta in new[] { p.Base, p.Salsa })
+            // Primero las recetas que usa -la base y la salsa, o el relleno-,
+            // cada una con lo suyo colgando abajo. Después lo que lleva arriba.
+            foreach (var receta in new[] { p.Base, p.Salsa, p.Relleno })
             {
                 if (receta is null)
                 {
@@ -429,7 +459,9 @@ public class RecetaService
                 costo += costoReceta;
             }
 
-            foreach (var r in p.Receta)
+            // lo suelto de una empanada no cuenta: todo lo que lleva viene en su
+            // relleno, y si le quedo algo de cuando era otra cosa, no se hace
+            foreach (var r in p.Familia == Familia.Empanada ? [] : p.Receta)
             {
                 var sale = Cuanto(r.Cantidad, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
 

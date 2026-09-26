@@ -84,8 +84,8 @@ public static class Sembrador
     // la de pizza pesa 1730 g y se corta en 6, o sea bollos de 288; la de
     // focaccia pesa 1930 y se corta en 4, o sea de 483.
     //
-    // La tapa de empanada no es una base: se compra hecha. Es un ingrediente
-    // más de cada gusto, como la muzzarella.
+    // La tapa de empanada no es una base: se compra hecha. Va adentro del
+    // relleno de cada gusto, con lo demás que lleva.
     private static readonly (string N, Familia Fam, int Rinde, (string Ing, decimal Cant)[] Receta)[] LasBases =
     [
         ("Bollo de pizza",    Familia.Pizza,    6, [("Harina 00", 1000), ("Agua", 600), ("Masa madre", 100), ("Sal fina", 30)]),
@@ -106,7 +106,8 @@ public static class Sembrador
     ];
 
     // familia, nombre, precio (nulo en empanadas: van por pack), si está en la
-    // carta, la base que consume, y cuánto lleva UNA pieza de cada ingrediente
+    // carta, la base que consume, y cuánto lleva UNA pieza de cada ingrediente.
+    // En las empanadas eso va a su relleno, cargado para 12
     private static readonly (Familia Fam, string N, decimal? Precio, bool Activo, string? Base, (string Ing, decimal Cant)[] Receta)[] LosProductos =
     [
         (Familia.Pizza, "Margarita",      9800,  true,  "Bollo de pizza",
@@ -134,7 +135,7 @@ public static class Sembrador
             [("Aceitunas", 50), ("Orégano", 1), ("Oliva", 10), ("Sal", 1)]),
 
         (Familia.Empanada, "Carne suave",     null, true,  null,
-            [("Tapas de empanada", 1), ("Carne", 35), ("Cebolla", 15), ("Huevo", 6), ("Comino", 1)]),
+            [("Tapas de empanada", 1), ("Carne", 35), ("Cebolla", 15), ("Huevo", 0.25m), ("Comino", 1)]),
         (Familia.Empanada, "Carne picante",   null, true,  null,
             [("Tapas de empanada", 1), ("Carne", 35), ("Cebolla", 15), ("Pimentón", 1), ("Ají molido", 1)]),
         (Familia.Empanada, "Jamón y queso",   null, true,  null,
@@ -290,21 +291,40 @@ public static class Sembrador
             ingredientes[x.N] = nuevo;
         }
 
-        contexto.Productos.AddRange(LosProductos.Select(p => new Producto
-        {
-            Familia = p.Fam,
-            Nombre = p.N,
-            Precio = p.Precio,
-            Activo = p.Activo,
-            // las empanadas no llevan: la tapa es un ingrediente suyo
-            Base = p.Base is null ? null : bases[p.Base],
-            Receta = [.. p.Receta.Select(r => new ProductoIngrediente
+        contexto.Productos.AddRange(LosProductos.Select(p => p.Fam == Familia.Empanada
+            // La empanada no lleva nada suelto: su relleno trae todo, tapas
+            // incluidas, cargado para 12 como se hace. Se llama como el gusto
+            ? new Producto
             {
-                Ingrediente = ingredientes[r.Ing],
-                Cantidad = r.Cant,
-                Quitable = !Fijos.Contains(r.Ing)
-            })]
-        }));
+                Familia = p.Fam,
+                Nombre = p.N,
+                Activo = p.Activo,
+                Relleno = new Receta
+                {
+                    Nombre = p.N,
+                    Tipo = TipoReceta.Relleno,
+                    Rinde = 12,
+                    Ingredientes = [.. p.Receta.Select(r => new RecetaIngrediente
+                    {
+                        Ingrediente = ingredientes[r.Ing],
+                        Cantidad = r.Cant * 12
+                    })]
+                }
+            }
+            : new Producto
+            {
+                Familia = p.Fam,
+                Nombre = p.N,
+                Precio = p.Precio,
+                Activo = p.Activo,
+                Base = p.Base is null ? null : bases[p.Base],
+                Receta = [.. p.Receta.Select(r => new ProductoIngrediente
+                {
+                    Ingrediente = ingredientes[r.Ing],
+                    Cantidad = r.Cant,
+                    Quitable = !Fijos.Contains(r.Ing)
+                })]
+            }));
 
         await contexto.SaveChangesAsync();
 
