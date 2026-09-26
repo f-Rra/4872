@@ -24,6 +24,11 @@ public class Producto
     public int? IdBase { get; set; }
     public Receta? Base { get; set; }
 
+    // la salsa, que a diferencia de la masa se elige: una receta de tipo Salsa,
+    // o ninguna. Solo en pizzas y focaccias
+    public int? IdSalsa { get; set; }
+    public Receta? Salsa { get; set; }
+
     // se llama Receta y no Ingredientes porque cada renglon no es un ingrediente:
     // es un ingrediente con su cantidad y con si se puede sacar
     public ICollection<ProductoIngrediente> Receta { get; set; } = new List<ProductoIngrediente>();

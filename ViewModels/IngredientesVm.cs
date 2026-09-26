@@ -104,7 +104,7 @@ public class FichaIngrediente
 }
 
 // De dónde sale una parte de lo que hace falta: el renglón de un producto que
-// lleva el ingrediente, o el de una base.
+// lleva el ingrediente, o el de una receta.
 //
 // Es lo que devuelve RecetaService y de lo que sale, sumado, el número de la
 // grilla. No está formateado: la ficha decide cómo se lee cada renglón.
@@ -112,11 +112,11 @@ public class ParteDeReceta
 {
     public int IdIngrediente { get; set; }
 
-    // el nombre del producto, o el de la base: «Margarita», «Bollo de masa»
+    // el nombre del producto, o el de la receta: «Margarita», «Pomodoro»
     public string Donde { get; set; } = null!;
 
-    // Cuánto lleva. De un producto es por pieza; de una base es de la TANDA
-    // ENTERA, que es como se carga la receta del bollo. Por eso viaja el rinde.
+    // Cuánto lleva. De un producto es por pieza; de una receta es de la RECETA
+    // ENTERA, que es como se carga. Por eso viaja el rinde.
     public decimal Cantidad { get; set; }
 
     public int? Rinde { get; set; }
@@ -124,13 +124,13 @@ public class ParteDeReceta
     // cuántas piezas lo llevan de verdad: las que lo pidieron sin no cuentan
     public int Piezas { get; set; }
 
-    // Cuántas tandas hay que amasar para esas piezas, redondeado para arriba.
-    // Cero cuando no viene de una base.
-    public int Tandas { get; set; }
+    // Cuántas veces hay que hacer la receta para esas piezas, redondeado para
+    // arriba. Cero cuando no viene de una receta.
+    public int Veces { get; set; }
 
     public decimal Total { get; set; }
 
-    public bool EsBase => Rinde is not null;
+    public bool EsReceta => Rinde is not null;
 }
 
 // Un renglón del desglose, ya formateado. La vista no hace cuentas ni decide
@@ -139,7 +139,7 @@ public class RenglonDesglose
 {
     public string Donde { get; set; } = null!;
 
-    // «rinde 6», solo en las bases
+    // «rinde 6», solo en las recetas
     public string? Rinde { get; set; }
 
     // «4 u», o «1 kg la receta» si es una receta

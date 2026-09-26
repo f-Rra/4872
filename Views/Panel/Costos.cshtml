@@ -194,12 +194,12 @@ else
                 @Fam(d.Familia)@(d.Familia == f4872.Models.Familia.Empanada ? " · por unidad, del pack que sale más barato" : "")
             </p>
 
-            @* La base va en un renglón que sí suma, con lo suyo colgando abajo:
-               lo de abajo ya está contado arriba y por eso no lleva número. *@
+            @* Cada receta —la base, la salsa— va en un renglón que sí suma, con
+               lo suyo colgando abajo: lo de abajo ya está contado arriba. *@
             <ul class="desglose">
                 @foreach (var r in d.Desglose)
                 {
-                    <li class="@(r.EsBase ? "fija" : r.DeLaBase ? "sangria" : null)">
+                    <li class="@(r.EsReceta ? "fija" : r.DeLaReceta ? "sangria" : null)">
                         <span class="qn">@r.Nombre</span>
                         <span class="cuanto">@r.Cuanto</span>
                         <span class="sub">@(r.Sale is decimal s ? s.ToString("C") : "—")</span>

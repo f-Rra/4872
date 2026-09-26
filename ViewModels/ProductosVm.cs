@@ -80,8 +80,17 @@ public class FichaProducto
     //
     // Vive en la ficha por lo mismo que los precios de pack: es donde se lo
     // mira. Y como ellos, no es de este producto —cambiarlo lo cambia para
-    // todos los que lo amasan— así que la pantalla lo dice.
-    public Bollo? Bollo { get; set; }
+    // todos los que lo amasan— así que se cambia en Recetas.
+    public RecetaPorPieza? Base { get; set; }
+
+    // La salsa elegida, o nula si no lleva. A diferencia de la base se elige,
+    // y por eso viaja con la ficha como el precio.
+    public int? IdSalsa { get; set; }
+
+    // Todas las salsas, para elegir, cada una con lo que le toca a una pizza:
+    // la elegida se ve abierta, y al tocar otra se abre la otra sin esperar a
+    // guardar.
+    public IReadOnlyList<RecetaPorPieza> Salsas { get; set; } = [];
 
     public bool SeCobraPorPack => Familia == Familia.Empanada;
 
@@ -126,22 +135,25 @@ public class PrecioPack
     public decimal Precio { get; set; }
 }
 
-// Lo que le toca de masa a UNA pieza. Una pizza es un bollo.
+// Lo que le toca a UNA pieza de una receta que usa el producto: la masa o la
+// salsa. Una pizza es un bollo.
 //
-// La receta de la base se carga por tanda entera, que es como se amasa, pero
-// acá no se muestra así: en esta ficha todo lo demás es por pieza —120 g de
-// muzzarella son de una pizza— y mezclar las dos unidades en la misma pantalla
-// obligaba a explicar el rinde. Dividida, las dos listas dicen lo mismo.
+// Las recetas se cargan enteras, que es como se hacen, pero acá no se muestran
+// así: en esta ficha todo lo demás es por pieza —120 g de muzzarella son de una
+// pizza— y mezclar las dos cuentas en la misma pantalla obligaba a explicar el
+// rinde. Divididas, las listas dicen lo mismo.
 //
-// Va de lectura: son números derivados, y la receta de la masa no es de este
-// producto sino de todos los que la amasan.
-public class Bollo
+// Va de lectura: son números derivados, y la receta no es de este producto sino
+// de todos los que la usan.
+public class RecetaPorPieza
 {
-    public IReadOnlyList<IngredienteDelBollo> Receta { get; set; } = [];
+    public int IdReceta { get; set; }
+    public string Nombre { get; set; } = null!;
+    public IReadOnlyList<RenglonPorPieza> Renglones { get; set; } = [];
 }
 
-// Un renglón de la masa, ya formateado: «166,7 g».
-public class IngredienteDelBollo
+// Un renglón de la receta, ya formateado: «166,7 g».
+public class RenglonPorPieza
 {
     public string Nombre { get; set; } = null!;
     public string Cuanto { get; set; } = null!;

@@ -78,22 +78,22 @@ public class CostoDeProducto
     public IReadOnlyList<RenglonDeCosto> Desglose { get; set; } = [];
 }
 
-// Un renglón del desglose. Los de la base van sangrados y no suman: ya están
-// contados en el renglón de la base, que lleva el total de una unidad.
+// Un renglón del desglose. Los de una receta van sangrados y no suman: ya están
+// contados en el renglón de la receta, que lleva el total de una unidad.
 public class RenglonDeCosto
 {
     public string Nombre { get; set; } = null!;
 
-    // «120 g». Vacío en el renglón de la base, que no lleva una cantidad suya
+    // «120 g». Vacío en el renglón de la receta, que no lleva una cantidad suya
     public string Cuanto { get; set; } = "";
 
     public decimal? Sale { get; set; }
 
-    // el renglón de la base, el que sí suma
-    public bool EsBase { get; set; }
+    // el renglón de una receta —la base, la salsa—, el que sí suma
+    public bool EsReceta { get; set; }
 
-    // los ingredientes de la base, que cuelgan del anterior
-    public bool DeLaBase { get; set; }
+    // los ingredientes de la receta, que cuelgan del anterior
+    public bool DeLaReceta { get; set; }
 }
 
 // Un mes del historial: lo que se cobró contra lo que costó.

@@ -517,7 +517,11 @@
 .nota-suelta{display:inline-block;margin:0;opacity:.6}
 
 
-/* ---------- las recetas ---------- */
+/* ---------- las recetas ----------
+   La base, la salsa y el relleno se leen como una receta aparte y no como
+   ingredientes sueltos: el nombre arriba y lo que lleva abajo, abierto */
+.de-receta{display:block;font-size:.95rem;font-weight:700}
+.receta-reng .va > .lectura{margin-top:.35rem}
 /* lo que le toca a una pieza, en la ficha de la receta: es derivado, asi que
    va sin pastilla, como la base en la ficha del producto */
 .receta .porpieza{

@@ -245,35 +245,48 @@ public class RecetaService
             .SelectMany(p => p.Base!.Ingredientes.Select(r => new
             {
                 p.IdProducto,
-                Base = p.Base.Nombre,
+                Receta = p.Base.Nombre,
                 p.Base.Rinde,
                 r.IdIngrediente,
                 r.Cantidad
             }))
             .ToListAsync();
 
-        // Agrupado por base y no por producto: el bollo es uno solo y se amasa
-        // para todas las piezas que lo llevan juntas. La base tampoco se
-        // descuenta: una pizza sin albahaca se hace con el bollo entero igual.
-        partes.AddRange(deBase
-            .GroupBy(x => new { x.Base, x.Rinde, x.IdIngrediente, x.Cantidad })
+        var deSalsa = await _contexto.Productos
+            .Where(x => ids.Contains(x.IdProducto) && x.IdSalsa != null)
+            .SelectMany(p => p.Salsa!.Ingredientes.Select(r => new
+            {
+                p.IdProducto,
+                Receta = p.Salsa.Nombre,
+                p.Salsa.Rinde,
+                r.IdIngrediente,
+                r.Cantidad
+            }))
+            .ToListAsync();
+
+        // Agrupado por receta y no por producto: el bollo es uno solo y se amasa
+        // para todas las piezas que lo llevan juntas, y la salsa se hace en la
+        // olla para todas las pizzas que la llevan. Tampoco se descuentan: una
+        // pizza sin albahaca se hace con el bollo y la salsa enteros igual.
+        partes.AddRange(deBase.Concat(deSalsa)
+            .GroupBy(x => new { x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad })
             .Select(g =>
             {
                 var cuantas = g.Sum(x => piezas[x.IdProducto]);
-                var tandas = Tandas(cuantas, g.Key.Rinde);
+                var veces = Tandas(cuantas, g.Key.Rinde);
 
                 return new ParteDeReceta
                 {
                     IdIngrediente = g.Key.IdIngrediente,
-                    Donde = g.Key.Base,
+                    Donde = g.Key.Receta,
                     Cantidad = g.Key.Cantidad,
                     Rinde = g.Key.Rinde,
                     Piezas = cuantas,
-                    Tandas = tandas,
-                    // Por tandas enteras y no proporcional: media tanda no se
-                    // amasa. Para trece bollos de a seis hay que hacer tres
-                    // tandas, asi que se compra harina para tres.
-                    Total = g.Key.Cantidad * tandas
+                    Veces = veces,
+                    // Por recetas enteras y no proporcional: media receta no se
+                    // hace. Para trece bollos de a seis hay que amasar tres
+                    // veces, asi que se compra harina para tres.
+                    Total = g.Key.Cantidad * veces
                 };
             }));
 
@@ -303,9 +316,9 @@ public class RecetaService
     // Lo que cuesta hacer una unidad de cada producto y lo que deja.
     //
     // No mira los pedidos: es la receta contra el precio al que se compra cada
-    // ingrediente. Vive aca porque recorre las mismas dos recetas que el resto
-    // -la del producto y la de su base- y son las mismas reglas: la base se
-    // carga por tanda entera y hay que dividirla por el rinde.
+    // ingrediente. Vive aca porque recorre las mismas recetas que el resto -la
+    // del producto, su base y su salsa- y son las mismas reglas: una receta se
+    // carga entera y hay que dividirla por el rinde.
     public async Task<IReadOnlyList<CostoDeProducto>> Costos()
     {
         var productos = await _contexto.Productos
@@ -320,6 +333,21 @@ public class RecetaService
                     p.Base.Nombre,
                     p.Base.Rinde,
                     Receta = p.Base.Ingredientes.Select(r => new
+                    {
+                        r.Ingrediente.Nombre,
+                        r.Ingrediente.Unidad,
+                        r.Ingrediente.Libre,
+                        r.Ingrediente.CantidadDeCompra,
+                        r.Ingrediente.PrecioDeCompra,
+                        r.Cantidad
+                    }).ToList()
+                },
+                // la salsa es otra receta entera: se cuenta igual que la base
+                Salsa = p.Salsa == null ? null : new
+                {
+                    p.Salsa.Nombre,
+                    p.Salsa.Rinde,
+                    Receta = p.Salsa.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
                         r.Ingrediente.Unidad,
@@ -359,16 +387,23 @@ public class RecetaService
             var sinPrecio = 0;
             var costo = 0m;
 
-            if (p.Base is not null)
+            // Primero las recetas que usa -la base y la salsa-, cada una con lo
+            // suyo colgando abajo. Después lo que lleva arriba.
+            foreach (var receta in new[] { p.Base, p.Salsa })
             {
-                var deLaBase = new List<RenglonDeCosto>();
-                var costoBase = 0m;
-
-                foreach (var r in p.Base.Receta)
+                if (receta is null)
                 {
-                    // la receta de la base es de la tanda entera: lo que entra en
-                    // una pizza es esa cantidad dividida por el rinde
-                    var cuanto = p.Base.Rinde > 0 ? r.Cantidad / p.Base.Rinde : 0m;
+                    continue;
+                }
+
+                var deLaReceta = new List<RenglonDeCosto>();
+                var costoReceta = 0m;
+
+                foreach (var r in receta.Receta)
+                {
+                    // la receta es entera: lo que entra en una pizza es esa
+                    // cantidad dividida por el rinde
+                    var cuanto = receta.Rinde > 0 ? r.Cantidad / receta.Rinde : 0m;
                     var sale = Cuanto(cuanto, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
 
                     if (sale is null)
@@ -376,22 +411,22 @@ public class RecetaService
                         sinPrecio++;
                     }
 
-                    costoBase += sale ?? 0m;
+                    costoReceta += sale ?? 0m;
 
-                    deLaBase.Add(new RenglonDeCosto
+                    deLaReceta.Add(new RenglonDeCosto
                     {
                         Nombre = r.Nombre,
                         Cuanto = Cantidades.Bonito(cuanto, r.Unidad),
                         Sale = sale,
-                        DeLaBase = true
+                        DeLaReceta = true
                     });
                 }
 
-                // el renglon de la base va primero y lleva el total de una
+                // el renglon de la receta va primero y lleva el total de una
                 // unidad; los de abajo cuelgan de el y no se vuelven a sumar
-                renglones.Add(new RenglonDeCosto { Nombre = p.Base.Nombre, Sale = costoBase, EsBase = true });
-                renglones.AddRange(deLaBase);
-                costo += costoBase;
+                renglones.Add(new RenglonDeCosto { Nombre = receta.Nombre, Sale = costoReceta, EsReceta = true });
+                renglones.AddRange(deLaReceta);
+                costo += costoReceta;
             }
 
             foreach (var r in p.Receta)

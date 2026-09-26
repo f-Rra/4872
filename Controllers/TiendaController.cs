@@ -49,6 +49,7 @@ public class TiendaController : Controller
             .Select(x => new
             {
                 x.Familia,
+                Salsa = x.Salsa == null ? null : x.Salsa.Nombre,
                 Renglon = new RenglonCarta
                 {
                     IdProducto = x.IdProducto,
@@ -69,6 +70,14 @@ public class TiendaController : Controller
                 }
             })
             .ToListAsync();
+
+        // La salsa va primera y fija: es una receta, no un ingrediente que se
+        // pueda sacar. Se pone acá y no en la consulta porque no es un renglón
+        // de la receta del producto.
+        foreach (var x in renglones.Where(x => x.Salsa is not null))
+        {
+            x.Renglon.Ingredientes = [new IngredienteCarta { Nombre = x.Salsa!, Quitable = false }, .. x.Renglon.Ingredientes];
+        }
 
         // las empanadas no traen receta ni precio: en la carta van solo con el
         // nombre, y lo que se cobra es el pack

@@ -301,31 +301,54 @@
 
         @* Lo que le toca de masa a una pieza. Una pizza es un bollo, así que
            estos números están en la misma unidad que los de arriba: lo que lleva
-           una. Van de lectura porque son derivados -la masa se carga por tanda
-           entera- y porque la receta del bollo no es de este producto. *@
-        @if (Model.Ficha.Bollo is f4872.ViewModels.Bollo bollo)
+           una. Van de lectura porque son derivados -la masa se carga entera- y
+           porque la receta del bollo no es de este producto: se cambia en
+           Recetas. *@
+        @if (Model.Ficha.Base is f4872.ViewModels.RecetaPorPieza laBase)
         {
             <div class="renglones sigue">
                 <div class="reng alto receta-reng">
                     <span class="et">Base</span>
                     <span class="va">
-                        <ul class="receta lectura">
-                            @foreach (var r in bollo.Receta)
-                            {
-                                <li>
-                                    <span class="rn">@r.Nombre</span>
-                                    <span class="rq">@r.Cuanto</span>
-                                    @* los dos huecos de los botones que no lleva:
-                                       sin ellos el numero cae mas a la derecha
-                                       que las cantidades de arriba *@
-                                    <span class="hueco"></span><span class="rx"></span>
-                                </li>
-                            }
-                        </ul>
+                        <span class="de-receta">@laBase.Nombre</span>
+                        <partial name="_PorPieza" model="laBase" />
                     </span>
                 </div>
             </div>
         }
+
+        @* La salsa, a diferencia de la base, se elige: una de Recetas o
+           ninguna. Va con la base, abajo, y abierta: están dibujadas todas y se
+           ve la elegida, así al tocar otra se abre la suya sin esperar a guardar.
+           Los chips van con form="ficha", como las cantidades, y el bloque se
+           esconde con el tipo, como el precio: una empanada lleva relleno. *@
+        <div class="renglones sigue" data-salsa hidden="@Model.Ficha.SeCobraPorPack">
+            <div class="reng alto receta-reng">
+                <span class="et">Salsa</span>
+                <span class="va">
+                    <span class="chips-fam">
+                        @foreach (var s in Model.Ficha.Salsas)
+                        {
+                            <label class="chip-fam">
+                                <input type="radio" name="Ficha.IdSalsa" value="@s.IdReceta" form="ficha"
+                                       checked="@(Model.Ficha.IdSalsa == s.IdReceta)" />
+                                <span>@s.Nombre</span>
+                            </label>
+                        }
+                        <label class="chip-fam">
+                            <input type="radio" name="Ficha.IdSalsa" value="" form="ficha"
+                                   checked="@(Model.Ficha.IdSalsa is null)" />
+                            <span>Sin salsa</span>
+                        </label>
+                    </span>
+                    @foreach (var s in Model.Ficha.Salsas)
+                    {
+                        <partial name="_PorPieza" model="s"
+                                 view-data='new ViewDataDictionary(ViewData) { ["Escondida"] = Model.Ficha.IdSalsa != s.IdReceta }' />
+                    }
+                </span>
+            </div>
+        </div>
 
         @if (!Model.EsNuevo)
         {

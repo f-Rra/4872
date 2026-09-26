@@ -195,9 +195,12 @@
 // son del tamano y no del gusto. El servidor dibuja los dos renglones y esconde
 // el que no va, pero decide con la familia GUARDADA: al dar de alta una
 // empanada todavia la cree una pizza, asi que el cambio lo hace el chip.
+//
+// La salsa va con el precio suelto: es de las pizzas y las focaccias, y una
+// empanada lleva relleno.
 (function () {
-  var chips = [].slice.call(document.querySelectorAll(".chips-fam input[type='radio']"));
-  var sueltos = [].slice.call(document.querySelectorAll("[data-precio='suelto']"));
+  var chips = [].slice.call(document.querySelectorAll("input[name='Ficha.Familia']"));
+  var sueltos = [].slice.call(document.querySelectorAll("[data-precio='suelto'], [data-salsa]"));
   var packs = [].slice.call(document.querySelectorAll("[data-precio='pack']"));
   if (!chips.length || !sueltos.length) return;
 
@@ -209,4 +212,19 @@
   }
 
   chips.forEach(function (c) { c.addEventListener("change", acomodar); });
+})();
+
+// Lo que lleva la salsa elegida, abierto. Vienen dibujadas todas y escondidas
+// menos la guardada, asi que al tocar otro chip se abre la suya sin esperar a
+// guardar. «Sin salsa» no abre nada.
+(function () {
+  var chips = [].slice.call(document.querySelectorAll("input[name='Ficha.IdSalsa']"));
+  var listas = [].slice.call(document.querySelectorAll("[data-salsa] [data-lectura]"));
+  if (!chips.length) return;
+
+  chips.forEach(function (c) {
+    c.addEventListener("change", function () {
+      listas.forEach(function (l) { l.hidden = l.dataset.lectura !== c.value; });
+    });
+  });
 })();
