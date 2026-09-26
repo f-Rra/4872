@@ -35,6 +35,7 @@ public class RecetaService
                 x.IdProducto,
                 x.Producto.Nombre,
                 x.Producto.Familia,
+                x.Producto.Posicion,
                 x.Cantidad,
                 x.UnidadesPorPack,
                 Sacados = x.Quitados.Select(q => q.Ingrediente).ToList()
@@ -42,7 +43,12 @@ public class RecetaService
             .ToListAsync();
 
         var productos = items
-            .GroupBy(x => new { x.IdProducto, x.Nombre, x.Familia })
+            .GroupBy(x => new { x.IdProducto, x.Nombre, x.Familia, x.Posicion })
+            // el orden de la carta. Familia se guarda como texto, asi que este
+            // OrderBy tiene que ser en memoria: en SQL saldria alfabetico
+            .OrderBy(g => g.Key.Familia)
+            .ThenBy(g => g.Key.Posicion)
+            .ThenBy(g => g.Key.IdProducto)
             .Select(g => new ProductoPedido
             {
                 IdProducto = g.Key.IdProducto,
@@ -59,10 +65,6 @@ public class RecetaService
                     .GroupBy(x => x.UnidadesPorPack!.Value)
                     .ToDictionary(x => x.Key, x => x.Sum(y => y.Cantidad))
             })
-            // el orden de la carta. Familia se guarda como texto, asi que este
-            // OrderBy tiene que ser en memoria: en SQL saldria alfabetico
-            .OrderBy(x => x.Familia)
-            .ThenBy(x => x.IdProducto)
             .ToList();
 
         return new Consolidado { Productos = productos };

@@ -18,6 +18,12 @@ public class Producto
 
     public bool Activo { get; set; } = true;
 
+    // El lugar en la carta, dentro de su familia: hay una pizza 1, una
+    // focaccia 1 y una empanada 1. Sirve solo para ordenar, y por eso puede
+    // tener huecos o repetirse -desempata el IdProducto-: el número que se ve
+    // en el panel sale del orden y no de acá.
+    public int Posicion { get; set; }
+
     // la masa que consume, que es una receta de tipo Base: el bollo en pizzas
     // y focaccias. Una por producto, que es como se arma. Nula en las
     // empanadas, que no amasan

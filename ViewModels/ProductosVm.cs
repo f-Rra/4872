@@ -25,6 +25,13 @@ public class ProductosVm : PanelVm
     public string Subtitulo { get; set; } = "";
     public bool ActivoGuardado { get; set; } = true;
 
+    // El lugar en la carta, contado dentro de su familia: «4» y «de 7
+    // pizzas». También es de lo guardado, como el título, y no viaja en el
+    // formulario: se cambia con las flechas, que guardan solas.
+    public int Lugar { get; set; }
+    public int Cuantos { get; set; }
+    public string DeCuantos { get; set; } = "";
+
     // lo que salió mal al guardar, con el texto que va a leer una persona
     public string? Error { get; set; }
 
@@ -44,6 +51,7 @@ public class FilaProducto
     public Familia Familia { get; set; }
     public decimal? Precio { get; set; }
     public bool Activo { get; set; }
+    public int Posicion { get; set; }
 }
 
 public class FichaProducto

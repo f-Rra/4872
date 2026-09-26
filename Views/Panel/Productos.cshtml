@@ -40,7 +40,10 @@
             @* Un grupo por tipo, en el orden en que ya viene la lista. El título
                sale solo con «Todo»: con un tipo elegido arriba repetiría el chip.
                Y con el tipo en el título, el renglón ya no lo dice: queda en una
-               línea, nombre y precio. *@
+               línea, nombre y precio.
+
+               Delante del nombre, su lugar en la carta: la lista se lee como la
+               va a ver el cliente. *@
             @foreach (var grupo in Model.Lista.GroupBy(x => x.Familia))
             {
                 <section class="grupo-lista">
@@ -49,12 +52,13 @@
                         <h2 class="cab-grupo">@Titulo(grupo.Key)<span class="cuantos">· @grupo.Count()</span></h2>
                     }
                     <ul class="en-una-linea">
-                        @foreach (var p in grupo)
+                        @foreach (var (p, lugar) in grupo.Select((x, i) => (x, i + 1)))
                         {
                             <li class="@(!Model.EsNuevo && p.IdProducto == Model.Ficha.IdProducto ? "elegido" : null)">
                                 <a asp-action="Productos" asp-route-familia="@Model.Familia" asp-route-producto="@p.IdProducto">
                                     <span class="izq">
                                         <span class="fila-p">
+                                            <span class="n-lugar">@lugar</span>
                                             <span class="nom">@p.Nombre</span>
                                             @if (!p.Activo)
                                             {
@@ -141,6 +145,39 @@
                                 </label>
                             }
                         </span>
+                    </span>
+                </div>
+
+                @* Debajo del tipo porque es dentro de él: el número se lee junto a
+                   «de 7 pizzas». Las flechas son de otro formulario, como
+                   «Modificable»: mueven un lugar y guardan solas, y no viajan
+                   con el resto de la ficha. *@
+                <div class="reng pos-reng">
+                    <span class="et">Posición</span>
+                    <span class="va">
+                        @if (Model.EsNuevo)
+                        {
+                            <span class="nota-f nota-suelta">Entra al final de su tipo.</span>
+                        }
+                        else
+                        {
+                            <span class="lugar">@Model.Lugar</span>
+                            <span class="cual">@Model.DeCuantos</span>
+                            <span class="flechas">
+                                <button class="mas" type="submit" form="mover" name="paso" value="-1"
+                                        title="Subir un lugar" aria-label="Subir un lugar"
+                                        disabled="@(Model.Lugar <= 1)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+                                </button>
+                                <button class="mas" type="submit" form="mover" name="paso" value="1"
+                                        title="Bajar un lugar" aria-label="Bajar un lugar"
+                                        disabled="@(Model.Lugar >= Model.Cuantos)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                                </button>
+                            </span>
+                        }
                     </span>
                 </div>
 
@@ -388,6 +425,9 @@
 
         @if (!Model.EsNuevo)
         {
+            <form id="mover" method="post" asp-action="Mover"
+                  asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia"></form>
+
             <form id="sumar-ingrediente" method="post" asp-action="SumarIngrediente"
                   asp-route-id="@Model.Ficha.IdProducto" asp-route-familia="@Model.Familia"></form>
 

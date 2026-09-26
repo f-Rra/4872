@@ -32,7 +32,7 @@ public class PedidoService
     private sealed record Renglon(int IdProducto, int Cantidad, int? Unidades, IReadOnlyList<int> Sin);
 
     // lo único que hace falta saber de un producto para cobrarlo
-    private sealed record Carta(int IdProducto, string Nombre, decimal? Precio, bool Activo, Familia Familia);
+    private sealed record Carta(int IdProducto, string Nombre, decimal? Precio, bool Activo, Familia Familia, int Posicion);
 
     public async Task<int> Confirmar(PedidoNuevo datos)
     {
@@ -78,7 +78,7 @@ public class PedidoService
 
         var productos = await _contexto.Productos
             .Where(x => ids.Contains(x.IdProducto))
-            .Select(x => new Carta(x.IdProducto, x.Nombre, x.Precio, x.Activo, x.Familia))
+            .Select(x => new Carta(x.IdProducto, x.Nombre, x.Precio, x.Activo, x.Familia, x.Posicion))
             .ToDictionaryAsync(x => x.IdProducto);
 
         var unidades = renglones
@@ -133,6 +133,7 @@ public class PedidoService
         var renglones = pedido.Items
             // el mismo orden que la carta, para poder compararlos de un vistazo
             .OrderBy(x => productos[x.IdProducto].Familia)
+            .ThenBy(x => productos[x.IdProducto].Posicion)
             .ThenBy(x => x.IdProducto)
             .Select(x =>
             {

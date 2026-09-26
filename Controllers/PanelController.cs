@@ -481,6 +481,14 @@ public class PanelController : Controller
         if (nuevo || cambioDeFamilia)
         {
             producto.IdBase = await BaseDe(ficha.Familia);
+
+            // Y el lugar en la carta: uno nuevo entra último en su familia, y
+            // uno que se muda, último en la nueva. Ponerlo en el medio correría
+            // a los de abajo sin que nadie lo haya pedido. El que se muda
+            // todavía figura en la vieja, así que no se cuenta a sí mismo.
+            producto.Posicion = (await _contexto.Productos
+                .Where(x => x.Familia == ficha.Familia)
+                .MaxAsync(x => (int?)x.Posicion) ?? 0) + 1;
         }
 
         // La salsa se elige, y es de las pizzas y las focaccias: una empanada
@@ -681,6 +689,42 @@ public class PanelController : Controller
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
+    // Subir o bajar un lugar en la carta, dentro de su familia. Guarda solo,
+    // como «Modificable»: es un toque y no un campo de la ficha.
+    [HttpPost("productos/mover")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Mover(int id, int paso, string? familia = null)
+    {
+        var producto = await _contexto.Productos.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el producto {id}.");
+
+        var hermanos = await _contexto.Productos
+            .Where(x => x.Familia == producto.Familia)
+            .OrderBy(x => x.Posicion)
+            .ThenBy(x => x.IdProducto)
+            .ToListAsync();
+
+        var desde = hermanos.IndexOf(producto);
+        var hasta = desde + Math.Sign(paso);
+
+        if (hasta != desde && hasta >= 0 && hasta < hermanos.Count)
+        {
+            hermanos.RemoveAt(desde);
+            hermanos.Insert(hasta, producto);
+
+            // Se numera la familia entera y no se cambian solo esos dos: si
+            // tenían el mismo número, intercambiarlos no movía nada.
+            for (var i = 0; i < hermanos.Count; i++)
+            {
+                hermanos[i].Posicion = i + 1;
+            }
+
+            await _contexto.SaveChangesAsync();
+        }
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
     // el error de la receta no tiene nada tipeado que conservar: alcanza con
     // volver a la ficha del producto y decir que pasó
     private async Task<IActionResult> Volver(string? familia, int producto, string error)
@@ -772,12 +816,14 @@ public class PanelController : Controller
                 Nombre = x.Nombre,
                 Familia = x.Familia,
                 Precio = x.Precio,
-                Activo = x.Activo
+                Activo = x.Activo,
+                Posicion = x.Posicion
             })
             .ToListAsync();
 
-        // Familia se guarda como texto: ordenar en la base saldria alfabetico
-        lista = [.. lista.OrderBy(x => x.Familia).ThenBy(x => x.IdProducto)];
+        // El orden de la carta: la familia y, adentro, la posición. Familia se
+        // guarda como texto, así que va en memoria: en la base saldría alfabético
+        lista = [.. lista.OrderBy(x => x.Familia).ThenBy(x => x.Posicion).ThenBy(x => x.IdProducto)];
 
         var packs = await _contexto.Packs
             .OrderBy(x => x.Unidades)
@@ -787,6 +833,17 @@ public class PanelController : Controller
         var elegido = nuevo
             ? null
             : lista.FirstOrDefault(x => x.IdProducto == producto) ?? lista.FirstOrDefault();
+
+        // Su lugar sale de la lista y no de la columna, que puede tener huecos.
+        // La lista trae siempre la familia entera del elegido: filtra por familia.
+        var hermanos = elegido is null ? [] : lista.Where(x => x.Familia == elegido.Familia).ToList();
+
+        var tipo = elegido is null ? "" : elegido.Familia switch
+        {
+            Familia.Pizza => "Pizza",
+            Familia.Focaccia => "Focaccia",
+            _ => "Empanada"
+        };
 
         // La receta de este producto, y los que todavia no estan. Sin columna de
         // orden, van por nombre: es el orden en que se busca uno en una lista.
@@ -857,13 +914,12 @@ public class PanelController : Controller
             EsNuevo = nuevo || elegido is null,
             Resumen = $"{lista.Count} · {(agotados == 0 ? "ninguno agotado" : agotados == 1 ? "1 agotado" : $"{agotados} agotados")}",
             Titulo = elegido?.Nombre ?? "",
-            Subtitulo = elegido is null ? "" : elegido.Familia switch
-            {
-                Familia.Pizza => "Pizza",
-                Familia.Focaccia => "Focaccia",
-                _ => "Empanada"
-            },
+            Subtitulo = tipo,
             ActivoGuardado = elegido?.Activo ?? true,
+            Lugar = elegido is null ? 0 : hermanos.IndexOf(elegido) + 1,
+            Cuantos = hermanos.Count,
+            // «de 7 pizzas», y «de 1 focaccia» si es la única
+            DeCuantos = $"de {hermanos.Count} {tipo.ToLowerInvariant()}{(hermanos.Count == 1 ? "" : "s")}",
             Ficha = elegido is null
                 ? new FichaProducto { Packs = packs, Salsas = salsas, Rellenos = rellenos }
                 : new FichaProducto
@@ -1134,14 +1190,21 @@ public class PanelController : Controller
         return View(nameof(Recetas), vm);
     }
 
-    // Los productos que usan una receta, en el orden en que se cargaron. Con
-    // alguno, la receta no se borra ni cambia de tipo.
+    // Los productos que usan una receta, en el orden de la carta. Con alguno,
+    // la receta no se borra ni cambia de tipo.
     private async Task<List<string>> UsanLaReceta(int id) =>
-        await _contexto.Productos
-            .Where(x => x.IdBase == id || x.IdSalsa == id || x.IdRelleno == id)
-            .OrderBy(x => x.IdProducto)
+    [
+        .. (await _contexto.Productos
+                .Where(x => x.IdBase == id || x.IdSalsa == id || x.IdRelleno == id)
+                .Select(x => new { x.Familia, x.Posicion, x.IdProducto, x.Nombre })
+                .ToListAsync())
+            // en memoria: Familia se guarda como texto y en la base saldría
+            // alfabético
+            .OrderBy(x => x.Familia)
+            .ThenBy(x => x.Posicion)
+            .ThenBy(x => x.IdProducto)
             .Select(x => x.Nombre)
-            .ToListAsync();
+    ];
 
     // Quiénes la usan, en una línea: «Salsa · la usan Margarita y Marinara».
     // La base no nombra a cada pizza: la usan todas las de su familia, y la
@@ -1487,6 +1550,7 @@ public class PanelController : Controller
                         i.Cantidad,
                         i.Producto.Nombre,
                         i.Producto.Familia,
+                        i.Producto.Posicion,
                         i.IdProducto,
                         i.UnidadesPorPack,
                         Total = i.Cantidad * i.PrecioUnitario,
@@ -1516,10 +1580,11 @@ public class PanelController : Controller
                 // El orden se pone aca y no en la consulta. Familia se guarda
                 // como texto, asi que un ORDER BY en la base sale alfabetico
                 // -Empanada, Focaccia, Pizza- y la carta va al reves. En memoria
-                // ordena por el valor del enum, que es el orden de la carta y el
-                // mismo que usa el aviso de Telegram.
+                // ordena por el valor del enum y despues por la posicion, que es
+                // el orden de la carta y el mismo que usa el aviso de Telegram.
                 .. pedido.Items
                     .OrderBy(x => x.Familia)
+                    .ThenBy(x => x.Posicion)
                     .ThenBy(x => x.IdProducto)
                     .Select(x => new ItemDelDetalle
                 {

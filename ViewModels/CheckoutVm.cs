@@ -14,7 +14,7 @@ public class CheckoutVm
         new Dictionary<int, ProductoDelPedido>();
 
     // los gustos de empanada: la clave de un pack es "e" + este id + "x" + unidades
-    public IReadOnlyDictionary<int, string> Gustos { get; set; } = new Dictionary<int, string>();
+    public IReadOnlyDictionary<int, GustoDelPedido> Gustos { get; set; } = new Dictionary<int, GustoDelPedido>();
 
     // cuánto sale cada tamaño de pack, por unidades
     public IReadOnlyDictionary<int, decimal> Packs { get; set; } = new Dictionary<int, decimal>();
@@ -28,5 +28,13 @@ public class ProductoDelPedido
     public string Nombre { get; set; } = null!;
     public decimal Precio { get; set; }
     // para ordenar el resumen igual que la carta, y no por orden de agregado
+    public int Orden { get; set; }
+}
+
+// el gusto no tiene precio: se cobra el pack. El orden, por lo mismo que el
+// de un producto
+public class GustoDelPedido
+{
+    public string Nombre { get; set; } = null!;
     public int Orden { get; set; }
 }

@@ -535,6 +535,29 @@
 .detalle .secundarias{margin-top:.9rem}
 
 
+/* ---------- la posicion ----------
+   El lugar en la carta, dentro de su tipo: el numero, de cuantos, y dos flechas
+   redondas como el (+) de sumar un ingrediente. El numero va sin pastilla: no
+   se escribe, se mueve con las flechas */
+.pos-reng .va{display:flex;align-items:center;gap:.5rem}
+.pos-reng .lugar{font-size:.98rem;font-weight:700;font-variant-numeric:tabular-nums}
+.pos-reng .cual{font-size:.9rem;font-weight:700;opacity:.8}
+.pos-reng .flechas{display:inline-flex;gap:.3rem}
+/* en la punta no hay para donde ir: la flecha queda, apagada, para que las dos
+   no cambien de lugar segun cual se pueda tocar */
+.pos-reng .mas[disabled]{
+  opacity:.3;cursor:default;
+  background:transparent;border-color:rgba(30,82,69,.5);color:var(--verde);
+}
+/* el lugar en la lista, antes del nombre: angosto y tenue, que se lea la carta
+   de un vistazo sin competir con el nombre */
+.fila-p .n-lugar{
+  flex:none;min-width:1.1rem;
+  font-size:.78rem;font-weight:800;opacity:.5;font-variant-numeric:tabular-nums;
+}
+.columna li.elegido .n-lugar{opacity:.75}
+
+
 /* ---------- ingredientes: la grilla ----------
    Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
    maneras de contarla -lo que queda despues de la tanda, una barra de consumo y

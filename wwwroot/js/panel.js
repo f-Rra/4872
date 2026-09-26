@@ -228,3 +228,20 @@
     });
   });
 })();
+
+// El elegido de la lista, a la vista. Cada toque -en la lista, o en las
+// flechas de la posicion- vuelve a dibujar la pantalla, y la lista arrancaba
+// de arriba: lo que se tocaba abajo quedaba debajo del borde, y una empanada
+// que se subia un lugar se perdia de vista. Va al medio y no al borde, para
+// ver entre cuales quedo. Si ya se ve no se toca nada: la lista no salta al
+// elegir uno que estaba a la vista.
+(function () {
+  var elegido = document.querySelector(".columna li.elegido");
+  if (!elegido) return;
+
+  var caja = elegido.closest(".rollo") || elegido.closest(".columna");
+  var c = caja.getBoundingClientRect(), e = elegido.getBoundingClientRect();
+  if (e.top < c.top || e.bottom > c.bottom) {
+    caja.scrollTop += (e.top + e.bottom) / 2 - (c.top + c.bottom) / 2;
+  }
+})();

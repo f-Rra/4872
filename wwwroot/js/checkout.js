@@ -40,8 +40,10 @@
       var gusto = CARTA.Gustos[partes[0]];
       var precio = CARTA.Packs[partes[1]];
       if (gusto === undefined || precio === undefined) return null;
-      return { nombre: gusto + " · x" + partes[1], sin: [], cuantos: cuantos,
-               precio: precio, orden: 10000 + Number(partes[0]) };
+      // después de las pizzas y las focaccias, y entre ellas en el orden de
+      // la carta
+      return { nombre: gusto.Nombre + " · x" + partes[1], sin: [], cuantos: cuantos,
+               precio: precio, orden: 10000 + gusto.Orden };
     }
 
     var trozos = clave.split("|");

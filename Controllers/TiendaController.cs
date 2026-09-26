@@ -43,9 +43,12 @@ public class TiendaController : Controller
 
         // una sola consulta para las dos familias: son la misma forma de renglón
         // y traerlas por separado serían dos viajes a la base para nada
+        // en el orden que eligió él: la posición, que se cuenta dentro de cada
+        // familia, y las dos se separan abajo
         var renglones = await _contexto.Productos
             .Where(x => x.Familia == Familia.Pizza || x.Familia == Familia.Focaccia)
-            .OrderBy(x => x.IdProducto)
+            .OrderBy(x => x.Posicion)
+            .ThenBy(x => x.IdProducto)
             .Select(x => new
             {
                 x.Familia,
@@ -83,7 +86,8 @@ public class TiendaController : Controller
         // nombre, y lo que se cobra es el pack
         var gustos = await _contexto.Productos
             .Where(x => x.Familia == Familia.Empanada)
-            .OrderBy(x => x.IdProducto)
+            .OrderBy(x => x.Posicion)
+            .ThenBy(x => x.IdProducto)
             .Select(x => new Gusto { IdProducto = x.IdProducto, Nombre = x.Nombre, Activo = x.Activo })
             .ToListAsync();
 
@@ -116,17 +120,24 @@ public class TiendaController : Controller
             return RedirectToAction(nameof(Carta));
         }
 
-        var productos = await _contexto.Productos
-            .Where(x => x.Familia != Familia.Empanada && x.Precio != null)
+        // Se ordena en memoria y no en la consulta: Familia se guarda como
+        // texto, y un ORDER BY en la base ponía las focaccias antes que las
+        // pizzas, al revés que la carta.
+        var productos = (await _contexto.Productos
+                .Where(x => x.Familia != Familia.Empanada && x.Precio != null)
+                .Select(x => new { x.IdProducto, x.Nombre, Precio = x.Precio!.Value, x.Familia, x.Posicion })
+                .ToListAsync())
             .OrderBy(x => x.Familia)
+            .ThenBy(x => x.Posicion)
             .ThenBy(x => x.IdProducto)
-            .Select(x => new { x.IdProducto, x.Nombre, Precio = x.Precio!.Value })
-            .ToListAsync();
+            .ToList();
 
         var gustos = await _contexto.Productos
             .Where(x => x.Familia == Familia.Empanada)
+            .OrderBy(x => x.Posicion)
+            .ThenBy(x => x.IdProducto)
             .Select(x => new { x.IdProducto, x.Nombre })
-            .ToDictionaryAsync(x => x.IdProducto, x => x.Nombre);
+            .ToListAsync();
 
         var packs = await _contexto.Packs
             .Where(x => x.Activo)
@@ -150,7 +161,9 @@ public class TiendaController : Controller
                     Orden = i
                 } })
                 .ToDictionary(x => x.IdProducto, x => x.Dato),
-            Gustos = gustos,
+            Gustos = gustos
+                .Select((x, i) => new { x.IdProducto, Dato = new GustoDelPedido { Nombre = x.Nombre, Orden = i } })
+                .ToDictionary(x => x.IdProducto, x => x.Dato),
             Packs = packs,
             Ingredientes = ingredientes
         });

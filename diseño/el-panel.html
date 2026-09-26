@@ -691,6 +691,27 @@
   /* borrar va aparte y abajo, como en la ficha de un ingrediente */
   .detalle .secundarias{margin-top:.9rem}
 
+  /* la posicion: el lugar en la carta, dentro de su tipo, y dos flechas
+     redondas como el (+) de sumar un ingrediente. El numero va sin pastilla:
+     no se escribe, se mueve con las flechas */
+  .pos-reng .va{display:flex;align-items:center;gap:.5rem}
+  .pos-reng .lugar{font-size:.98rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .pos-reng .cual{font-size:.9rem;font-weight:700;opacity:.8}
+  .pos-reng .flechas{display:inline-flex;gap:.3rem}
+  /* en la punta no hay para donde ir: la flecha queda, apagada, para que las dos
+     no cambien de lugar segun cual se pueda tocar */
+  .pos-reng .mas[disabled]{
+    opacity:.3;cursor:default;
+    background:transparent;border-color:rgba(30,82,69,.5);color:var(--verde);
+  }
+  /* el lugar en la lista, antes del nombre: angosto y tenue, que se lea la carta
+     de un vistazo sin competir con el nombre */
+  .fila-p .n-lugar{
+    flex:none;min-width:1.1rem;
+    font-size:.78rem;font-weight:800;opacity:.5;font-variant-numeric:tabular-nums;
+  }
+  .columna li.elegido .n-lugar{opacity:.75}
+
 
   /* ---------- ingredientes: la grilla ----------
      Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
@@ -1610,6 +1631,25 @@
     }).join("") + '</span>' + (elegida && RECETAS[elegida] ? lecturaHTML(elegida) : '');
   }
 
+  // El lugar en la carta, contado dentro de su tipo: \u00ab4 de 7 pizzas\u00bb. Va
+  // debajo del tipo porque es dentro de \u00e9l. Cada flecha mueve un lugar y en
+  // la app guarda sola, como Modificable; en las puntas queda apagada.
+  function posicionHTML(nuevo, el){
+    if(nuevo) return '<span class="nota-f nota-suelta">Entra al final de su tipo.</span>';
+    var grupo = PRODUCTOS.filter(function(x){ return x.f === el.f; });
+    var lugar = grupo.indexOf(el) + 1, total = grupo.length;
+    var tipo = FAM[el.f].toLowerCase();
+    if(total === 1) tipo = tipo.slice(0, -1);
+    function flecha(paso, d, dice, apagada){
+      return '<button class="mas" type="button" data-mover="' + paso + '" title="' + dice + '" aria-label="' + dice + '"' +
+        (apagada ? ' disabled' : '') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg></button>';
+    }
+    return '<span class="lugar">' + lugar + '</span><span class="cual">de ' + total + ' ' + tipo + '</span>' +
+      '<span class="flechas">' + flecha(-1, "M6 15l6-6 6 6", "Subir un lugar", lugar === 1) +
+      flecha(1, "M6 9l6 6 6-6", "Bajar un lugar", lugar === total) + '</span>';
+  }
+
   // B \u00b7 rengl\u00f3n etiquetado
   function fichaRenglones(nuevo, el, ing){
     var v = valores(el);
@@ -1627,6 +1667,7 @@
       '<div class="renglones">' +
         r("Nombre", inNom(v.n)) +
         r("Tipo", chipsFam(el)) +
+        r("Posici\u00f3n", posicionHTML(nuevo, el), "pos-reng") +
         precios +
       '</div></div>' +
       // La empanada no lleva nada suelto: se le elige el relleno. La pizza y
@@ -1645,10 +1686,12 @@
     var el = nuevo ? BORRADOR : (buscaProd(prodElegido) || listaProd()[0] || PRODUCTOS[0]);
     var ing = nuevo ? BORRADOR.ing : (LLEVA[el.n] || []);
 
-    function renglonProd(x){
+    // delante del nombre, su lugar en la carta: la lista se lee como la va a
+    // ver el cliente
+    function renglonProd(x, lugar){
       return '<li class="' + (!nuevo && x.n === prodElegido ? "elegido" : "") + '">' +
         '<a href="#" data-ep="' + x.n + '"><span class="izq">' +
-        '<span class="fila-p"><span class="nom">' + x.n + '</span>' +
+        '<span class="fila-p"><span class="n-lugar">' + lugar + '</span><span class="nom">' + x.n + '</span>' +
         (x.act ? '' : '<span class="agotado">Agotado</span>') +
         (x.p
           ? '<span class="plata">' + pesos(x.p) + '</span>'
@@ -1662,7 +1705,7 @@
       if(!deEste.length) return '';
       return '<section class="grupo-lista">' +
         (famProd === "todo" ? '<h2 class="cab-grupo">' + FAM[f] + '<span class="cuantos">&middot; ' + deEste.length + '</span></h2>' : '') +
-        '<ul class="en-una-linea">' + deEste.map(renglonProd).join("") + '</ul></section>';
+        '<ul class="en-una-linea">' + deEste.map(function(x, i){ return renglonProd(x, i + 1); }).join("") + '</ul></section>';
     }).join("");
 
     var col = '<div class="columna con-pie"><div class="rollo">' + grupos + '</div>' +
@@ -2430,6 +2473,7 @@
     productos: function(){
       return uso('Es la carta: lo que est\u00e9 ac\u00e1 y no est\u00e9 agotado es lo que el cliente ve.', [
         'Eleg\u00ed uno de la izquierda y edit\u00e1 nombre, precio y receta. Todo se guarda junto con <b>Guardar cambios</b>.',
+        'Las flechas de <b>Posici\u00f3n</b> lo suben o lo bajan un lugar dentro de su tipo: es el orden en que sale en la carta. Guardan solas.',
         'En los ingredientes, el n\u00famero es <b>cu\u00e1nto lleva una pieza</b>. <b>Modificable</b> decide si el cliente lo puede pedir sin eso; <b>Fijo</b>, que no.',
         '<b>Base</b> y <b>Salsa</b> dicen lo que le toca a una pieza de cada receta. La base se pone sola; la salsa se elige, o ninguna. Las dos se cargan en <b>Recetas</b>.',
         'Una empanada no lleva ingredientes sueltos: se le elige el <b>relleno</b>, que trae todo, tapas incluidas.',
@@ -2594,6 +2638,16 @@
       '<p>Con el tipo en el t\u00edtulo, el rengl\u00f3n ya no dice <b>Pizza</b> y queda en <b>una sola l\u00ednea</b>: ' +
       'nombre y precio.</p></div>' +
 
+      '<div class="bloque"><h3>La posici\u00f3n, con flechas</h3>' +
+      '<p>Cada producto tiene su lugar en la carta <b>dentro de su tipo</b>: hay una pizza 1, una focaccia 1 y una ' +
+      'empanada 1. El rengl\u00f3n va <b>debajo del tipo</b> porque el n\u00famero se lee con \u00e9l &mdash; <b>4 de 7 pizzas</b> &mdash; ' +
+      'y la lista lleva el de cada uno delante del nombre: se lee como la va a ver el cliente. Es el orden de la carta, ' +
+      'del checkout, de Producci\u00f3n y de cada pedido.</p>' +
+      '<p>Cada flecha mueve <b>un lugar</b> y guarda sola, como Modificable; en las puntas queda apagada. Uno nuevo ' +
+      'entra \u00faltimo en su tipo, y uno que cambia de tipo pasa al final del nuevo.</p>' +
+      '<p>Se probaron escribir el n\u00famero, decir entre cu\u00e1les queda y ponerlo debajo del precio, donde en una empanada ' +
+      'quedaba entre los packs y su nota.</p></div>' +
+
       '<div class="bloque"><h3>El alta al pie de la columna</h3>' +
       '<p><b>+ Producto nuevo</b> queda fijo abajo aunque la lista scrollee, y abre <b>la misma ficha en blanco</b>. ' +
       'No hay una pantalla de alta distinta de la de edici\u00f3n.</p></div>' +
@@ -2616,7 +2670,13 @@
       '<div class="bloque"><h3>No hay bot\u00f3n de borrar</h3>' +
       '<p>Un producto puede estar nombrado en pedidos viejos; si lo borr\u00e1s, el historial queda hablando ' +
       'de algo que no existe. Lo que se hace es <b>marcarlo agotado</b>: sale de la carta del cliente ' +
-      'y sigue vivo en Pedidos y Producci\u00f3n.</p></div>';
+      'y sigue vivo en Pedidos y Producci\u00f3n.</p></div>' +
+
+      '<dl class="medidas">' +
+        '<div><dt>Flechas de la posici\u00f3n</dt><dd>24,8 px</dd></div>' +
+        '<div><dt>N\u00famero de la posici\u00f3n</dt><dd>15,68 px / 700</dd></div>' +
+        '<div><dt>Lugar en la lista</dt><dd>12,48 px / 800</dd></div>' +
+      '</dl>';
     },
 
     recetas: function(){
@@ -2844,6 +2904,16 @@
     // y la pantalla lado a lado desde ahi, y sin el iban una abajo de la otra
     document.getElementById("marco").innerHTML = '<div class="panel">' + menu() + cont + '</div>';
 
+    // el elegido de la lista, a la vista, como hace panel.js en la app: al
+    // repintar la lista arranca de arriba, y lo que se tocaba abajo, o una
+    // empanada que se sub\u00eda un lugar, quedaba debajo del borde
+    var eleg = document.querySelector("#marco .columna li.elegido");
+    if(eleg){
+      var caja = eleg.closest(".rollo") || eleg.closest(".columna");
+      var c = caja.getBoundingClientRect(), e = eleg.getBoundingClientRect();
+      if(e.top < c.top || e.bottom > c.bottom) caja.scrollTop += (e.top + e.bottom) / 2 - (c.top + c.bottom) / 2;
+    }
+
     document.getElementById("lado").innerHTML = USO[seccion]() + NOTAS[seccion]() + REGLAS;
     pintarPasos();
 
@@ -2993,7 +3063,12 @@
       b.addEventListener("click", function(){
         sincronizar();
         if(prodElegido === null) BORRADOR.f = b.dataset.fam;
-        else buscaProd(prodElegido).f = b.dataset.fam;
+        else{
+          var x = buscaProd(prodElegido);
+          // el que se muda pasa al final del tipo nuevo, como en la app
+          if(x.f !== b.dataset.fam){ PRODUCTOS.splice(PRODUCTOS.indexOf(x), 1); PRODUCTOS.push(x); }
+          x.f = b.dataset.fam;
+        }
         pintar();
       });
     });
@@ -3124,6 +3199,20 @@
     document.querySelectorAll("#marco [data-tog]").forEach(function(b){
       b.addEventListener("click", function(){
         var x = buscaProd(b.dataset.tog); x.act = !x.act; TIPEADO = null; pintar();
+      });
+    });
+    // un lugar para arriba o para abajo, dentro de su tipo. El orden de la
+    // carta es el de PRODUCTOS, as\u00ed que se intercambia con el vecino ah\u00ed.
+    // Como en la app, guarda solo y lo tipeado sin guardar se pierde
+    document.querySelectorAll("#marco [data-mover]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var x = buscaProd(prodElegido);
+        var grupo = PRODUCTOS.filter(function(y){ return y.f === x.f; });
+        var otro = grupo[grupo.indexOf(x) + Number(b.dataset.mover)];
+        if(!otro) return;
+        var i = PRODUCTOS.indexOf(x), j = PRODUCTOS.indexOf(otro);
+        PRODUCTOS[i] = otro; PRODUCTOS[j] = x;
+        TIPEADO = null; pintar();
       });
     });
     // la salsa y el relleno se eligen en la ficha del producto
