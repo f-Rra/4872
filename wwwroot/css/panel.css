@@ -558,6 +558,27 @@
 .columna li.elegido .n-lugar{opacity:.75}
 
 
+/* ---------- el orden de la receta ----------
+   Los ingredientes de un producto se ordenan arrastrando de la manija, antes de
+   la x. Las listas de la base y la salsa, y el renglon de sumar, llevan un hueco
+   del mismo ancho: asi sus cantidades siguen cayendo en la columna de las de
+   arriba */
+.receta .manija{
+  flex:none;width:1.1rem;height:1.55rem;display:grid;place-items:center;padding:0;
+  background:transparent;border:0;color:var(--verde);opacity:.55;cursor:grab;
+  /* sin esto, en una pantalla tactil el dedo scrollea en vez de arrastrar */
+  touch-action:none;
+}
+.receta .manija:hover,
+.receta .manija:focus-visible{opacity:1}
+.receta .manija:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+.receta .manija svg{width:10px;height:16px}
+.receta .hueco-mover{flex:none;width:1.1rem}
+/* el que se esta arrastrando se marca, para seguirlo con la vista */
+.receta li.arrastrando{background:rgba(30,82,69,.1)}
+.receta li.arrastrando .manija{cursor:grabbing}
+
+
 /* ---------- ingredientes: la grilla ----------
    Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
    maneras de contarla -lo que queda despues de la tanda, una barra de consumo y

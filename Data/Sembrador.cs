@@ -318,11 +318,13 @@ public static class Sembrador
                 Precio = p.Precio,
                 Activo = p.Activo,
                 Base = p.Base is null ? null : bases[p.Base],
-                Receta = [.. p.Receta.Select(r => new ProductoIngrediente
+                // en el orden en que están escritos arriba, que es el de la carta
+                Receta = [.. p.Receta.Select((r, i) => new ProductoIngrediente
                 {
                     Ingrediente = ingredientes[r.Ing],
                     Cantidad = r.Cant,
-                    Quitable = !Fijos.Contains(r.Ing)
+                    Quitable = !Fijos.Contains(r.Ing),
+                    Posicion = i + 1
                 })]
             }));
 

@@ -389,7 +389,8 @@ public class RecetaService
                         r.Cantidad
                     }).ToList()
                 },
-                Receta = p.Receta.Select(r => new
+                // en el orden de la ficha, que es el de la carta
+                Receta = p.Receta.OrderBy(r => r.Posicion).ThenBy(r => r.IdIngrediente).Select(r => new
                 {
                     r.Ingrediente.Nombre,
                     r.Ingrediente.Unidad,

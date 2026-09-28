@@ -539,9 +539,17 @@ public class PanelController : Controller
         }
 
         // Las cantidades de la receta viajan con la ficha: se editan en el
-        // renglon y se guardan con el mismo boton que el nombre y el precio.
-        foreach (var renglon in ficha.Receta ?? [])
+        // renglón y se guardan con el mismo botón que el nombre y el precio.
+        //
+        // El orden también: los renglones llegan en el orden en que quedaron en
+        // la pantalla -panel.js los renumera al arrastrar uno- y ese es el
+        // lugar de cada uno.
+        var receta = ficha.Receta ?? [];
+
+        for (var i = 0; i < receta.Count; i++)
         {
+            var renglon = receta[i];
+
             if (renglon.Cantidad <= 0)
             {
                 return await Volver(familia, ficha, nuevo,
@@ -554,6 +562,7 @@ public class PanelController : Controller
             if (fila is not null)
             {
                 fila.Cantidad = renglon.Cantidad;
+                fila.Posicion = i + 1;
             }
         }
 
@@ -623,7 +632,12 @@ public class PanelController : Controller
             {
                 IdProducto = id,
                 IdIngrediente = ingrediente.IdIngrediente,
-                Cantidad = cantidad.Value
+                Cantidad = cantidad.Value,
+                // entra último: meterlo en el medio correría a los que ya
+                // estaban ordenados
+                Posicion = (await _contexto.ProductoIngredientes
+                    .Where(x => x.IdProducto == id)
+                    .MaxAsync(x => (int?)x.Posicion) ?? 0) + 1
             });
         }
         else
@@ -845,13 +859,14 @@ public class PanelController : Controller
             _ => "Empanada"
         };
 
-        // La receta de este producto, y los que todavia no estan. Sin columna de
-        // orden, van por nombre: es el orden en que se busca uno en una lista.
+        // La receta de este producto, en su orden, que es el de la carta; y los
+        // que todavía no están, más abajo.
         var receta = elegido is null
             ? []
             : await _contexto.ProductoIngredientes
                 .Where(x => x.IdProducto == elegido.IdProducto)
-                .OrderBy(x => x.Ingrediente.Nombre)
+                .OrderBy(x => x.Posicion)
+                .ThenBy(x => x.IdIngrediente)
                 .Select(x => new IngredienteDeLaReceta
                 {
                     IdIngrediente = x.IdIngrediente,

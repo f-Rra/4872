@@ -52,9 +52,10 @@ Destilado de **Sistema-Control-Almuerzos**, que es código suyo al 100%:
 
 Salió del diseño y está validado contra los números reales del vendedor:
 
-- **Producto** — familia (`pizza` / `foc` / `emp`), nombre, precio, activo. Las empanadas **no tienen precio propio**: se cobran por pack de 6 o de 12.
+- **Producto** — familia (`pizza` / `foc` / `emp`), nombre, precio, activo y su **posición** en la carta, contada dentro de su familia. Las empanadas **no tienen precio propio**: se cobran por pack de 6 o de 12.
 - **La cantidad es del par producto–ingrediente**, no del ingrediente. Una fugazzeta lleva 140 g de muzzarella y una margarita, 120.
 - **Quitable**, también por par: si el cliente puede pedirlo *sin* ese ingrediente.
+- **La posición**, también por par: en qué orden nombra la carta los ingredientes de cada producto, después de la salsa.
 - **Ingrediente** — unidad (`g` / `ml` / `u`), stock, y **cómo se compra**: qué cantidad trae la compra y cuánto sale. El precio unitario se deriva. Bandera para lo que no se compra (agua, masa madre).
 - **Receta** — lo que se prepara aparte y usan varios productos, de tres tipos: **base, salsa y relleno**. Se carga **entera con un `rinde`**, como se hace, y el panel divide: una base rinde bollos, una salsa pizzas y un relleno empanadas. Las bases son los dos bollos, una por familia, y cada pizza o focaccia toma la suya sola. La **salsa**, en cambio, se elige en cada pizza o focaccia, o ninguna, y en la carta sale primera y no se puede sacar. La empanada no lleva nada suelto: elige su **relleno**, que trae todo, **tapas incluidas**, cargado para 12.
 

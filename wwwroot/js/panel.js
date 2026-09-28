@@ -229,6 +229,86 @@
   });
 })();
 
+// El orden de los ingredientes de un producto. Cada renglon se arrastra de su
+// manija, y el orden en que quedan viaja con la ficha: los campos llevan su
+// lugar en el nombre -Ficha.Receta[2].Cantidad- y el servidor guarda el orden
+// en que llegan, asi que al mover uno se renumeran. Se guarda con «Guardar
+// cambios», junto con las cantidades.
+//
+// Sin JavaScript no hay como arrastrar: la manija, y el hueco que le hace
+// lugar en los otros renglones, vienen escondidos y aparecen aca.
+(function () {
+  var lista = document.querySelector("[data-ordenable]");
+  if (!lista) return;
+
+  document.querySelectorAll("[data-manija], .hueco-mover").forEach(function (e) { e.hidden = false; });
+
+  function renumerar() {
+    [].slice.call(lista.children).forEach(function (li, i) {
+      li.querySelectorAll("[name^='Ficha.Receta[']").forEach(function (c) {
+        c.name = c.name.replace(/^Ficha\.Receta\[\d+\]/, "Ficha.Receta[" + i + "]");
+      });
+    });
+  }
+
+  // el renglon sigue al puntero: se mete antes del primero cuya mitad queda
+  // por debajo, o va al final
+  lista.addEventListener("pointerdown", function (e) {
+    var manija = e.target.closest("[data-manija]");
+    if (!manija || e.button !== 0) return;
+    e.preventDefault();
+
+    var li = manija.closest("li");
+    li.classList.add("arrastrando");
+    manija.setPointerCapture(e.pointerId);
+
+    function seguir(ev) {
+      var antesDe = [].slice.call(lista.children).filter(function (f) {
+        if (f === li) return false;
+        var r = f.getBoundingClientRect();
+        return ev.clientY < r.top + r.height / 2;
+      })[0];
+
+      if (antesDe) {
+        if (li.nextElementSibling !== antesDe) lista.insertBefore(li, antesDe);
+      } else if (lista.lastElementChild !== li) {
+        lista.appendChild(li);
+      }
+    }
+
+    function soltar() {
+      manija.removeEventListener("pointermove", seguir);
+      manija.removeEventListener("pointerup", soltar);
+      manija.removeEventListener("pointercancel", soltar);
+      li.classList.remove("arrastrando");
+      renumerar();
+      // el pointerdown le saco el foco al cancelarse: vuelve aca, asi se puede
+      // seguir con el teclado
+      manija.focus();
+    }
+
+    manija.addEventListener("pointermove", seguir);
+    manija.addEventListener("pointerup", soltar);
+    manija.addEventListener("pointercancel", soltar);
+  });
+
+  // con el teclado, la manija sube y baja un lugar con las flechas
+  lista.addEventListener("keydown", function (e) {
+    var manija = e.target.closest("[data-manija]");
+    if (!manija || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+
+    var li = manija.closest("li");
+    if (e.key === "ArrowUp" && li.previousElementSibling) {
+      lista.insertBefore(li, li.previousElementSibling);
+    } else if (e.key === "ArrowDown" && li.nextElementSibling) {
+      lista.insertBefore(li.nextElementSibling, li);
+    }
+    renumerar();
+    manija.focus();
+  });
+})();
+
 // El elegido de la lista, a la vista. Cada toque -en la lista, o en las
 // flechas de la posicion- vuelve a dibujar la pantalla, y la lista arrancaba
 // de arriba: lo que se tocaba abajo quedaba debajo del borde, y una empanada

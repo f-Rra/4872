@@ -712,6 +712,23 @@
   }
   .columna li.elegido .n-lugar{opacity:.75}
 
+  /* el orden de la receta: los ingredientes de un producto se ordenan
+     arrastrando de la manija, antes de la x. Las listas de la base y la salsa, y
+     el renglon de sumar, llevan un hueco del mismo ancho: asi sus cantidades
+     siguen cayendo en la columna de las de arriba */
+  .receta .manija{
+    flex:none;width:1.1rem;height:1.55rem;display:grid;place-items:center;padding:0;
+    background:transparent;border:0;color:var(--verde);opacity:.55;cursor:grab;
+    touch-action:none;
+  }
+  .receta .manija:hover,
+  .receta .manija:focus-visible{opacity:1}
+  .receta .manija:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+  .receta .manija svg{width:10px;height:16px}
+  .receta .hueco-mover{flex:none;width:1.1rem}
+  .receta li.arrastrando{background:rgba(30,82,69,.1)}
+  .receta li.arrastrando .manija{cursor:grabbing}
+
 
   /* ---------- ingredientes: la grilla ----------
      Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
@@ -1521,7 +1538,9 @@
   // el rengl\u00f3n de arriba nunca se mueve de lugar: el (+) en reposo y el
   // buscador cuando se abre, tenga la receta cuatro ingredientes o doce. Es el
   // mismo en un producto y en una receta
-  function sumarHTML(yaPuestos){
+  // conManija: en la ficha de producto el rengl\u00f3n de sumar le hace lugar a la
+  // manija, como las listas de abajo; en Recetas no hay manija
+  function sumarHTML(yaPuestos, conManija){
     return '<ul class="receta tope"><li>' +
       (sumando
         ? '<input class="buscar-linea" id="ing-nuevo" type="text" placeholder="Buscar\u2026" autocomplete="off">'
@@ -1529,22 +1548,32 @@
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">' +
           '<path d="M12 5v14M5 12h14"/></svg></button>' +
           '<button class="dice" type="button" data-abrire="1">Sumar un ingrediente</button>') +
-      '<span class="hueco"></span><span class="rx"></span></li></ul>' +
+      '<span class="hueco"></span>' + (conManija ? '<span class="hueco-mover"></span>' : '') +
+      '<span class="rx"></span></li></ul>' +
       (sumando ? candidatosHTML(yaPuestos) : '');
   }
 
   // Un rengl\u00f3n por ingrediente: qu\u00e9 lleva, cu\u00e1nto y si se puede sacar.
   // Los tres juntos porque cuando carg\u00e1s una pizza la pregunta es esa, e ir a
   // Ingredientes por el cu\u00e1nto obliga a ir y volver por cada rengl\u00f3n.
+  //
+  // En el orden de la carta, y se ordena arrastrando de la manija, antes de la
+  // \u00d7: as\u00ed los nombres siguen en la columna de la base y la salsa.
   function ingrHTML(lista, prod){
-    return sumarHTML(lista) + '<ul class="receta">' + lista.map(function(g, k){
+    return sumarHTML(lista, true) + '<ul class="receta" data-ordenable="1">' + lista.map(function(g, k){
       var x = buscaIng(g), c = prod ? cuantoLleva(prod, g) : 0;
-      return '<li><span class="rn">' + g + '</span>' +
+      return '<li data-g="' + g + '"><span class="rn">' + g + '</span>' +
         '<span class="rcaja"><input class="rc" value="' + redondo(c) + '" data-cant="' + g + '">' +
         '<span class="ru">' + (x ? x.u : 'g') + '</span></span>' +
         '<button class="saca" type="button" data-saca="' + g + '" aria-pressed="' +
           (prod ? seSaca(prod, g) : true) + '">' +
           ((prod && !seSaca(prod, g)) ? 'Fijo' : 'Modificable') + '</button>' +
+        '<button class="manija" type="button" data-manija="' + g + '" title="Arrastr\u00e1 para cambiarlo de lugar" ' +
+          'aria-label="Cambiar de lugar ' + g + ': arrastr\u00e1, o us\u00e1 las flechas del teclado">' +
+          '<svg viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">' +
+          '<circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/>' +
+          '<circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/>' +
+          '<circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg></button>' +
         '<button class="rx" type="button" data-qi="' + k + '" title="Quitar">\u00d7</button></li>';
     }).join("") + '</ul>';
   }
@@ -1615,7 +1644,7 @@
       var x = buscaIng(g);
       return '<li><span class="rn">' + g + '</span>' +
         '<span class="rq">' + bonito(b.r[g] / b.rinde, x ? x.u : 'g') + '</span>' +
-        '<span class="hueco"></span><span class="rx"></span></li>';
+        '<span class="hueco"></span><span class="hueco-mover"></span><span class="rx"></span></li>';
     }).join("") + '</ul>';
   }
   // La salsa o el relleno, en chips como el tipo y con lo que lleva abierto
@@ -2474,6 +2503,7 @@
       return uso('Es la carta: lo que est\u00e9 ac\u00e1 y no est\u00e9 agotado es lo que el cliente ve.', [
         'Eleg\u00ed uno de la izquierda y edit\u00e1 nombre, precio y receta. Todo se guarda junto con <b>Guardar cambios</b>.',
         'Las flechas de <b>Posici\u00f3n</b> lo suben o lo bajan un lugar dentro de su tipo: es el orden en que sale en la carta. Guardan solas.',
+        'Los ingredientes van en el orden de la carta. Se cambia arrastrando de la <b>manija</b>, antes de la \u00d7, y se guarda con <b>Guardar cambios</b>.',
         'En los ingredientes, el n\u00famero es <b>cu\u00e1nto lleva una pieza</b>. <b>Modificable</b> decide si el cliente lo puede pedir sin eso; <b>Fijo</b>, que no.',
         '<b>Base</b> y <b>Salsa</b> dicen lo que le toca a una pieza de cada receta. La base se pone sola; la salsa se elige, o ninguna. Las dos se cargan en <b>Recetas</b>.',
         'Una empanada no lleva ingredientes sueltos: se le elige el <b>relleno</b>, que trae todo, tapas incluidas.',
@@ -2656,6 +2686,15 @@
       '<p>El campo para sumar uno <b>ya est\u00e1 ah\u00ed</b>, con la misma l\u00ednea de puntos que los dem\u00e1s campos: ' +
       'escrib\u00eds y Enter. Antes era una pastilla punteada que parec\u00eda una pastilla rota entre las buenas.</p></div>' +
 
+      '<div class="bloque"><h3>Los ingredientes se ordenan arrastrando</h3>' +
+      '<p>El orden de la lista es el de la carta: la salsa sale primera y fija, y despu\u00e9s los ingredientes as\u00ed. ' +
+      'Se cambia arrastrando de la <b>manija</b> de seis puntos, o con las flechas del teclado sobre ella, y se guarda ' +
+      'con <b>Guardar cambios</b>, junto con las cantidades. Uno que se suma entra \u00faltimo.</p>' +
+      '<p>La manija va <b>antes de la \u00d7</b>: as\u00ed los nombres siguen en la columna de la base y la salsa, que le ' +
+      'hacen lugar con un hueco del mismo ancho para que sus cantidades sigan cayendo debajo de las de arriba.</p>' +
+      '<p>Se probaron flechas en cada rengl\u00f3n, la manija antes del nombre, que se vea solo al pasar el mouse y ' +
+      'que cada movida se guardara sola.</p></div>' +
+
       '<div class="bloque"><h3>La base se pone sola; la salsa y el relleno se eligen</h3>' +
       '<p>Abajo de los ingredientes van la <b>base</b> y la <b>salsa</b>. La base no se elige: cada pizza toma el bollo ' +
       'de pizza y cada focaccia el suyo. La salsa s\u00ed, entre las de Recetas, o ninguna. La empanada no lleva ' +
@@ -2676,6 +2715,7 @@
         '<div><dt>Flechas de la posici\u00f3n</dt><dd>24,8 px</dd></div>' +
         '<div><dt>N\u00famero de la posici\u00f3n</dt><dd>15,68 px / 700</dd></div>' +
         '<div><dt>Lugar en la lista</dt><dd>12,48 px / 800</dd></div>' +
+        '<div><dt>Manija de los ingredientes</dt><dd>17,6 px</dd></div>' +
       '</dl>';
     },
 
@@ -3213,6 +3253,58 @@
         var i = PRODUCTOS.indexOf(x), j = PRODUCTOS.indexOf(otro);
         PRODUCTOS[i] = otro; PRODUCTOS[j] = x;
         TIPEADO = null; pintar();
+      });
+    });
+    // El orden de los ingredientes: se arrastra de la manija, o con las flechas
+    // del teclado sobre ella. El orden de la carta es el de la lista del
+    // producto, as\u00ed que se reordena ah\u00ed. En la app se guarda con Guardar
+    // cambios, junto con las cantidades; ac\u00e1 no hay nada que guardar
+    function listaAbierta(){
+      return prodElegido === null ? BORRADOR.ing : (LLEVA[buscaProd(prodElegido).n] || []);
+    }
+    function reordenar(nuevo, g){
+      var lista = listaAbierta();
+      sincronizar();
+      lista.splice.apply(lista, [0, lista.length].concat(nuevo));
+      pintar();
+      var m = document.querySelector('#marco [data-manija="' + g + '"]'); if(m) m.focus();
+    }
+    document.querySelectorAll("#marco [data-manija]").forEach(function(m){
+      m.addEventListener("keydown", function(e){
+        if(e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+        e.preventDefault();
+        var nuevo = listaAbierta().slice(), i = nuevo.indexOf(m.dataset.manija);
+        var j = i + (e.key === "ArrowUp" ? -1 : 1);
+        if(j < 0 || j >= nuevo.length) return;
+        nuevo.splice(i, 1); nuevo.splice(j, 0, m.dataset.manija);
+        reordenar(nuevo, m.dataset.manija);
+      });
+      // el rengl\u00f3n sigue al puntero: se mete antes del primero cuya mitad queda
+      // por debajo, o va al final
+      m.addEventListener("pointerdown", function(e){
+        if(e.button !== 0) return;
+        e.preventDefault();
+        var li = m.closest("li"), ul = li.parentNode;
+        li.classList.add("arrastrando");
+        m.setPointerCapture(e.pointerId);
+        function seguir(ev){
+          var antesDe = [].slice.call(ul.children).filter(function(f){
+            if(f === li) return false;
+            var r = f.getBoundingClientRect();
+            return ev.clientY < r.top + r.height / 2;
+          })[0];
+          if(antesDe){ if(li.nextElementSibling !== antesDe) ul.insertBefore(li, antesDe); }
+          else if(ul.lastElementChild !== li) ul.appendChild(li);
+        }
+        function soltar(){
+          m.removeEventListener("pointermove", seguir);
+          m.removeEventListener("pointerup", soltar);
+          m.removeEventListener("pointercancel", soltar);
+          reordenar([].slice.call(ul.children).map(function(f){ return f.dataset.g; }), m.dataset.manija);
+        }
+        m.addEventListener("pointermove", seguir);
+        m.addEventListener("pointerup", soltar);
+        m.addEventListener("pointercancel", soltar);
       });
     });
     // la salsa y el relleno se eligen en la ficha del producto

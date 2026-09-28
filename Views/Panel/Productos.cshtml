@@ -279,7 +279,7 @@
                                     </span>
                                 }
 
-                                <span class="hueco"></span><span class="rx"></span>
+                                <span class="hueco"></span><span class="hueco-mover" hidden></span><span class="rx"></span>
                             </li>
                         </ul>
 
@@ -304,7 +304,10 @@
                             </ul>
                         }
 
-                        <ul class="receta">
+                        @* En el orden de la carta, y se ordena arrastrando: el
+                           orden en que quedan los renglones es el que se guarda
+                           con «Guardar cambios», junto con las cantidades. *@
+                        <ul class="receta" data-ordenable>
                             @for (var i = 0; i < Model.Ficha.Receta.Count; i++)
                             {
                                 var j = i;
@@ -327,6 +330,20 @@
                                             aria-pressed="@r.Modificable.ToString().ToLowerInvariant()"
                                             title="@(r.Modificable ? "El cliente lo puede sacar" : "No se puede sacar")">
                                         @(r.Modificable ? "Modificable" : "Fijo")
+                                    </button>
+
+                                    @* De donde se agarra para cambiarlo de lugar. Sin
+                                       JavaScript no hay cómo arrastrar, así que viene
+                                       escondida y la muestra panel.js, junto con el
+                                       hueco que le hace lugar en los otros renglones. *@
+                                    <button class="manija" type="button" data-manija hidden
+                                            title="Arrastrá para cambiarlo de lugar"
+                                            aria-label="Cambiar de lugar @r.Nombre: arrastrá, o usá las flechas del teclado">
+                                        <svg viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">
+                                            <circle cx="2.5" cy="3" r="1.4" /><circle cx="7.5" cy="3" r="1.4" />
+                                            <circle cx="2.5" cy="8" r="1.4" /><circle cx="7.5" cy="8" r="1.4" />
+                                            <circle cx="2.5" cy="13" r="1.4" /><circle cx="7.5" cy="13" r="1.4" />
+                                        </svg>
                                     </button>
 
                                     <button class="rx" type="submit" form="quitar-@r.IdIngrediente"

@@ -59,10 +59,10 @@ public class TiendaController : Controller
                     Nombre = x.Nombre,
                     Precio = x.Precio,
                     Activo = x.Activo,
-                    // sin columna de orden, el de la receta no está garantizado:
-                    // ver la nota del commit. Por IdIngrediente al menos es estable
+                    // en el orden que eligió él en la ficha del producto
                     Ingredientes = x.Receta
-                        .OrderBy(r => r.IdIngrediente)
+                        .OrderBy(r => r.Posicion)
+                        .ThenBy(r => r.IdIngrediente)
                         .Select(r => new IngredienteCarta
                         {
                             IdIngrediente = r.IdIngrediente,

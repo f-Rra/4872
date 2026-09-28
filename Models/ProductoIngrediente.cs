@@ -20,4 +20,10 @@ public class ProductoIngrediente
     // saca de una fugazzeta, y de una napolitana no
     [DisplayName("Se puede sacar")]
     public bool Quitable { get; set; }
+
+    // El lugar en la receta, que es el orden en que la carta lo nombra. Es del
+    // par por lo mismo que la cantidad: la muzzarella va primera en una y
+    // última en otra. Sirve solo para ordenar, así que puede tener huecos o
+    // repetirse: desempata el IdIngrediente.
+    public int Posicion { get; set; }
 }
