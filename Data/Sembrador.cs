@@ -78,10 +78,10 @@ public static class Sembrador
         (12, 15200)
     ];
 
-    // Las dos recetas de bollo son lo único real de todo este archivo. Van por
-    // tanda entera, que es como se amasan, y el panel divide por el rinde.
+    // Las dos recetas de bollo son lo único real de todo este archivo. Van
+    // enteras, que es como se amasan, y el panel divide por el rinde.
     //
-    // El rinde es cuantos bollos sale la tanda, y el peso del bollo sale de ahi:
+    // El rinde es cuantos bollos salen de la receta, y el peso del bollo sale de ahi:
     // la de pizza pesa 1730 g y se corta en 6, o sea bollos de 288; la de
     // focaccia pesa 1930 y se corta en 4, o sea de 483.
     //

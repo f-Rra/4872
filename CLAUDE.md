@@ -68,7 +68,7 @@ Las dos recetas de bollo, dichas por el vendedor. Son lo único real del sistema
 | masa madre | 100 g | 100 g |
 | sal | 30 g | 30 g |
 | oliva | — | 50 g |
-| **la tanda pesa** | 1730 g | 1930 g |
+| **la receta pesa** | 1730 g | 1930 g |
 | **el bollo sale de** | 288 g | 483 g |
 | **rinde** | **6** | **4** |
 

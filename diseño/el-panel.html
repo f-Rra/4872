@@ -744,7 +744,7 @@
 
   /* ---------- ingredientes: la grilla ----------
      Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
-     maneras de contarla -lo que queda despues de la tanda, una barra de consumo y
+     maneras de contarla -lo que queda despues del finde, una barra de consumo y
      un semaforo- y gano la mas literal. */
   .rollo-ing{flex:1;overflow-y:auto;min-width:0}
   .grilla{width:100%;border-collapse:collapse}
@@ -1255,22 +1255,23 @@
   }
 
   // toda la harina sale de la receta del bollo, no de un porcentaje
-  // por tandas enteras: media tanda no se amasa, as\u00ed que la harina que se
-  // gasta es la de la receta por cu\u00e1ntas tandas salgan
+  // por recetas enteras: media receta no se amasa, as\u00ed que la harina que se
+  // gasta es la de la receta por cu\u00e1ntas veces haya que hacerla
   function harinaDelDia(){
-    return tandas().reduce(function(a, x){
-      return a + x.tandas * cuantoReceta(x.base, "Harina 000");
+    return recetasDeMasa().reduce(function(a, x){
+      return a + x.veces * cuantoReceta(x.base, "Harina 000");
     }, 0);
   }
 
-  // \u00ab2 tandas de pizza \u00b7 1 de focaccia\u00bb. Nombradas por masa y no por rinde:
-  // juntarlas porque las dos rindieran seis ser\u00eda amasar en una sola tanda dos
+  // \u00ab2 recetas de pizza \u00b7 1 de focaccia\u00bb: la palabra va una sola vez, en la
+  // primera. Nombradas por masa y no por rinde: juntarlas porque las dos
+  // rindieran seis ser\u00eda amasar en una sola receta dos
   // cosas que no se mezclan.
   function comoAmasar(){
-    var t = tandas();
+    var t = recetasDeMasa();
     if(!t.length) return "nada que amasar";
-    return t.map(function(x){
-      return x.tandas + (x.tandas === 1 ? " tanda de " : " tandas de ") +
+    return t.map(function(x, i){
+      return x.veces + (i > 0 ? " de " : x.veces === 1 ? " receta de " : " recetas de ") +
              x.base.replace(/^Bollo de /, "");
     }).join(" \u00b7 ");
   }
@@ -1296,7 +1297,7 @@
                   return {t:"Amasar", v:a.ini.charAt(0).toUpperCase() + a.ini.slice(1),
                           n:CONF.fermenMin + " a " + CONF.fermenMax + " h antes del " + a.entrega}; })(),
       pedidos:  {t:"Pedidos a cubrir", v:activos().length, n:"el m\u00e1s viejo, de " + (activos().length ? activos()[activos().length-1].hora : "\u2014")},
-      caja:     {t:"Plata de la tanda", v:"$" + caja.toLocaleString("es-AR"), n:"sin entregar todav\u00eda"},
+      caja:     {t:"Plata del finde", v:"$" + caja.toLocaleString("es-AR"), n:"sin entregar todav\u00eda"},
       cambios:  {t:"Con cambios", v:cambios, n:"piezas con algo sacado"},
       empanadas:{t:"Empanadas", v:totEmp, n:Object.keys(d.emp).length + " gustos"}
     };
@@ -1971,16 +1972,16 @@
     return m;
   }
 
-  // Cu\u00e1ntas tandas de cada masa hay que amasar. Se redondea para arriba
-  // porque media tanda no se amasa, y es la misma cuenta que usa la compra: si
-  // se amasan tres tandas, se gasta harina para tres.
-  function tandas(){
+  // Cu\u00e1ntas recetas de cada masa hay que hacer. Se redondea para arriba
+  // porque media receta no se amasa, y es la misma cuenta que usa la compra: si
+  // se hace tres veces, se gasta harina para tres.
+  function recetasDeMasa(){
     var m = piezasPorReceta(), r = [];
     Object.keys(RECETAS).forEach(function(b){
       // solo las masas: es la cuenta de cu\u00e1nto amasar
       if(RECETAS[b].t !== "base") return;
       var piezas = m[b] || 0;
-      if(piezas) r.push({base:b, piezas:piezas, tandas:Math.ceil(piezas / RECETAS[b].rinde)});
+      if(piezas) r.push({base:b, piezas:piezas, veces:Math.ceil(piezas / RECETAS[b].rinde)});
     });
     return r;
   }
@@ -2128,11 +2129,11 @@
       // Una receta se hace entera: media no se hace, as\u00ed que lo que se gasta
       // es la receta por cu\u00e1ntas veces haya que hacerla, no la parte
       // proporcional. Es la misma cuenta que hace Producci\u00f3n con la masa.
-      var tandas = esReceta ? Math.ceil(n / RECETAS[p].rinde) : 0;
-      var sale = esReceta ? cuantoReceta(p, ing) * tandas : c * n;
+      var veces = esReceta ? Math.ceil(n / RECETAS[p].rinde) : 0;
+      var sale = esReceta ? cuantoReceta(p, ing) * veces : c * n;
       total += sale;
       filas.push({prod:p, cuanto:c, piezas:n, sale:sale, saca:!esReceta && seSaca(p, ing), receta:esReceta,
-                  tanda:cuantoReceta(p, ing), rinde:esReceta ? RECETAS[p].rinde : 0, tandas:tandas});
+                  enLaReceta:cuantoReceta(p, ing), rinde:esReceta ? RECETAS[p].rinde : 0, veces:veces});
     });
     filas.sort(function(a, b){ return b.sale - a.sale; });
     return {total:total, con:con, sin:sin, filas:filas};
@@ -2255,8 +2256,8 @@
         // hay que hacerla
         return '<div class="fila"><span class="qn">' + r.prod +
           (r.receta ? '<em class="rinde">rinde ' + r.rinde + '</em>' : '') + '</span>' +
-          '<span class="cu">' + (r.receta ? bonito(r.tanda, u) + ' la receta' : bonito(r.cuanto, u)) + '</span>' +
-          '<span class="sale">\u00d7 ' + (r.receta ? r.tandas : r.piezas) + ' = ' + bonito(r.sale, u) + '</span></div>';
+          '<span class="cu">' + (r.receta ? bonito(r.enLaReceta, u) + ' la receta' : bonito(r.cuanto, u)) + '</span>' +
+          '<span class="sale">\u00d7 ' + (r.receta ? r.veces : r.piezas) + ' = ' + bonito(r.sale, u) + '</span></div>';
       }).join("") +
       '<div class="fila total"><span class="qn">Hace falta</span>' +
       '<span class="sale">' + bonito(k.total, u) + '</span></div></div>';
@@ -2453,10 +2454,10 @@
     // por tipo, y adentro de cada tipo del peor margen al mejor
     datos.sort(function(a, b){ return FAMS.indexOf(a.p.f) - FAMS.indexOf(b.p.f) || a.pct - b.pct; });
 
-    var tandaCosto = 0, tandaVenta = 0;
+    var costoDelFinde = 0, ventaDelFinde = 0;
     datos.forEach(function(d){
       var n = ped[d.p.n] || 0;
-      tandaCosto += d.costo * n; tandaVenta += d.venta * n;
+      costoDelFinde += d.costo * n; ventaDelFinde += d.venta * n;
     });
     var flojos = datos.filter(function(d){ return d.pct < CONF.margenMin && !d.sinPrecio; }).length;
     var incompletos = datos.filter(function(d){ return d.sinPrecio; }).length;
@@ -2464,9 +2465,9 @@
     var banda = '<div class="banda">' + (activos().length === 0
       ? '<b>No hay pedidos por hacer</b>' +
         '<span>&middot; cuando entren, ac\u00e1 va cu\u00e1nto cuesta hacerlos y cu\u00e1nto dejan</span>'
-      : '<b>Hacer todo lo que hay pedido cuesta ' + plata(tandaCosto) + '</b>' +
-        '<span>&middot; se cobra ' + plata(tandaVenta) + ' &middot; deja ' + plata(tandaVenta - tandaCosto) +
-        (tandaVenta ? ' (' + Math.round((tandaVenta - tandaCosto) / tandaVenta * 100) + '%)' : '') + '</span>') +
+      : '<b>Hacer todo lo que hay pedido cuesta ' + plata(costoDelFinde) + '</b>' +
+        '<span>&middot; se cobra ' + plata(ventaDelFinde) + ' &middot; deja ' + plata(ventaDelFinde - costoDelFinde) +
+        (ventaDelFinde ? ' (' + Math.round((ventaDelFinde - costoDelFinde) / ventaDelFinde * 100) + '%)' : '') + '</span>') +
       '<span class="aparte">' + (incompletos
         ? incompletos + (incompletos === 1 ? ' producto sin terminar de cargar' : ' productos sin terminar de cargar')
         : flojos ? flojos + (flojos === 1 ? ' producto' : ' productos') + ' bajo el ' + CONF.margenMin + '%'
@@ -2538,7 +2539,7 @@
     inicio: function(){
       return uso('Es la pantalla de llegada. Ac\u00e1 no se carga nada: todo lo que dice sale de los pedidos sin entregar.', [
         'Las cinco cifras de arriba son el estado del finde: cu\u00e1ntos pedidos entraron, cu\u00e1nto falta comprar, cu\u00e1nto hay que producir y cu\u00e1nto suma.',
-        '<b>Hornear</b> y <b>Comprar</b> son las dos listas de la tanda. Las dos se recalculan solas cuando avanz\u00e1s o cancel\u00e1s un pedido.',
+        '<b>Hornear</b> y <b>Comprar</b> son las dos listas del finde. Las dos se recalculan solas cuando avanz\u00e1s o cancel\u00e1s un pedido.',
         'El interruptor de la cabecera abre y cierra la tienda. Cerrada, el cliente ve el cartel en lugar de la carta y no puede pedir.'
       ]);
     },
@@ -2554,7 +2555,7 @@
 
     produccion: function(){
       return uso('Es la lista de la mesada: se lee de parado y con las manos ocupadas.', [
-        'Arriba, cu\u00e1ntos bollos salen y <b>cu\u00e1ntas tandas de cada masa</b> hay que amasar. La de pizza y la de focaccia van por separado: son masas distintas.',
+        'Arriba, cu\u00e1ntos bollos salen y <b>cu\u00e1ntas recetas de cada masa</b> hay que amasar. La de pizza y la de focaccia van por separado: son masas distintas.',
         'Abajo, cu\u00e1nto hacer de cada gusto. El n\u00famero grande es el total.',
         'Las pastillas dicen cu\u00e1ntos van <b>sin algo</b>. Los que no aparecen ah\u00ed van enteros: si dice 5 y abajo hay 3 sin albahaca, dos llevan todo.'
       ]);
@@ -2646,7 +2647,7 @@
       '<p>Arriba, <b>Pedidos nuevos, Falta comprar, Producci\u00f3n, Costo y Total</b>. Salieron de un cat\u00e1logo ' +
       'de veintis\u00e9is cifras que el panel sabe calcular; el t\u00edtulo de cada tarjeta es un selector, ' +
       'as\u00ed que la fila se puede rearmar sin tocar c\u00f3digo.</p>' +
-      '<p>Abajo, las dos preguntas de la tanda: <b>Hornear</b> y <b>Comprar</b>. Las dos salen de los mismos ' +
+      '<p>Abajo, las dos preguntas del finde: <b>Hornear</b> y <b>Comprar</b>. Las dos salen de los mismos ' +
       'pedidos sin entregar.</p></div>' +
 
       '<div class="bloque"><h3>Los filetes de las dos listas coinciden</h3>' +
@@ -2703,7 +2704,7 @@
 
       '<div class="bloque"><h3>Tres titulares elegidos entre diez</h3>' +
       '<p><b>Masa</b> en kilos y bollos, <b>Empanadas</b> en unidades y gustos, y <b>Pedidos a cubrir</b>. ' +
-      'Se descartaron harina, piezas al horno, hornadas, plata de la tanda y con cambios: todas siguen ' +
+      'Se descartaron harina, piezas al horno, hornadas, plata del finde y con cambios: todas siguen ' +
       'disponibles como tarjeta en Inicio.</p>' +
       '<p>El pie de <b>Pedidos a cubrir</b> no repite el n\u00famero: dice <b>de cu\u00e1ndo es el m\u00e1s viejo ' +
       'sin entregar</b>. Es el dato que avisa si algo se qued\u00f3 atr\u00e1s.</p></div>' +
@@ -2829,7 +2830,7 @@
       '<div class="bloque"><h3>Es la lista de compras</h3>' +
       '<p><b>Stock \u00b7 Necesito \u00b7 Falta</b>, en el orden de la resta. El stock se edita en el rengl\u00f3n; ' +
       'las otras dos salen solas de los pedidos. La \u00faltima columna es la lista: lo que hay que ir a buscar.</p>' +
-      '<p>Se probaron otras tres maneras de contar esa resta &mdash; lo que te queda despu\u00e9s de la tanda, ' +
+      '<p>Se probaron otras tres maneras de contar esa resta &mdash; lo que te queda despu\u00e9s del finde, ' +
       'una barra de consumo y un sem\u00e1foro con \u00abjusto\u00bb. Gan\u00f3 la m\u00e1s literal.</p></div>' +
 
       '<div class="bloque"><h3>Partida por rubro</h3>' +

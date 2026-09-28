@@ -16,8 +16,8 @@
         <div class="marca"><img src="~/img/logo.png" alt="48·72" width="240" height="240" /></div>
 
         <nav aria-label="Secciones">
-            @* Las cinco que faltan van apagadas en vez de escondidas: así se ve
-               de una qué panel va a haber, y cada tanda enciende una. *@
+            @* Una sección que todavía no tiene pantalla va apagada en vez de
+               escondida: así se ve de una qué panel va a haber. *@
             @foreach (var (id, nombre, dibujo) in Secciones)
             {
                 var globo = id == "pedidos" && Model.SinEntregar > 0

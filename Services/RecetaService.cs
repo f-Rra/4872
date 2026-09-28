@@ -90,7 +90,7 @@ public class RecetaService
                 Como = "sin " + g.Key.ToLowerInvariant(),
                 Piezas = g.Sum(x => x.Cantidad)
             })
-            // de mayor a menor: es el orden en que se arma la tanda
+            // de mayor a menor: es el orden en que se arman
             .OrderByDescending(x => x.Piezas)
             .ThenBy(x => x.Como)
             .ToList();
@@ -98,25 +98,26 @@ public class RecetaService
         return porComo;
     }
 
-    // «Bollo de pizza» se lee «pizza» cuando ya se dijo la palabra tanda: «2
-    // tandas de bollo de pizza» dice bollo dos veces. Si el nombre no empieza
-    // asi se deja entero, que es lo unico honesto con un nombre que no conozco.
+    // «Bollo de pizza» se lee «pizza»: la nota va debajo de cuántos bollos
+    // salen, y «2 recetas de bollo de pizza» dice bollo dos veces. Si el nombre
+    // no empieza así se deja entero, que es lo único honesto con un nombre que
+    // no conozco.
     private static string Corto(string nombre) =>
         nombre.StartsWith("Bollo de ", StringComparison.OrdinalIgnoreCase)
             ? nombre["Bollo de ".Length..]
             : nombre.ToLowerInvariant();
 
-    // Cuantas tandas hay que amasar para esas piezas. Se redondea para arriba
-    // porque media tanda no se amasa, y es la misma cuenta que usa la lista de
-    // compras: si se amasan tres tandas, se gasta harina para tres.
-    private static int Tandas(int piezas, int rinde) =>
+    // Cuántas veces hay que hacer una receta para esas piezas. Se redondea para
+    // arriba porque media receta no se hace, y es la misma cuenta que usa la
+    // lista de compras: si se hace tres veces, se gasta harina para tres.
+    private static int Veces(int piezas, int rinde) =>
         rinde > 0 ? (int)Math.Ceiling(piezas / (double)rinde) : 0;
 
-    // Cuantas tandas de masa hay que amasar. La receta de la base se carga por
-    // tanda entera con su rinde -1 kg de harina da 6 bollos- asi que el numero
-    // que sirve en la mesada es cuantas tandas, no cuantos gramos de harina.
+    // Cuántas recetas de masa hay que hacer. La base se carga entera, con su
+    // rinde -1 kg de harina da 6 bollos-, así que el número que sirve en la
+    // mesada es cuántas recetas, no cuántos gramos de harina.
     //
-    // Se redondea para arriba: media tanda no se amasa.
+    // Se redondea para arriba: media receta no se amasa.
     public async Task<string> Amasado(IReadOnlyList<ProductoPedido> productos)
     {
         var piezas = productos
@@ -141,19 +142,22 @@ public class RecetaService
 
         // Agrupado por base y no por rinde: la masa de pizza y la de focaccia
         // son masas distintas, y juntarlas porque las dos rindieran seis seria
-        // mandarlo a amasar una sola tanda de dos cosas que no se mezclan.
+        // mandarlo a amasar una sola receta de dos cosas que no se mezclan.
         var porBase = bases
             .GroupBy(x => new { x.IdReceta, x.Nombre, x.Rinde })
             .Select(g => new
             {
                 g.Key.Nombre,
-                Tandas = Tandas(g.Sum(x => piezas[x.IdProducto]), g.Key.Rinde)
+                Veces = Veces(g.Sum(x => piezas[x.IdProducto]), g.Key.Rinde)
             })
-            .OrderByDescending(x => x.Tandas)
+            .OrderByDescending(x => x.Veces)
             .ThenBy(x => x.Nombre);
 
-        return string.Join(" · ", porBase.Select(x =>
-            $"{x.Tandas} {(x.Tandas == 1 ? "tanda" : "tandas")} de {Corto(x.Nombre)}"));
+        // «3 recetas de pizza · 1 de focaccia»: la palabra va una sola vez, en
+        // la primera
+        return string.Join(" · ", porBase.Select((x, i) => i == 0
+            ? $"{x.Veces} {(x.Veces == 1 ? "receta" : "recetas")} de {Corto(x.Nombre)}"
+            : $"{x.Veces} de {Corto(x.Nombre)}"));
     }
 
     // De donde sale cada parte de lo que hace falta: un renglon por producto que
@@ -290,7 +294,7 @@ public class RecetaService
             .Select(g =>
             {
                 var cuantas = g.Sum(x => piezas[x.IdProducto]);
-                var veces = Tandas(cuantas, g.Key.Rinde);
+                var veces = Veces(cuantas, g.Key.Rinde);
 
                 return new ParteDeReceta
                 {
