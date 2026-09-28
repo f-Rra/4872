@@ -20,6 +20,12 @@ public class IngredienteConfiguracion : IEntityTypeConfiguration<Ingrediente>
             .HasMaxLength(20)
             .IsRequired();
 
+        // escrito también, y nulo: al aparecer, ninguno de los que ya estaban
+        // tenía rubro
+        ingrediente.Property(x => x.Rubro)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         // tres decimales alcanzan para cualquier gramaje y dejan lugar a media
         // unidad, que es lo mas chico que se puede pedir de algo que se cuenta
         ingrediente.Property(x => x.Stock)

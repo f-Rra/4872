@@ -729,6 +729,18 @@
   .receta li.arrastrando{background:rgba(30,82,69,.1)}
   .receta li.arrastrando .manija{cursor:grabbing}
 
+  /* el titulo de cada rubro, adentro de la grilla: la banda de los grupos de
+     Productos en un renglon de la tabla. Queda fijo abajo de los titulos de las
+     columnas, y el que llega tapa al anterior. Cuanto miden esos titulos lo
+     mide el script; el numero de aca es por si no corre */
+  .grilla .cab-rubro th{
+    top:var(--alto-th, 1.7rem);z-index:1;opacity:1;
+    padding:.6rem 1.1rem;font-size:.66rem;letter-spacing:.18em;
+    background:color-mix(in srgb, var(--verde) 9%, var(--papel));
+    border-bottom:1px solid rgba(30,82,69,.22);
+  }
+  .grilla .cab-rubro .cuantos{letter-spacing:.06em;opacity:.6;margin-left:.4rem}
+
 
   /* ---------- ingredientes: la grilla ----------
      Stock, Necesito y Falta, en el orden de la resta. Se probaron otras tres
@@ -1132,6 +1144,8 @@
   var famProd = "todo", prodElegido = "Margarita", sumando = false;
   var tiendaAbierta = true;
   var ingElegido = undefined, uniNueva = null, prodCosto = "Margarita";
+  // el chip de arriba de Ingredientes, y el rubro tocado en la ficha abierta
+  var rubroIng = "todo", rubroNuevo = null, avisoIng = null;
   var vistaCostos2 = "producto";
   var ranuras = ["nuevos", "comprar", "masa", "costo", "total"];
   var BORRADOR = {f:"pizza", n:"", p:0, ing:[]}, TIPEADO = null;
@@ -2048,11 +2062,26 @@
     Object.keys(RECETAS).forEach(function(b){
       Object.keys(RECETAS[b].r).forEach(function(g){ vistos[g] = true; });
     });
+    // el rubro, que es d\u00f3nde se compra. Tres quedan sin rubro a prop\u00f3sito: es
+    // como van a quedar todos los que ya est\u00e1n cargados cuando aparezca, hasta
+    // que se les elija uno. Lo que no se compra no tiene
+    var rubro = {
+      "Harina 000":"alm", "Carne":"car", "Muzzarella":"qf", "Cebolla":"veg", "Tomate triturado":"alm",
+      "Choclo":"veg", "Leche":"alm", "Jam\u00f3n":"qf", "Aceite":"alm", "Oliva":"alm", "Tomate cherry":"veg",
+      "Sal fina":"alm", "Tapas de empanada":"alm", "Provolone":"qf", "Roquefort":"qf", "Albahaca":"veg",
+      "Cebolla de verdeo":"veg", "Parmesano":"qf", "Ajo":"veg", "Aj\u00ed molido":"alm", "Huevo":"alm",
+      "Semolin":"alm", "Or\u00e9gano":"alm", "Sal gruesa":"alm", "Romero":"veg", "Sal":"alm", "Pimienta":"alm",
+      "Jam\u00f3n crudo":"qf", "Longaniza":"qf", "Morr\u00f3n":"veg", "Perejil":"veg", "Pollo":"car",
+      "R\u00facula":"veg", "Tomate":"veg"
+    };
     Object.keys(vistos).sort().forEach(function(g){
       var d = semilla[g] || {};
-      INGR.push({n:g, u:d.u || "g", stock:d.stock || 0, trae:d.trae || 0, sale:d.sale || 0, libre:!!d.libre});
+      INGR.push({n:g, u:d.u || "g", stock:d.stock || 0, trae:d.trae || 0, sale:d.sale || 0, libre:!!d.libre,
+                 r:d.libre ? null : (rubro[g] || null)});
     });
   })();
+  // los cuatro rubros, en el orden de la pantalla
+  var RUBROS_ING = [["qf", "Quesos &amp; Fiambres"], ["alm", "Almac\u00e9n"], ["car", "Carnes"], ["veg", "Vegetales"]];
   // cuanto cuesta UNA unidad de medida del ingrediente (un gramo, un ml, una unidad)
   function porMedida(x){ return x && x.trae ? x.sale / x.trae : 0; }
   function buscaIng(n){ return INGR.filter(function(x){ return x.n === n; })[0]; }
@@ -2142,7 +2171,7 @@
         '<span>&middot; ' + (faltantes === 0 ? 'alcanza con lo que hay'
           : 'comprar ' + faltantes + (faltantes === 1 ? ' ingrediente' : ' ingredientes')) + '</span>') + '</div>';
 
-    var cuerpo = base.map(function(x){
+    function fila(x){
       var k = cta(x.n), pie = dondeEsta(k);
       return '<tr>' +
         '<td class="g-nom"><button class="abre" type="button" data-ing="' + x.n + '">' + x.n + '</button>' +
@@ -2155,6 +2184,31 @@
         '<td class="g-fin g-num">' + (!x.libre && k.con && Math.max(0, k.total - x.stock)
           ? '<b class="urge">' + bonito(k.total - x.stock, x.u) + '</b>'
           : '<span class="sinCargar">&mdash;</span>') + '</td></tr>';
+    }
+
+    // Partida por rubro, que es d\u00f3nde se compra: un tbody por grupo con su
+    // t\u00edtulo. Primero los que todav\u00eda no tienen rubro, porque falta
+    // eleg\u00edrselo; despu\u00e9s los cuatro, y al final lo que no se compra. El
+    // t\u00edtulo sale solo con \u00abTodo\u00bb: con un rubro elegido repetir\u00eda el chip
+    var grupos = [];
+    if(rubroIng === "todo"){
+      var sinRubro = base.filter(function(x){ return !x.libre && !x.r; });
+      if(sinRubro.length) grupos.push(["Sin rubro", sinRubro]);
+      RUBROS_ING.forEach(function(r){
+        var deEste = base.filter(function(x){ return !x.libre && x.r === r[0]; });
+        if(deEste.length) grupos.push([r[1], deEste]);
+      });
+      var libres = base.filter(function(x){ return x.libre; });
+      if(libres.length) grupos.push(["No se compran", libres]);
+    }
+    else grupos.push([null, base.filter(function(x){ return !x.libre && x.r === rubroIng; })]);
+
+    var cuerpo = grupos.map(function(g){
+      return '<tbody>' + (g[0] ? '<tr class="cab-rubro"><th colspan="4" scope="colgroup">' + g[0] +
+        '<span class="cuantos">&middot; ' + g[1].length + '</span></th></tr>' : '') +
+        (g[1].length ? g[1].map(fila).join("")
+          : '<tr><td colspan="4" class="sinCargar">Todav\u00eda no hay ingredientes de este rubro.</td></tr>') +
+        '</tbody>';
     }).join("");
 
     var pie = '<div class="pie-tabla"><button class="abrir" type="button" data-ingnuevo="1">' +
@@ -2164,7 +2218,7 @@
     return banda + '<div class="rollo-ing"><table class="grilla"><thead><tr>' +
       '<th>Ingrediente</th><th class="g-num">Stock</th>' +
       '<th class="g-num">Necesito</th><th class="g-fin g-num">Falta</th>' +
-      '</tr></thead><tbody>' + cuerpo + '</tbody></table></div>' + pie + fichaIng();
+      '</tr></thead>' + cuerpo + '</table></div>' + pie + fichaIng();
   }
 
   var TIPEADO_I = {n:"", p:"", t:""};
@@ -2222,10 +2276,17 @@
     return '<div class="telon" data-icerrar="1"><div class="modal" data-adentro="1">' +
       '<div class="det-tope"><h2>' + (nuevo ? "Ingrediente nuevo" : x.n) + '</h2></div>' +
       (nuevo ? '' : '<p class="det-meta">' + donde + '</p>') +
+      (avisoIng ? '<p class="aviso" role="alert">' + avisoIng + '</p>' : '') +
 
       '<div class="renglones">' +
         '<div class="reng"><span class="et">Nombre</span><span class="va">' +
           '<input id="i-nombre" value="' + x.n + '" placeholder="C\u00f3mo se llama"></span></div>' +
+        // d\u00f3nde se compra, debajo del nombre. Lo que no se compra no lo lleva
+        (x.libre ? '' : '<div class="reng"><span class="et">Rubro</span><span class="va"><span class="chips-fam">' +
+          RUBROS_ING.map(function(r){
+            return '<label class="chip-fam"><input type="radio" name="rubroing" data-rubroing="' + r[0] + '"' +
+                   ((rubroNuevo || x.r) === r[0] ? ' checked' : '') + '><span>' + r[1] + '</span></label>';
+          }).join("") + '</span></span></div>') +
         '<div class="reng"><span class="et">Se mide en</span><span class="va"><span class="chips-fam">' +
           UNIDADES.map(function(w){
             return '<label class="chip-fam"><input type="radio" name="uni" data-uni="' + w + '"' +
@@ -2527,6 +2588,7 @@
         'Las tres columnas son la resta: <b>Stock</b> menos <b>Necesito</b> da <b>Falta</b>, que es lo que hay que ir a buscar.',
         'El <b>stock</b> se edita en el rengl\u00f3n: escrib\u00ed el n\u00famero y sal\u00ed del campo. La unidad va adentro, as\u00ed que \u00ab2 kg\u00bb tambi\u00e9n entra.',
         'Toc\u00e1 el nombre para abrir la ficha. Ah\u00ed carg\u00e1s <b>c\u00f3mo se compra</b> \u2014cu\u00e1nto trae el bulto y cu\u00e1nto sale\u2014, que es de donde salen los costos.',
+        'La lista va partida por <b>rubro</b>, que es d\u00f3nde se compra, y se elige en la ficha. Los chips de arriba dejan uno solo.',
         'Abajo de la ficha, el desglose dice <b>de d\u00f3nde sale</b> lo que hace falta: qu\u00e9 productos y qu\u00e9 recetas lo llevan, y cu\u00e1ntas veces.',
         'Al pie, <b>Ingrediente nuevo</b>.'
       ]);
@@ -2770,6 +2832,17 @@
       '<p>Se probaron otras tres maneras de contar esa resta &mdash; lo que te queda despu\u00e9s de la tanda, ' +
       'una barra de consumo y un sem\u00e1foro con \u00abjusto\u00bb. Gan\u00f3 la m\u00e1s literal.</p></div>' +
 
+      '<div class="bloque"><h3>Partida por rubro</h3>' +
+      '<p>Son todos, y la lista es larga, as\u00ed que va partida por <b>d\u00f3nde se compra</b>: Quesos &amp; ' +
+      'Fiambres, Almac\u00e9n, Carnes y Vegetales, en ese orden. Adentro de cada uno sigue la lista de compras: ' +
+      'lo que hay que comprar, arriba. El t\u00edtulo de cada rubro queda fijo mientras corre, como en Productos, ' +
+      'y los chips de arriba dejan uno solo.</p>' +
+      '<p>El rubro se elige en la ficha, <b>debajo del nombre</b>. Uno nuevo no se crea sin rubro. Los que ya ' +
+      'estaban cargados quedan <b>sin rubro</b> hasta que se les elija uno, y van primeros: es lo que falta ' +
+      'hacer. El agua y la masa madre no se compran, as\u00ed que van aparte, al final, y su ficha no lo pide.</p>' +
+      '<p>Se probaron elegir el rubro ah\u00ed mismo, en el rengl\u00f3n de los que no tienen, darles uno al agua y a ' +
+      'la masa madre, y ponerlo debajo de la medida o del precio.</p></div>' +
+
       '<div class="bloque"><h3>La cantidad es del par producto\u2013ingrediente</h3>' +
       '<p>Es la decisi\u00f3n que oblig\u00f3 a rehacer el modelo. <b>Una fugazzeta lleva 200 g de cebolla y una ' +
       'empanada de carne, 15.</b> Abr\u00ed <b>Cebolla</b>: la fugazzeta y los rellenos que la llevan, cada uno ' +
@@ -2924,8 +2997,12 @@
         '<div class="doble">' + recLista() + '<div class="detalle">' + recFicha() + '</div></div></div>';
     }
     else if(seccion === "ingredientes"){
+      // como en Productos: con un rubro elegido, la lista trae solo ese
       cont = '<div class="obra"><div class="cabecera"><span class="cab-titulo"><h3>Ingredientes</h3>' +
-        '<span class="sub">' + INGR.length + ' en las recetas</span></span></div>' + ingCompras() + '</div>';
+        '<span class="sub">' + INGR.length + ' en las recetas</span></span>' +
+        '<div class="filtros">' + [["todo", "Todo"]].concat(RUBROS_ING).map(function(o){
+          return '<a href="#" data-fri="' + o[0] + '" aria-pressed="' + (rubroIng === o[0]) + '">' + o[1] + '</a>';
+        }).join("") + '</div></div>' + ingCompras() + '</div>';
     }
     else if(seccion === "costos"){
       var NOMK = {producto:"Por producto", mes:"Por mes"};
@@ -2953,6 +3030,11 @@
       var c = caja.getBoundingClientRect(), e = eleg.getBoundingClientRect();
       if(e.top < c.top || e.bottom > c.bottom) caja.scrollTop += (e.top + e.bottom) / 2 - (c.top + c.bottom) / 2;
     }
+
+    // el t\u00edtulo de cada rubro de Ingredientes se pega abajo de los t\u00edtulos de
+    // las columnas: lo que midan, como en panel.js
+    var thIng = document.querySelector("#marco .grilla thead th");
+    if(thIng) thIng.closest(".grilla").style.setProperty("--alto-th", thIng.getBoundingClientRect().height + "px");
 
     document.getElementById("lado").innerHTML = USO[seccion]() + NOTAS[seccion]() + REGLAS;
     pintarPasos();
@@ -3009,19 +3091,27 @@
       b.addEventListener("click", function(){ prodCosto = b.dataset.pc; pintar(); });
     });
     document.querySelectorAll("#marco [data-ing]").forEach(function(b){
-      b.addEventListener("click", function(){ ingElegido = b.dataset.ing; uniNueva = null; TIPEADO_I = {n:"", p:"", t:""}; pintar(); });
+      b.addEventListener("click", function(){ ingElegido = b.dataset.ing; uniNueva = null; rubroNuevo = null; TIPEADO_I = {n:"", p:"", t:""}; pintar(); });
     });
     document.querySelectorAll("#marco [data-ingnuevo]").forEach(function(b){
       b.addEventListener("click", function(){
-        ingElegido = null; uniNueva = "g"; TIPEADO_I = {n:"", p:"", t:""}; pintar();
+        ingElegido = null; uniNueva = "g"; rubroNuevo = null; TIPEADO_I = {n:"", p:"", t:""}; pintar();
         var c = document.getElementById("i-nombre"); if(c) c.focus();
       });
     });
     document.querySelectorAll("#marco [data-icerrar]").forEach(function(b){
       b.addEventListener("click", function(e){
         if(e.target.closest("[data-adentro]") && b.dataset.icerrar && b.classList.contains("telon")) return;
-        ingElegido = undefined; uniNueva = null; pintar();
+        ingElegido = undefined; uniNueva = null; rubroNuevo = null; pintar();
       });
+    });
+    // el chip de arriba deja un solo rubro; el de la ficha se guarda con Guardar
+    // cambios, junto con el resto
+    document.querySelectorAll("#marco [data-fri]").forEach(function(b){
+      b.addEventListener("click", function(e){ e.preventDefault(); rubroIng = b.dataset.fri; pintar(); });
+    });
+    document.querySelectorAll("#marco [data-rubroing]").forEach(function(b){
+      b.addEventListener("change", function(){ rubroNuevo = b.dataset.rubroing; });
     });
     document.querySelectorAll("#marco [data-uni]").forEach(function(b){
       b.addEventListener("click", function(){
@@ -3057,7 +3147,7 @@
         var n = b.dataset.iborrar;
         INGR = INGR.filter(function(y){ return y.n !== n; });
         Object.keys(CANT).forEach(function(p){ delete CANT[p][n]; });
-        ingElegido = undefined; uniNueva = null; pintar();
+        ingElegido = undefined; uniNueva = null; rubroNuevo = null; pintar();
       });
     });
     document.querySelectorAll("#marco [data-iguardar]").forEach(function(b){
@@ -3066,12 +3156,18 @@
         var pre = soloNum(document.getElementById("i-precio").value);
         var tra = leerMedida(document.getElementById("i-trae").value, uniNueva || (ingElegido !== null && buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g"));
         if(!nom){ document.getElementById("i-nombre").focus(); return; }
+        // uno nuevo no se crea sin rubro: entrar\u00eda en \u00abSin rubro\u00bb y habr\u00eda que
+        // volver a abrirlo. A uno que ya existe se lo deja guardar sin
+        if(ingElegido === null && !rubroNuevo){
+          sincronizarIng(); avisoIng = "Falta elegir el rubro."; pintar(); avisoIng = null; restaurarIng(); return;
+        }
         if(ingElegido === null){
-          if(!buscaIng(nom)) INGR.push({n:nom, u:uniNueva || "g", stock:0, trae:tra, sale:pre});
+          if(!buscaIng(nom)) INGR.push({n:nom, u:uniNueva || "g", stock:0, trae:tra, sale:pre, r:rubroNuevo});
         }else{
           var x = buscaIng(ingElegido);
           x.sale = pre; x.trae = tra;
           if(uniNueva) x.u = uniNueva;
+          if(rubroNuevo && !x.libre) x.r = rubroNuevo;
           if(nom !== x.n){
             Object.keys(LLEVA).forEach(function(p){
               LLEVA[p] = LLEVA[p].map(function(g){ return g === x.n ? nom : g; });
@@ -3088,7 +3184,7 @@
             x.n = nom;
           }
         }
-        ingElegido = undefined; uniNueva = null; pintar();
+        ingElegido = undefined; uniNueva = null; rubroNuevo = null; pintar();
       });
     });
     document.querySelectorAll("#marco [data-nuevo]").forEach(function(b){

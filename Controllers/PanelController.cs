@@ -124,8 +124,10 @@ public class PanelController : Controller
     // Stock, Necesito y Falta, en el orden de la resta. El stock se edita en el
     // renglon; las otras dos salen solas de los pedidos.
     [HttpGet("ingredientes")]
-    public async Task<IActionResult> Ingredientes(int? ingrediente = null, bool nuevo = false)
+    public async Task<IActionResult> Ingredientes(int? ingrediente = null, bool nuevo = false, string? rubro = null)
     {
+        rubro = IngredientesVm.Chips.Any(x => x.Clave == rubro) ? rubro! : "todo";
+
         var marco = await Marco();
         var necesita = await _recetas.Necesita();
 
@@ -137,6 +139,7 @@ public class PanelController : Controller
                 x.Stock,
                 x.Libre,
                 x.Unidad,
+                x.Rubro,
                 // en cuantos productos y en cuantas recetas aparece. Las recetas
                 // cuentan: la harina esta en el bollo y en ninguna pizza, y decir
                 // «todavia en ninguna receta» al lado de «necesito 2 kg» seria falso
@@ -163,7 +166,9 @@ public class PanelController : Controller
                     Necesito = cuanto > 0 ? Cantidades.Bonito(cuanto, x.Unidad) : "—",
                     Falta = falta > 0 ? Cantidades.Bonito(falta, x.Unidad) : "—",
                     HayQueComprar = !x.Libre && falta > 0,
-                    Donde = Donde(x.EnProductos, x.Recetas)
+                    Donde = Donde(x.EnProductos, x.Recetas),
+                    Rubro = x.Rubro,
+                    Libre = x.Libre
                 };
             })
             // primero lo que mas falta, y despues por nombre: es el orden en que
@@ -172,12 +177,18 @@ public class PanelController : Controller
             .ThenBy(x => x.Nombre)
             .ToList();
 
+        // Con un rubro elegido queda solo ese. Los que no tienen y lo que no se
+        // compra salen con «Todo», que es donde se ve la lista entera.
+        var lista = rubro == "todo" ? filas : [.. filas.Where(x => x.Rubro?.ToString() == rubro)];
+
         return View(new IngredientesVm
         {
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
-            Lista = filas,
+            Lista = lista,
+            Rubro = rubro,
             Pedidos = marco.SinEntregar,
+            // de todos y no de los del rubro: la banda habla de la compra entera
             Faltantes = filas.Count(x => x.HayQueComprar),
             // en blanco es el alta: la misma ficha sin nada cargado
             Ficha = nuevo ? new FichaIngrediente()
@@ -201,6 +212,7 @@ public class PanelController : Controller
             {
                 i.IdIngrediente,
                 i.Nombre,
+                i.Rubro,
                 i.Unidad,
                 i.Libre,
                 i.CantidadDeCompra,
@@ -222,6 +234,7 @@ public class PanelController : Controller
         {
             IdIngrediente = x.IdIngrediente,
             Nombre = x.Nombre,
+            Rubro = x.Rubro,
             Unidad = x.Unidad,
             Libre = x.Libre,
             // pelado: la unidad se dibuja al lado y no adentro del campo
@@ -274,20 +287,20 @@ public class PanelController : Controller
         return partes.Count == 0 ? "todavía en ninguna receta" : string.Join(" y ", partes);
     }
 
-    // Guardar la ficha: nombre, medida y como se compra.
+    // Guardar la ficha: nombre, rubro, medida y como se compra.
     //
     // Va entera y de una vez -y no campo por campo como el stock- porque los
     // cuatro se leen juntos: cambiar la medida sin tocar el bulto deja «25 kg»
     // queriendo decir otra cosa.
     [HttpPost("ingredientes/guardar")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GuardarIngrediente(FichaIngrediente ficha)
+    public async Task<IActionResult> GuardarIngrediente(FichaIngrediente ficha, string? rubro = null)
     {
         var nombre = (ficha.Nombre ?? "").Trim();
 
         if (nombre.Length == 0)
         {
-            return await VolverAFicha(ficha, "Escribí cómo se llama.");
+            return await VolverAFicha(ficha, "Escribí cómo se llama.", rubro);
         }
 
         // el nombre es unico en la tabla: mejor decirlo con palabras que dejar
@@ -297,7 +310,16 @@ public class PanelController : Controller
 
         if (repetido)
         {
-            return await VolverAFicha(ficha, $"Ya hay un ingrediente que se llama «{nombre}».");
+            return await VolverAFicha(ficha, $"Ya hay un ingrediente que se llama «{nombre}».", rubro);
+        }
+
+        // Uno nuevo no se crea sin rubro: entraría a la lista en «Sin rubro» y
+        // habría que volver a abrirlo. A uno que ya existe se lo deja guardar
+        // sin: al aparecer el rubro quedaron todos así, y la ficha de cada uno no
+        // puede quedar trabada hasta que se lo elijan.
+        if (ficha.EsNuevo && ficha.Rubro is null)
+        {
+            return await VolverAFicha(ficha, "Falta elegir el rubro.", rubro);
         }
 
         // Vacio quiere decir «todavia no se cuanto trae» y se guarda nulo. Lo
@@ -312,14 +334,14 @@ public class PanelController : Controller
             if (bulto is null)
             {
                 return await VolverAFicha(ficha,
-                    $"No entiendo «{ficha.Bulto.Trim()}» como cantidad. Escribí solo el número.");
+                    $"No entiendo «{ficha.Bulto.Trim()}» como cantidad. Escribí solo el número.", rubro);
             }
 
             // cero se entiende, pero un bulto que no trae nada no es un bulto
             if (bulto == 0)
             {
                 return await VolverAFicha(ficha,
-                    "El bulto no puede ser cero: es cuánto trae la compra. Dejalo vacío si todavía no lo sabés.");
+                    "El bulto no puede ser cero: es cuánto trae la compra. Dejalo vacío si todavía no lo sabés.", rubro);
             }
         }
 
@@ -329,6 +351,9 @@ public class PanelController : Controller
                 ?? throw new InvalidOperationException($"No existe el ingrediente {ficha.IdIngrediente}.");
 
         ingrediente.Nombre = nombre;
+        // lo que no se compra no tiene dónde: su ficha ni lo pide, y un rubro
+        // que llegara igual se descarta
+        ingrediente.Rubro = ingrediente.Libre ? null : ficha.Rubro;
         ingrediente.Unidad = ficha.Unidad;
         // Libre no se toca: no viene del formulario, y el binder lo daria en
         // false por no estar. Guardar la ficha del agua la volveria comprable.
@@ -342,7 +367,7 @@ public class PanelController : Controller
 
         await _contexto.SaveChangesAsync();
 
-        return RedirectToAction(nameof(Ingredientes));
+        return RedirectToAction(nameof(Ingredientes), new { rubro });
     }
 
     // Borrar uno que este en alguna receta la dejaria rota, y las dos claves
@@ -351,7 +376,7 @@ public class PanelController : Controller
     // usos, asi que llegar aca con alguno es que la receta cambio mientras tanto.
     [HttpPost("ingredientes/borrar")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BorrarIngrediente(int id)
+    public async Task<IActionResult> BorrarIngrediente(int id, string? rubro = null)
     {
         var ingrediente = await _contexto.Ingredientes
             .Include(x => x.UsosEnProductos)
@@ -370,16 +395,16 @@ public class PanelController : Controller
         _contexto.Ingredientes.Remove(ingrediente);
         await _contexto.SaveChangesAsync();
 
-        return RedirectToAction(nameof(Ingredientes));
+        return RedirectToAction(nameof(Ingredientes), new { rubro });
     }
 
     // Vuelve a dibujar la pantalla con la ficha abierta y el error puesto,
     // conservando lo tipeado. El encabezado sigue saliendo del registro
     // guardado: es la identidad de lo que estas editando, no lo que escribiste.
-    private async Task<IActionResult> VolverAFicha(FichaIngrediente ficha, string error)
+    private async Task<IActionResult> VolverAFicha(FichaIngrediente ficha, string error, string? rubro)
     {
         var vm = (IngredientesVm)((ViewResult)await Ingredientes(
-            ficha.EsNuevo ? null : ficha.IdIngrediente, ficha.EsNuevo)).Model!;
+            ficha.EsNuevo ? null : ficha.IdIngrediente, ficha.EsNuevo, rubro)).Model!;
 
         // en un alta no hay registro guardado del que sacarlos: la ficha es todo
         // lo que hay
@@ -406,7 +431,7 @@ public class PanelController : Controller
     // pisar lo que otro pudo haber tocado mientras tanto.
     [HttpPost("ingredientes/stock")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Stock(int id, string? stock)
+    public async Task<IActionResult> Stock(int id, string? stock, string? rubro = null)
     {
         var ingrediente = await _contexto.Ingredientes.FindAsync(id)
             ?? throw new InvalidOperationException($"No existe el ingrediente {id}.");
@@ -421,7 +446,7 @@ public class PanelController : Controller
             await _contexto.SaveChangesAsync();
         }
 
-        return RedirectToAction(nameof(Ingredientes));
+        return RedirectToAction(nameof(Ingredientes), new { rubro });
     }
 
     // Productos: la lista a la izquierda y la ficha a la derecha.

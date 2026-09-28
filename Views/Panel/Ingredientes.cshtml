@@ -10,6 +10,15 @@
         <h1>Ingredientes</h1>
         <span class="sub">@Model.EnRecetas en las recetas</span>
     </span>
+
+    @* Como en Productos: con un rubro elegido, la lista trae solo ese. *@
+    <div class="filtros">
+        @foreach (var (clave, nombre) in f4872.ViewModels.IngredientesVm.Chips)
+        {
+            <a asp-action="Ingredientes" asp-route-rubro="@clave"
+               aria-pressed="@((clave == Model.Rubro).ToString().ToLowerInvariant())">@nombre</a>
+        }
+    </div>
 </div>
 
 @* Para cuántos pedidos es esta cuenta. Va arriba de todo porque es lo que le da
@@ -34,7 +43,11 @@
 
 @* Stock · Necesito · Falta, en el orden de la resta. El stock se edita en el
    renglón; las otras dos salen solas de los pedidos. La última columna es la
-   lista: lo que hay que ir a buscar. *@
+   lista: lo que hay que ir a buscar.
+
+   Partida por rubro, que es dónde se compra: un tbody por grupo, con su
+   título arriba. El título sale solo con «Todo»: con un rubro elegido arriba
+   repetiría el chip. *@
 <div class="rollo-ing">
     <table class="grilla">
         <thead>
@@ -45,17 +58,31 @@
                 <th class="g-num">Falta</th>
             </tr>
         </thead>
-        <tbody>
-            @if (Model.Lista.Count == 0)
-            {
+
+        @if (Model.Lista.Count == 0)
+        {
+            <tbody>
                 <tr>
                     <td colspan="4" class="sinCargar">
-                        Todavía no hay ingredientes. El primero se suma con «Ingrediente nuevo», acá abajo.
+                        @(Model.Rubro == "todo"
+                            ? "Todavía no hay ingredientes. El primero se suma con «Ingrediente nuevo», acá abajo."
+                            : "Todavía no hay ingredientes de este rubro.")
                     </td>
+                </tr>
+            </tbody>
+        }
+
+        @foreach (var grupo in Model.Grupos)
+        {
+            <tbody>
+            @if (Model.Rubro == "todo")
+            {
+                <tr class="cab-rubro">
+                    <th colspan="4" scope="colgroup">@grupo.Titulo<span class="cuantos">· @grupo.Filas.Count</span></th>
                 </tr>
             }
 
-            @foreach (var i in Model.Lista)
+            @foreach (var i in grupo.Filas)
             {
                 <tr>
                     <td class="g-nom">
@@ -63,7 +90,7 @@
                            abrirla no cambia nada, y así se puede compartir y
                            volver con el botón de atrás *@
                         <a class="abre" asp-action="Ingredientes"
-                           asp-route-ingrediente="@i.IdIngrediente">@i.Nombre</a>
+                           asp-route-ingrediente="@i.IdIngrediente" asp-route-rubro="@Model.Rubro">@i.Nombre</a>
                         <span class="bajo">@i.Donde</span>
                     </td>
 
@@ -71,7 +98,7 @@
                         @* un formulario por renglón: se guarda solo el número que
                            se tocó y no la tabla entera *@
                         <form method="post" asp-action="Stock"
-                              asp-route-id="@i.IdIngrediente">
+                              asp-route-id="@i.IdIngrediente" asp-route-rubro="@Model.Rubro">
                             @* el campo lleva la unidad escrita —«11 kg», «24 u»—
                                y crece con lo que diga. Con piso: casi todos los
                                valores entran en seis caracteres y así la columna
@@ -100,13 +127,14 @@
                     </td>
                 </tr>
             }
-        </tbody>
+            </tbody>
+        }
     </table>
 </div>
 
 <div class="pie-tabla">
     @* abre la misma ficha en blanco: no hay una pantalla de alta distinta *@
-    <a class="abrir" asp-action="Ingredientes" asp-route-nuevo="true">
+    <a class="abrir" asp-action="Ingredientes" asp-route-nuevo="true" asp-route-rubro="@Model.Rubro">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
              stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Ingrediente nuevo
     </a>
@@ -121,7 +149,7 @@
     <div class="telon">
         @* el telón es un enlace: hacer clic afuera cierra, que es lo que
            espera cualquiera, y sin depender de que corra un script *@
-        <a class="tapa" asp-action="Ingredientes" aria-label="Cerrar"></a>
+        <a class="tapa" asp-action="Ingredientes" asp-route-rubro="@Model.Rubro" aria-label="Cerrar"></a>
 
         <div class="modal" role="dialog" aria-label="@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)">
             <div class="det-tope"><h2>@(f.EsNuevo ? "Ingrediente nuevo" : f.Titulo)</h2></div>
@@ -135,7 +163,7 @@
                 <p class="aviso" role="alert">@error</p>
             }
 
-            <form method="post" asp-action="GuardarIngrediente">
+            <form method="post" asp-action="GuardarIngrediente" asp-route-rubro="@Model.Rubro">
                 <input type="hidden" asp-for="Ficha!.IdIngrediente" />
 
                 <div class="renglones">
@@ -146,6 +174,26 @@
                             <input asp-for="Ficha!.Nombre" maxlength="60" autocomplete="off" />
                         </span>
                     </div>
+
+                    @* Dónde se compra, que es como se parte la lista. Lo que no se
+                       compra no lo lleva: el agua y la masa madre van aparte. *@
+                    @if (!f.Libre)
+                    {
+                        <div class="reng">
+                            <span class="et">Rubro</span>
+                            <span class="va">
+                                <span class="chips-fam">
+                                    @foreach (var (valor, nombre) in f4872.ViewModels.IngredientesVm.Rubros)
+                                    {
+                                        <label class="chip-fam">
+                                            <input type="radio" asp-for="Ficha!.Rubro" value="@valor" />
+                                            <span>@nombre</span>
+                                        </label>
+                                    }
+                                </span>
+                            </span>
+                        </div>
+                    }
 
                     <div class="reng">
                         <span class="et">Se mide en</span>
@@ -232,7 +280,7 @@
                     <button class="btn" type="submit">
                         @(f.EsNuevo ? "Crear ingrediente" : "Guardar cambios")
                     </button>
-                    <a class="btn flaco" asp-action="Ingredientes">Cancelar</a>
+                    <a class="btn flaco" asp-action="Ingredientes" asp-route-rubro="@Model.Rubro">Cancelar</a>
                 </div>
             </form>
 
@@ -251,7 +299,7 @@
                     else
                     {
                         <form method="post" asp-action="BorrarIngrediente"
-                              asp-route-id="@f.IdIngrediente">
+                              asp-route-id="@f.IdIngrediente" asp-route-rubro="@Model.Rubro">
                             <button class="enlace" type="submit"
                                     data-confirmar="¿Borrar @f.Titulo? No se puede deshacer.">
                                 Borrar ingrediente

@@ -23,51 +23,52 @@ public static class Sembrador
     ];
 
     // nombre, unidad, stock, cuánto trae la compra, cuánto sale, si no se compra
-    private static readonly (string N, Medida U, decimal Stock, decimal? Trae, decimal? Sale, bool Libre)[] LosIngredientes =
+    // y el rubro, que es dónde se compra: lo que no se compra no tiene
+    private static readonly (string N, Medida U, decimal Stock, decimal? Trae, decimal? Sale, bool Libre, Rubro? R)[] LosIngredientes =
     [
-        ("Harina 00",         Medida.Gramo,     42000, 25000, 32000, false),
-        ("Agua",              Medida.Mililitro,     0,  null,  null, true),
-        ("Masa madre",        Medida.Gramo,       400,  null,  null, true),
-        ("Sal fina",          Medida.Gramo,      2000,  1000,  1100, false),
-        ("Tapas de empanada", Medida.Unidad,      120,    60,  9000, false),
+        ("Harina 00",         Medida.Gramo,     42000, 25000, 32000, false, Rubro.Almacen),
+        ("Agua",              Medida.Mililitro,     0,  null,  null, true, null),
+        ("Masa madre",        Medida.Gramo,       400,  null,  null, true, null),
+        ("Sal fina",          Medida.Gramo,      2000,  1000,  1100, false, Rubro.Almacen),
+        ("Tapas de empanada", Medida.Unidad,      120,    60,  9000, false, Rubro.Almacen),
 
-        ("Salsa de tomate",   Medida.Gramo,     14000,  4000,  9600, false),
-        ("Muzzarella",        Medida.Gramo,      8500,  3000, 27600, false),
-        ("Albahaca",          Medida.Unidad,        0,    30,  1200, false),
-        ("Oliva",             Medida.Mililitro,  3000,  5000, 57500, false),
-        ("Ajo",               Medida.Gramo,       900,  1000,  3000, false),
-        ("Orégano",           Medida.Gramo,       600,   500,  6000, false),
-        ("Cebolla",           Medida.Gramo,     11000, 10000, 13000, false),
-        ("Tomate",            Medida.Gramo,      3000,  5000,  9000, false),
-        ("Longaniza",         Medida.Gramo,         0,  1000, 12000, false),
-        ("Morrón",            Medida.Gramo,         0,  1000,  5200, false),
-        ("Provolone",         Medida.Gramo,         0,  1000, 14000, false),
-        ("Roquefort",         Medida.Gramo,       400,  1000, 16000, false),
-        ("Parmesano",         Medida.Gramo,         0,  1000, 22000, false),
-        ("Rúcula",            Medida.Gramo,         0,  1000,  4000, false),
-        ("Jamón crudo",       Medida.Gramo,         0,  1000, 26000, false),
+        ("Salsa de tomate",   Medida.Gramo,     14000,  4000,  9600, false, Rubro.Almacen),
+        ("Muzzarella",        Medida.Gramo,      8500,  3000, 27600, false, Rubro.QuesosYFiambres),
+        ("Albahaca",          Medida.Unidad,        0,    30,  1200, false, Rubro.Vegetales),
+        ("Oliva",             Medida.Mililitro,  3000,  5000, 57500, false, Rubro.Almacen),
+        ("Ajo",               Medida.Gramo,       900,  1000,  3000, false, Rubro.Vegetales),
+        ("Orégano",           Medida.Gramo,       600,   500,  6000, false, Rubro.Almacen),
+        ("Cebolla",           Medida.Gramo,     11000, 10000, 13000, false, Rubro.Vegetales),
+        ("Tomate",            Medida.Gramo,      3000,  5000,  9000, false, Rubro.Vegetales),
+        ("Longaniza",         Medida.Gramo,         0,  1000, 12000, false, Rubro.QuesosYFiambres),
+        ("Morrón",            Medida.Gramo,         0,  1000,  5200, false, Rubro.Vegetales),
+        ("Provolone",         Medida.Gramo,         0,  1000, 14000, false, Rubro.QuesosYFiambres),
+        ("Roquefort",         Medida.Gramo,       400,  1000, 16000, false, Rubro.QuesosYFiambres),
+        ("Parmesano",         Medida.Gramo,         0,  1000, 22000, false, Rubro.QuesosYFiambres),
+        ("Rúcula",            Medida.Gramo,         0,  1000,  4000, false, Rubro.Vegetales),
+        ("Jamón crudo",       Medida.Gramo,         0,  1000, 26000, false, Rubro.QuesosYFiambres),
 
-        ("Romero",            Medida.Gramo,       150,   200,  1800, false),
-        ("Sal gruesa",        Medida.Gramo,      9000,  5000,  4000, false),
-        ("Semolín",           Medida.Gramo,      1800,  5000,  7500, false),
-        ("Tomate cherry",     Medida.Gramo,      2000,  2000,  7200, false),
-        ("Sal",               Medida.Gramo,      4000,  1000,   900, false),
-        ("Tomillo",           Medida.Gramo,       120,   200,  2100, false),
-        ("Aceitunas",         Medida.Gramo,         0,  1000,  8900, false),
+        ("Romero",            Medida.Gramo,       150,   200,  1800, false, Rubro.Vegetales),
+        ("Sal gruesa",        Medida.Gramo,      9000,  5000,  4000, false, Rubro.Almacen),
+        ("Semolín",           Medida.Gramo,      1800,  5000,  7500, false, Rubro.Almacen),
+        ("Tomate cherry",     Medida.Gramo,      2000,  2000,  7200, false, Rubro.Vegetales),
+        ("Sal",               Medida.Gramo,      4000,  1000,   900, false, Rubro.Almacen),
+        ("Tomillo",           Medida.Gramo,       120,   200,  2100, false, Rubro.Vegetales),
+        ("Aceitunas",         Medida.Gramo,         0,  1000,  8900, false, Rubro.Almacen),
 
-        ("Carne",             Medida.Gramo,      4200,  5000, 49000, false),
-        ("Huevo",             Medida.Unidad,       24,    30,  7500, false),
-        ("Comino",            Medida.Gramo,       200,   250,  4500, false),
-        ("Pimentón",          Medida.Gramo,       180,   250,  3900, false),
-        ("Ají molido",        Medida.Gramo,       150,   250,  4200, false),
-        ("Jamón",             Medida.Gramo,      1200,  2000, 17000, false),
-        ("Choclo",            Medida.Gramo,      6000,  3000,  6300, false),
-        ("Salsa blanca",      Medida.Gramo,         0,  2000,  6400, false),
-        ("Cebolla de verdeo", Medida.Unidad,        0,    12,  3600, false),
-        ("Nuez moscada",      Medida.Gramo,        40,    50,  5000, false),
-        ("Pollo",             Medida.Gramo,         0,  2000,  9800, false),
-        ("Perejil",           Medida.Unidad,        0,    12,  2400, false),
-        ("Acelga",            Medida.Unidad,        0,     6,  3000, false)
+        ("Carne",             Medida.Gramo,      4200,  5000, 49000, false, Rubro.Carnes),
+        ("Huevo",             Medida.Unidad,       24,    30,  7500, false, Rubro.Almacen),
+        ("Comino",            Medida.Gramo,       200,   250,  4500, false, Rubro.Almacen),
+        ("Pimentón",          Medida.Gramo,       180,   250,  3900, false, Rubro.Almacen),
+        ("Ají molido",        Medida.Gramo,       150,   250,  4200, false, Rubro.Almacen),
+        ("Jamón",             Medida.Gramo,      1200,  2000, 17000, false, Rubro.QuesosYFiambres),
+        ("Choclo",            Medida.Gramo,      6000,  3000,  6300, false, Rubro.Vegetales),
+        ("Salsa blanca",      Medida.Gramo,         0,  2000,  6400, false, Rubro.Almacen),
+        ("Cebolla de verdeo", Medida.Unidad,        0,    12,  3600, false, Rubro.Vegetales),
+        ("Nuez moscada",      Medida.Gramo,        40,    50,  5000, false, Rubro.Almacen),
+        ("Pollo",             Medida.Gramo,         0,  2000,  9800, false, Rubro.Carnes),
+        ("Perejil",           Medida.Unidad,        0,    12,  2400, false, Rubro.Vegetales),
+        ("Acelga",            Medida.Unidad,        0,     6,  3000, false, Rubro.Vegetales)
     ];
 
     // los dos tamaños son de verdad y van siempre; los precios, inventados
@@ -275,6 +276,7 @@ public static class Sembrador
                 ya.Stock = x.Stock;
                 ya.CantidadDeCompra = x.Trae;
                 ya.PrecioDeCompra = x.Sale;
+                ya.Rubro = x.R;
                 continue;
             }
 
@@ -285,7 +287,8 @@ public static class Sembrador
                 Stock = x.Stock,
                 CantidadDeCompra = x.Trae,
                 PrecioDeCompra = x.Sale,
-                Libre = x.Libre
+                Libre = x.Libre,
+                Rubro = x.R
             };
             contexto.Ingredientes.Add(nuevo);
             ingredientes[x.N] = nuevo;

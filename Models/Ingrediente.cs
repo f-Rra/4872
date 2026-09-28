@@ -10,6 +10,12 @@ public class Ingrediente
 
     public Medida Unidad { get; set; }
 
+    // Dónde se compra. Nulo mientras no se eligió -todos los que ya estaban
+    // cargados quedaron así al aparecer el rubro- y para siempre en lo que no
+    // se compra, que no tiene dónde.
+    [DisplayName("Rubro")]
+    public Rubro? Rubro { get; set; }
+
     [DisplayName("Stock")]
     public decimal Stock { get; set; }
 

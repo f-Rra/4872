@@ -309,6 +309,22 @@
   });
 })();
 
+// El titulo de cada rubro de la grilla de Ingredientes se pega abajo de los
+// titulos de las columnas, que tambien quedan fijos. Cuanto miden depende de la
+// letra, asi que se mide aca, y otra vez cuando termina de cargar la tipografia.
+(function () {
+  var th = document.querySelector(".grilla thead th");
+  if (!th) return;
+
+  var grilla = th.closest(".grilla");
+  function medir() {
+    grilla.style.setProperty("--alto-th", th.getBoundingClientRect().height + "px");
+  }
+
+  medir();
+  if (document.fonts) document.fonts.ready.then(medir);
+})();
+
 // El elegido de la lista, a la vista. Cada toque -en la lista, o en las
 // flechas de la posicion- vuelve a dibujar la pantalla, y la lista arrancaba
 // de arriba: lo que se tocaba abajo quedaba debajo del borde, y una empanada

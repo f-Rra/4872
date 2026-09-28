@@ -609,6 +609,19 @@
 .grilla .urge{font-weight:800}
 .sinCargar{font-size:.8rem;font-weight:600;opacity:.5;font-style:italic}
 
+/* El titulo de cada rubro, adentro de la grilla: la banda de los grupos de
+   Productos, en un renglon de la tabla. Queda fijo abajo de los titulos de las
+   columnas mientras corre la lista, y el que llega tapa al anterior. Cuanto
+   miden esos titulos lo pone panel.js, que los mide; el numero de aca es por si
+   el script no corre */
+.grilla .cab-rubro th{
+  top:var(--alto-th, 1.7rem);z-index:1;opacity:1;
+  padding:.6rem 1.1rem;font-size:.66rem;letter-spacing:.18em;
+  background:color-mix(in srgb, var(--verde) 9%, var(--papel));
+  border-bottom:1px solid rgba(30,82,69,.22);
+}
+.grilla .cab-rubro .cuantos{letter-spacing:.06em;opacity:.6;margin-left:.4rem}
+
 /* el stock se edita en el renglon, en la misma pastilla que la cantidad en la
    receta de un producto: es el mismo gesto en las dos pantallas, y en una tabla
    donde todo lo demas es de solo lectura el borde redondo es lo que avisa cual

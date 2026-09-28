@@ -23,7 +23,55 @@ public class IngredientesVm : PanelVm
     // Los que estan en alguna receta. Distinto de EnTotal: uno recien dado de
     // alta todavia no esta en ninguna, y el subtitulo no puede contarlo.
     public int EnRecetas { get; set; }
+
+    // "todo" o el nombre de un rubro, para marcar el chip encendido
+    public string Rubro { get; set; } = "todo";
+
+    // Los cuatro, en el orden en que se muestran, con el nombre que se lee.
+    public static readonly (Models.Rubro Valor, string Nombre)[] Rubros =
+    [
+        (Models.Rubro.QuesosYFiambres, "Quesos & Fiambres"),
+        (Models.Rubro.Almacen, "Almacén"),
+        (Models.Rubro.Carnes, "Carnes"),
+        (Models.Rubro.Vegetales, "Vegetales")
+    ];
+
+    public static readonly (string Clave, string Nombre)[] Chips =
+        [("todo", "Todo"), .. Rubros.Select(x => (x.Valor.ToString(), x.Nombre))];
+
+    // Los grupos de la grilla, en el orden en que se muestran. Primero los que
+    // todavía no tienen rubro, porque falta elegírselo; después los cuatro, y al
+    // final lo que no se compra, que no tiene dónde. Adentro de cada uno sigue
+    // el orden de la lista: lo que hay que comprar, arriba.
+    public IEnumerable<GrupoDeIngredientes> Grupos
+    {
+        get
+        {
+            var sinRubro = Lista.Where(x => !x.Libre && x.Rubro is null).ToList();
+            if (sinRubro.Count > 0)
+            {
+                yield return new GrupoDeIngredientes("Sin rubro", sinRubro);
+            }
+
+            foreach (var (valor, nombre) in Rubros)
+            {
+                var deEste = Lista.Where(x => !x.Libre && x.Rubro == valor).ToList();
+                if (deEste.Count > 0)
+                {
+                    yield return new GrupoDeIngredientes(nombre, deEste);
+                }
+            }
+
+            var libres = Lista.Where(x => x.Libre).ToList();
+            if (libres.Count > 0)
+            {
+                yield return new GrupoDeIngredientes("No se compran", libres);
+            }
+        }
+    }
 }
+
+public record GrupoDeIngredientes(string Titulo, IReadOnlyList<FilaIngrediente> Filas);
 
 public class FilaIngrediente
 {
@@ -42,6 +90,10 @@ public class FilaIngrediente
 
     // «en 4 productos», «en bollo de masa», «todavía en ninguna receta»
     public string Donde { get; set; } = null!;
+
+    // para saber en qué grupo va
+    public Rubro? Rubro { get; set; }
+    public bool Libre { get; set; }
 }
 
 
@@ -53,6 +105,10 @@ public class FichaIngrediente
     public int IdIngrediente { get; set; }
 
     public string Nombre { get; set; } = "";
+
+    // Dónde se compra. Nulo en uno que todavía no lo tiene elegido, y en lo
+    // que no se compra, que ni lo pide.
+    public Rubro? Rubro { get; set; }
 
     public Medida Unidad { get; set; }
 
