@@ -280,6 +280,9 @@
     font-size:.88rem;font-weight:700;line-height:1.35;
   }
   .hecho svg{width:17px;height:17px;flex:none}
+  /* abajo del aviso casi siempre viene papel, pero al cerrar la tienda viene la
+     banda de cerrada, verde como el: pegadas se leian como un solo bloque */
+  .hecho + .banda.cerrada{border-top:3px solid var(--papel)}
 
   .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 
@@ -2633,7 +2636,8 @@
       'se marca agotado, no se elimina.</li>' +
     '<li>Lo que se guarda <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">avisa</b>: ' +
       'una banda verde abajo del t\u00edtulo dice qu\u00e9 se hizo, corto. Sale una vez, tambi\u00e9n cuando el cambio ya se ve, ' +
-      'y con el pr\u00f3ximo clic se va, as\u00ed que no lleva cruz. Un error no es esto: va adentro de la ficha, ' +
+      'y con el pr\u00f3ximo clic se va, as\u00ed que no lleva cruz. Si abajo viene la banda de cerrada, que tambi\u00e9n es verde, ' +
+      'las separa un corte de papel de 3 px: pegadas se le\u00edan como un solo bloque. Un error no es esto: va adentro de la ficha, ' +
       'al lado de lo que hay que arreglar.</li>' +
     '</ul></div>';
 

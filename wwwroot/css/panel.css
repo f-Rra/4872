@@ -123,6 +123,9 @@
   font-size:.88rem;font-weight:700;line-height:1.35;
 }
 .hecho svg{width:17px;height:17px;flex:none}
+/* abajo del aviso casi siempre viene papel, pero al cerrar la tienda viene la
+   banda de cerrada, verde como el: pegadas se leian como un solo bloque */
+.hecho + .banda.cerrada{border-top:3px solid var(--papel)}
 
 .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 
