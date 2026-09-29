@@ -367,6 +367,7 @@ public class PanelController : Controller
 
         await _contexto.SaveChangesAsync();
 
+        Avisar(ficha.EsNuevo ? "Ingrediente creado." : "Cambios guardados.");
         return RedirectToAction(nameof(Ingredientes), new { rubro });
     }
 
@@ -395,6 +396,7 @@ public class PanelController : Controller
         _contexto.Ingredientes.Remove(ingrediente);
         await _contexto.SaveChangesAsync();
 
+        Avisar("Ingrediente borrado.");
         return RedirectToAction(nameof(Ingredientes), new { rubro });
     }
 
@@ -444,6 +446,7 @@ public class PanelController : Controller
         {
             ingrediente.Stock = leido;
             await _contexto.SaveChangesAsync();
+            Avisar("Stock guardado.");
         }
 
         return RedirectToAction(nameof(Ingredientes), new { rubro });
@@ -613,6 +616,7 @@ public class PanelController : Controller
             return await Volver(familia, ficha, nuevo, $"Ya hay un/a {ficha.Familia.ToString().ToLowerInvariant()} que se llama «{nombre}».");
         }
 
+        Avisar(nuevo ? "Producto creado." : "Cambios guardados.");
         return RedirectToAction(nameof(Productos), new { familia, producto = producto.IdProducto });
     }
 
@@ -673,6 +677,7 @@ public class PanelController : Controller
 
         await _contexto.SaveChangesAsync();
 
+        Avisar(fila is null ? "Ingrediente sumado." : "Cantidad guardada.");
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
@@ -690,6 +695,7 @@ public class PanelController : Controller
         {
             fila.Quitable = !fila.Quitable;
             await _contexto.SaveChangesAsync();
+            Avisar(fila.Quitable ? "Marcado modificable." : "Marcado fijo.");
         }
 
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
@@ -706,6 +712,7 @@ public class PanelController : Controller
         {
             _contexto.ProductoIngredientes.Remove(fila);
             await _contexto.SaveChangesAsync();
+            Avisar("Ingrediente quitado.");
         }
 
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
@@ -725,6 +732,7 @@ public class PanelController : Controller
         producto.Activo = !producto.Activo;
         await _contexto.SaveChangesAsync();
 
+        Avisar(producto.Activo ? "Volvió a la carta." : "Marcado agotado.");
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
@@ -759,6 +767,7 @@ public class PanelController : Controller
             }
 
             await _contexto.SaveChangesAsync();
+            Avisar("Posición guardada.");
         }
 
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
@@ -1088,6 +1097,7 @@ public class PanelController : Controller
         // no aparecería en la lista
         var filtro = tipo is null or "todo" || tipo == receta.Tipo.ToString() ? tipo : receta.Tipo.ToString();
 
+        Avisar(nueva ? "Receta creada." : "Cambios guardados.");
         return RedirectToAction(nameof(Recetas), new { tipo = filtro, receta = receta.IdReceta });
     }
 
@@ -1136,6 +1146,7 @@ public class PanelController : Controller
 
         await _contexto.SaveChangesAsync();
 
+        Avisar(fila is null ? "Ingrediente sumado." : "Cantidad guardada.");
         return RedirectToAction(nameof(Recetas), new { tipo, receta = id });
     }
 
@@ -1150,6 +1161,7 @@ public class PanelController : Controller
         {
             _contexto.RecetaIngredientes.Remove(fila);
             await _contexto.SaveChangesAsync();
+            Avisar("Ingrediente quitado.");
         }
 
         return RedirectToAction(nameof(Recetas), new { tipo, receta = id });
@@ -1183,6 +1195,7 @@ public class PanelController : Controller
         _contexto.Recetas.Remove(receta);
         await _contexto.SaveChangesAsync();
 
+        Avisar("Receta borrada.");
         return RedirectToAction(nameof(Recetas), new { tipo });
     }
 
@@ -1430,7 +1443,7 @@ public class PanelController : Controller
                 new Titular
                 {
                     Titulo = "Producción",
-                    Valor = $"{consolidado.Bollos} bollos",
+                    Valor = $"{consolidado.Bollos} {(consolidado.Bollos == 1 ? "bollo" : "bollos")}",
                     Nota = await _recetas.Amasado(consolidado.Productos)
                 },
                 new Titular
@@ -1548,6 +1561,7 @@ public class PanelController : Controller
         {
             pedido.Estado = siguiente;
             await _contexto.SaveChangesAsync();
+            Avisar("Pedido actualizado.");
         }
 
         return RedirectToAction(nameof(Pedidos), new { filtro, pedido = id });
@@ -1567,6 +1581,7 @@ public class PanelController : Controller
         {
             pedido.Estado = EstadoPedido.Cancelado;
             await _contexto.SaveChangesAsync();
+            Avisar("Pedido cancelado.");
         }
 
         return RedirectToAction(nameof(Pedidos), new { filtro, pedido = id });
@@ -1753,8 +1768,14 @@ public class PanelController : Controller
         tienda.Abierta = !tienda.Abierta;
         await _contexto.SaveChangesAsync();
 
+        Avisar(tienda.Abierta ? "Tienda abierta." : "Tienda cerrada.");
         return RedirectToAction(nameof(Index));
     }
+
+    // El aviso de que algo se hizo. Va en TempData porque entre la acción y la
+    // pantalla hay un redirect: sobrevive a ese viaje, se muestra una vez y con
+    // el próximo clic ya no está. La banda la dibuja _Hecho.
+    private void Avisar(string texto) => TempData["Hecho"] = texto;
 
     // Lo que necesita el marco, que se dibuja en todas las pantallas del panel
     private async Task<PanelVm> Marco() => new()

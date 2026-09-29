@@ -270,6 +270,17 @@
   .banda b{font-weight:800}
   .banda.cerrada{background:var(--verde);color:var(--papel);border-bottom-color:var(--verde)}
 
+  /* ---------- el aviso de que algo se guardo ----------
+     Una banda mas, debajo del titulo y en verde macizo. Sale una vez despues de
+     guardar, crear, borrar o mover, y se va con el proximo clic: por eso no
+     lleva cruz. */
+  .hecho{
+    flex:none;margin:0;display:flex;align-items:center;gap:.6rem;
+    padding:.62rem 1.1rem;background:var(--verde);color:var(--papel);
+    font-size:.88rem;font-weight:700;line-height:1.35;
+  }
+  .hecho svg{width:17px;height:17px;flex:none}
+
   .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 
   /* ---------- el tablero ----------
@@ -1041,6 +1052,7 @@
   function ico(d){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
   }
+  var TILDE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var SECCIONES = [
     {id:"inicio", n:"Inicio", i:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/>'},
     {id:"pedidos", n:"Pedidos", i:'<path d="M5.5 3h13v18l-2.2-1.6L14 21l-2-1.6L10 21l-2.3-1.6L5.5 21Z"/><path d="M9 8h6M9 12h6"/>'},
@@ -1151,8 +1163,10 @@
   var BORRADOR = {f:"pizza", n:"", p:0, ing:[]}, TIPEADO = null;
   var famRec = "todo", recElegida = "Pomodoro";
   var BORRADOR_R = {t:"salsa", n:"", rinde:6, r:{}}, TIPEADO_R = null;
-  // los avisos duran un repintado: el que sigue ya no los muestra
-  var avisoProd = null, avisoRec = null;
+  // los avisos duran un repintado: el que sigue ya no los muestra. hecho es el
+  // de que algo se guard\u00f3, la banda de abajo del t\u00edtulo, y lo borra pintar
+  // apenas lo dibuja, como TempData en la app
+  var avisoProd = null, avisoRec = null, hecho = null;
 
   function plata(n){ return "$" + n.toLocaleString("es-AR"); }
   function precio(it){
@@ -1289,7 +1303,7 @@
     var porHornada = CONF.porHornada;
     return {
       bollos:   {t:"Bollos de masa", v:bollos, n:"uno por pieza"},
-      masa:     {t:"Producci\u00f3n", v:bollos + " bollos", n:comoAmasar()},
+      masa:     {t:"Producci\u00f3n", v:bollos + (bollos === 1 ? " bollo" : " bollos"), n:comoAmasar()},
       harina:   {t:"Harina", v:bonito(harinaDelDia(), "g"), n:comoAmasar()},
       horno:    {t:"Piezas al horno", v:bollos + totEmp, n:"pizzas, focaccias y empanadas"},
       hornadas: {t:"Hornadas", v:Math.ceil(bollos/porHornada), n:"de a " + porHornada + " piezas"},
@@ -2617,6 +2631,10 @@
       'pastilla con texto, por <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">centro</b>.</li>' +
     '<li>Nada se borra si dej\u00f3 rastro: un producto o un ingrediente nombrado en un pedido viejo ' +
       'se marca agotado, no se elimina.</li>' +
+    '<li>Lo que se guarda <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">avisa</b>: ' +
+      'una banda verde abajo del t\u00edtulo dice qu\u00e9 se hizo, corto. Sale una vez, tambi\u00e9n cuando el cambio ya se ve, ' +
+      'y con el pr\u00f3ximo clic se va, as\u00ed que no lleva cruz. Un error no es esto: va adentro de la ficha, ' +
+      'al lado de lo que hay que arreglar.</li>' +
     '</ul></div>';
 
   var NOTAS = {
@@ -3022,6 +3040,14 @@
     // y la pantalla lado a lado desde ahi, y sin el iban una abajo de la otra
     document.getElementById("marco").innerHTML = '<div class="panel">' + menu() + cont + '</div>';
 
+    // el aviso de que algo se guard\u00f3 va pegado abajo de la cabecera, antes que
+    // cualquier otra banda, como lo pone _Hecho.cshtml
+    if(hecho){
+      var cab = document.querySelector("#marco .obra > .cabecera");
+      if(cab) cab.insertAdjacentHTML("afterend", '<p class="hecho" role="status">' + TILDE + hecho + '</p>');
+      hecho = null;
+    }
+
     // el elegido de la lista, a la vista, como hace panel.js en la app: al
     // repintar la lista arranca de arriba, y lo que se tocaba abajo, o una
     // empanada que se sub\u00eda un lugar, quedaba debajo del borde
@@ -3052,7 +3078,7 @@
     document.querySelectorAll("#marco [data-av]").forEach(function(b){
       b.addEventListener("click", function(){
         var p = PEDIDOS.filter(function(x){ return x.n === b.dataset.av; })[0];
-        p.estado = SIG[p.estado]; pintar();
+        p.estado = SIG[p.estado]; hecho = "Pedido actualizado."; pintar();
       });
     });
     document.querySelectorAll("#marco [data-abrir]").forEach(function(b){
@@ -3071,12 +3097,17 @@
       b.addEventListener("click", function(){ prodElegido = b.dataset.ep; TIPEADO = null; sumando = false; pintar(); });
     });
     document.querySelectorAll("#marco [data-tienda]").forEach(function(b){
-      b.addEventListener("click", function(){ tiendaAbierta = !tiendaAbierta; pintar(); });
+      b.addEventListener("click", function(){
+        tiendaAbierta = !tiendaAbierta;
+        hecho = tiendaAbierta ? "Tienda abierta." : "Tienda cerrada.";
+        pintar();
+      });
     });
     document.querySelectorAll("#marco [data-stock]").forEach(function(b){
       b.addEventListener("change", function(){
         var x = buscaIng(b.dataset.stock);
         x.stock = leerMedida(b.value, x.u);
+        hecho = "Stock guardado.";
         pintar();
       });
     });
@@ -3130,6 +3161,7 @@
         var g = b.dataset.saca;
         QUITABLE[prodElegido] = QUITABLE[prodElegido] || {};
         QUITABLE[prodElegido][g] = !QUITABLE[prodElegido][g];
+        if(prodElegido !== null) hecho = QUITABLE[prodElegido][g] ? "Marcado modificable." : "Marcado fijo.";
         pintar();
       });
     });
@@ -3148,6 +3180,7 @@
         var n = b.dataset.iborrar;
         INGR = INGR.filter(function(y){ return y.n !== n; });
         Object.keys(CANT).forEach(function(p){ delete CANT[p][n]; });
+        hecho = "Ingrediente borrado.";
         ingElegido = undefined; uniNueva = null; rubroNuevo = null; pintar();
       });
     });
@@ -3163,8 +3196,9 @@
           sincronizarIng(); avisoIng = "Falta elegir el rubro."; pintar(); avisoIng = null; restaurarIng(); return;
         }
         if(ingElegido === null){
-          if(!buscaIng(nom)) INGR.push({n:nom, u:uniNueva || "g", stock:0, trae:tra, sale:pre, r:rubroNuevo});
+          if(!buscaIng(nom)){ INGR.push({n:nom, u:uniNueva || "g", stock:0, trae:tra, sale:pre, r:rubroNuevo}); hecho = "Ingrediente creado."; }
         }else{
+          hecho = "Cambios guardados.";
           var x = buscaIng(ingElegido);
           x.sale = pre; x.trae = tra;
           if(uniNueva) x.u = uniNueva;
@@ -3220,7 +3254,7 @@
         sincronizar();
         var k = +b.dataset.qi;
         if(prodElegido === null) BORRADOR.ing.splice(k, 1);
-        else{ LLEVA[prodElegido] = (LLEVA[prodElegido] || []).slice(); LLEVA[prodElegido].splice(k, 1); }
+        else{ LLEVA[prodElegido] = (LLEVA[prodElegido] || []).slice(); LLEVA[prodElegido].splice(k, 1); hecho = "Ingrediente quitado."; }
         pintar();
       });
     });
@@ -3231,6 +3265,8 @@
       if(seccion === "recetas") recAbierta().r[nombre] = 0;
       else if(prodElegido === null) BORRADOR.ing.push(nombre);
       else LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([nombre]);
+      // en un borrador no se guarda nada todav\u00eda: se guarda al crearlo
+      if(seccion === "recetas" ? recElegida !== null : prodElegido !== null) hecho = "Ingrediente sumado.";
       pintar();
       var c = document.getElementById("ing-nuevo"); if(c) c.focus();
     }
@@ -3307,6 +3343,7 @@
         LLEVA[v.n] = BORRADOR.f === "emp" ? [] : BORRADOR.ing.slice();
         prodElegido = v.n; TIPEADO = null;
         if(famProd !== "todo" && famProd !== BORRADOR.f) famProd = BORRADOR.f;
+        hecho = "Producto creado.";
         pintar();
       });
     });
@@ -3329,13 +3366,15 @@
           LLEVA[v.n] = LLEVA[x.n] || []; delete LLEVA[x.n];
           x.n = v.n; prodElegido = v.n;
         }
-        TIPEADO = null;
+        TIPEADO = null; hecho = "Cambios guardados.";
         pintar();
       });
     });
     document.querySelectorAll("#marco [data-tog]").forEach(function(b){
       b.addEventListener("click", function(){
-        var x = buscaProd(b.dataset.tog); x.act = !x.act; TIPEADO = null; pintar();
+        var x = buscaProd(b.dataset.tog); x.act = !x.act; TIPEADO = null;
+        hecho = x.act ? "Volvi\u00f3 a la carta." : "Marcado agotado.";
+        pintar();
       });
     });
     // un lugar para arriba o para abajo, dentro de su tipo. El orden de la
@@ -3349,7 +3388,7 @@
         if(!otro) return;
         var i = PRODUCTOS.indexOf(x), j = PRODUCTOS.indexOf(otro);
         PRODUCTOS[i] = otro; PRODUCTOS[j] = x;
-        TIPEADO = null; pintar();
+        TIPEADO = null; hecho = "Posici\u00f3n guardada."; pintar();
       });
     });
     // El orden de los ingredientes: se arrastra de la manija, o con las flechas
@@ -3473,6 +3512,7 @@
       b.addEventListener("click", function(){
         sincronizar();
         delete recAbierta().r[b.dataset.rquita];
+        if(recElegida !== null) hecho = "Ingrediente quitado.";
         pintar();
       });
     });
@@ -3494,7 +3534,7 @@
           });
           recElegida = n;
         }
-        TIPEADO_R = null; sumando = false; pintar();
+        TIPEADO_R = null; sumando = false; hecho = "Cambios guardados."; pintar();
       });
     });
     document.querySelectorAll("#marco [data-rcrear]").forEach(function(b){
@@ -3507,6 +3547,7 @@
         RECETAS[n] = {t:BORRADOR_R.t, rinde:BORRADOR_R.rinde, r:BORRADOR_R.r};
         recElegida = n; TIPEADO_R = null; sumando = false;
         if(famRec !== "todo" && famRec !== BORRADOR_R.t) famRec = BORRADOR_R.t;
+        hecho = "Receta creada.";
         pintar();
       });
     });
@@ -3519,14 +3560,14 @@
       b.addEventListener("click", function(){
         delete RECETAS[b.dataset.rborrar];
         if(!listaRec().length) famRec = "todo";
-        recElegida = listaRec()[0]; TIPEADO_R = null; pintar();
+        recElegida = listaRec()[0]; TIPEADO_R = null; hecho = "Receta borrada."; pintar();
       });
     });
 
     document.querySelectorAll("#marco [data-can]").forEach(function(b){
       b.addEventListener("click", function(){
         var p = PEDIDOS.filter(function(x){ return x.n === b.dataset.can; })[0];
-        p.estado = "cancelado"; pintar();
+        p.estado = "cancelado"; hecho = "Pedido cancelado."; pintar();
       });
     });
   }

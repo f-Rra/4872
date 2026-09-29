@@ -113,6 +113,17 @@
    titular de la banda en vez de competir con el */
 .banda .aparte{margin-left:auto;font-size:.78rem;font-weight:700;opacity:.7}
 
+/* ---------- el aviso de que algo se guardo ----------
+   Una banda mas, debajo del titulo y en verde macizo. Sale una vez despues de
+   guardar, crear, borrar o mover, y se va con el proximo clic: por eso no
+   lleva cruz. */
+.hecho{
+  flex:none;margin:0;display:flex;align-items:center;gap:.6rem;
+  padding:.62rem 1.1rem;background:var(--verde);color:var(--papel);
+  font-size:.88rem;font-weight:700;line-height:1.35;
+}
+.hecho svg{width:17px;height:17px;flex:none}
+
 .ini{flex:1;overflow-y:auto;min-width:0;display:flex;flex-direction:column}
 
 /* ---------- el tablero ----------

@@ -1,0 +1,10 @@
+@* El aviso de que algo se hizo: guardar, crear, borrar, mover. Llega en TempData
+   desde la acción, así que sale una sola vez, en la pantalla a la que se volvió.
+   No tiene cruz: con el próximo clic la pantalla se dibuja de nuevo y ya no está. *@
+@if (TempData["Hecho"] is string hecho)
+{
+    <p class="hecho" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>@hecho
+    </p>
+}
