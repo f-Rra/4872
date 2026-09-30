@@ -30,10 +30,9 @@ public class Producto
     public int? IdBase { get; set; }
     public Receta? Base { get; set; }
 
-    // la salsa, que a diferencia de la masa se elige: una receta de tipo Salsa,
-    // o ninguna. Solo en pizzas y focaccias
-    public int? IdSalsa { get; set; }
-    public Receta? Salsa { get; set; }
+    // las salsas, que a diferencia de la masa se eligen: recetas de tipo Salsa,
+    // ninguna, una o varias. Solo en pizzas y focaccias
+    public ICollection<ProductoSalsa> Salsas { get; set; } = new List<ProductoSalsa>();
 
     // el relleno, solo en las empanadas: una receta de tipo Relleno que trae
     // todo lo que lleva, tapas incluidas. La empanada no lleva nada suelto

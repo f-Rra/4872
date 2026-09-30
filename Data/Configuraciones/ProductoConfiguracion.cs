@@ -39,13 +39,6 @@ public class ProductoConfiguracion : IEntityTypeConfiguration<Producto>
             .HasForeignKey(x => x.IdBase)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // lo mismo con la salsa: borrar el pomodoro no puede dejar a las
-        // pizzas que lo llevan apuntando a nada
-        producto.HasOne(x => x.Salsa)
-            .WithMany()
-            .HasForeignKey(x => x.IdSalsa)
-            .OnDelete(DeleteBehavior.Restrict);
-
         producto.HasOne(x => x.Relleno)
             .WithMany()
             .HasForeignKey(x => x.IdRelleno)

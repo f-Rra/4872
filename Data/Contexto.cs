@@ -14,6 +14,7 @@ public class Contexto : DbContext, IDataProtectionKeyContext
     public DbSet<Ingrediente> Ingredientes => Set<Ingrediente>();
     public DbSet<Receta> Recetas => Set<Receta>();
     public DbSet<ProductoIngrediente> ProductoIngredientes => Set<ProductoIngrediente>();
+    public DbSet<ProductoSalsa> ProductoSalsas => Set<ProductoSalsa>();
     public DbSet<RecetaIngrediente> RecetaIngredientes => Set<RecetaIngrediente>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<ItemPedido> ItemPedidos => Set<ItemPedido>();

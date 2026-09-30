@@ -534,7 +534,21 @@ public class PanelController : Controller
             salsa = idSalsa;
         }
 
-        producto.IdSalsa = salsa;
+        // La salsa es un renglón de las salsas del producto: la elegida entra
+        // y las demás salen. Uno nuevo todavía no tiene id, así que entra por
+        // la colección y la clave se la pone EF al guardar.
+        var puestas = nuevo
+            ? []
+            : await _contexto.ProductoSalsas.Where(x => x.IdProducto == producto.IdProducto).ToListAsync();
+
+        _contexto.ProductoSalsas.RemoveRange(puestas.Where(x => x.IdReceta != salsa));
+
+        if (salsa is int laSalsa && puestas.All(x => x.IdReceta != laSalsa))
+        {
+            // antes que los ingredientes, que arrancan en 1: la carta la nombra
+            // primera
+            producto.Salsas.Add(new ProductoSalsa { IdReceta = laSalsa, Posicion = 0 });
+        }
 
         // El relleno es de las empanadas y es todo lo que llevan, así que una
         // nueva no se crea sin él. A una que ya existe se la deja guardar sin
@@ -917,7 +931,12 @@ public class PanelController : Controller
             ? null
             : await _contexto.Productos
                 .Where(x => x.IdProducto == elegido.IdProducto)
-                .Select(x => new { x.IdBase, x.IdSalsa, x.IdRelleno })
+                .Select(x => new
+                {
+                    x.IdBase,
+                    IdSalsa = x.Salsas.OrderBy(s => s.Posicion).Select(s => (int?)s.IdReceta).FirstOrDefault(),
+                    x.IdRelleno
+                })
                 .FirstOrDefaultAsync();
 
         var laBase = usa?.IdBase is int idBase
@@ -1248,7 +1267,7 @@ public class PanelController : Controller
     private async Task<List<string>> UsanLaReceta(int id) =>
     [
         .. (await _contexto.Productos
-                .Where(x => x.IdBase == id || x.IdSalsa == id || x.IdRelleno == id)
+                .Where(x => x.IdBase == id || x.Salsas.Any(s => s.IdReceta == id) || x.IdRelleno == id)
                 .Select(x => new { x.Familia, x.Posicion, x.IdProducto, x.Nombre })
                 .ToListAsync())
             // en memoria: Familia se guarda como texto y en la base saldría

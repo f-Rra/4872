@@ -260,13 +260,13 @@ public class RecetaService
             }))
             .ToListAsync();
 
-        var deSalsa = await _contexto.Productos
-            .Where(x => ids.Contains(x.IdProducto) && x.IdSalsa != null)
-            .SelectMany(p => p.Salsa!.Ingredientes.Select(r => new
+        var deSalsa = await _contexto.ProductoSalsas
+            .Where(x => ids.Contains(x.IdProducto))
+            .SelectMany(s => s.Receta.Ingredientes.Select(r => new
             {
-                p.IdProducto,
-                Receta = p.Salsa.Nombre,
-                p.Salsa.Rinde,
+                s.IdProducto,
+                Receta = s.Receta.Nombre,
+                s.Receta.Rinde,
                 r.IdIngrediente,
                 r.Cantidad
             }))
@@ -363,13 +363,13 @@ public class RecetaService
                         r.Cantidad
                     }).ToList()
                 },
-                // la salsa y el relleno son otras recetas enteras: se cuentan
+                // las salsas y el relleno son otras recetas enteras: se cuentan
                 // igual que la base
-                Salsa = p.Salsa == null ? null : new
+                Salsas = p.Salsas.OrderBy(s => s.Posicion).ThenBy(s => s.IdReceta).Select(s => new
                 {
-                    p.Salsa.Nombre,
-                    p.Salsa.Rinde,
-                    Receta = p.Salsa.Ingredientes.Select(r => new
+                    s.Receta.Nombre,
+                    s.Receta.Rinde,
+                    Receta = s.Receta.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
                         r.Ingrediente.Unidad,
@@ -378,7 +378,7 @@ public class RecetaService
                         r.Ingrediente.PrecioDeCompra,
                         r.Cantidad
                     }).ToList()
-                },
+                }).ToList(),
                 Relleno = p.Relleno == null ? null : new
                 {
                     p.Relleno.Nombre,
@@ -424,9 +424,9 @@ public class RecetaService
             var sinPrecio = 0;
             var costo = 0m;
 
-            // Primero las recetas que usa -la base y la salsa, o el relleno-,
+            // Primero las recetas que usa -la base y las salsas, o el relleno-,
             // cada una con lo suyo colgando abajo. Después lo que lleva arriba.
-            foreach (var receta in new[] { p.Base, p.Salsa, p.Relleno })
+            foreach (var receta in new[] { p.Base }.Concat(p.Salsas).Append(p.Relleno))
             {
                 if (receta is null)
                 {
