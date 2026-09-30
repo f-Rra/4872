@@ -1,11 +1,15 @@
 namespace f4872.ViewModels;
 
-// un ingrediente del renglón. El quitable sale del par producto-ingrediente:
-// es del par y no del ingrediente, porque la misma cebolla es quitable en una
-// fugazzeta y no lo es en otra receta
+// un ingrediente del renglón, o una salsa, que se nombra y se saca igual. El
+// quitable sale del par producto-ingrediente: es del par y no del ingrediente,
+// porque la misma cebolla es quitable en una fugazzeta y no lo es en otra
+// receta. Con la salsa, igual: sale del par producto-salsa
 public class IngredienteCarta
 {
-    public int IdIngrediente { get; set; }
+    // Lo que viaja en la clave del pedido cuando se saca: el número del
+    // ingrediente, o «s» y el de la receta si es una salsa. Las dos cosas
+    // tienen números que pueden repetirse, y así no se confunden.
+    public string Clave { get; set; } = null!;
     public string Nombre { get; set; } = null!;
     public bool Quitable { get; set; }
 }

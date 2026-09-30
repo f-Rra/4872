@@ -28,8 +28,9 @@ public class PedidoService
     }
 
     // un renglón del pedido ya leído: qué producto, cuántos, de qué pack si es
-    // empanada, y qué ingredientes se le sacaron
-    private sealed record Renglon(int IdProducto, int Cantidad, int? Unidades, IReadOnlyList<int> Sin);
+    // empanada, y qué se le sacó. Lo sacado va por su marca, como viaja: el
+    // número del ingrediente, o «s» y el de la receta si es una salsa
+    private sealed record Renglon(int IdProducto, int Cantidad, int? Unidades, IReadOnlyList<string> Sin);
 
     // lo único que hace falta saber de un producto para cobrarlo
     private sealed record Carta(int IdProducto, string Nombre, decimal? Precio, bool Activo, Familia Familia, int Posicion);
@@ -96,7 +97,18 @@ public class PedidoService
         var quitables = await _contexto.ProductoIngredientes
             .Where(x => ids.Contains(x.IdProducto) && x.Quitable)
             .Select(x => new { x.IdProducto, x.IdIngrediente, x.Ingrediente.Nombre })
-            .ToDictionaryAsync(x => (x.IdProducto, x.IdIngrediente), x => x.Nombre);
+            .ToDictionaryAsync(x => (x.IdProducto, x.IdIngrediente.ToString()), x => x.Nombre);
+
+        // Las salsas modificables, por su marca: el permiso también es del par
+        // producto-salsa. Van en el mismo diccionario, que es el que decide
+        // qué se puede sacar.
+        foreach (var s in await _contexto.ProductoSalsas
+                     .Where(x => ids.Contains(x.IdProducto) && x.Quitable)
+                     .Select(x => new { x.IdProducto, x.IdReceta, x.Receta.Nombre })
+                     .ToListAsync())
+        {
+            quitables[(s.IdProducto, "s" + s.IdReceta)] = s.Nombre;
+        }
 
         var pedido = new Pedido
         {
@@ -154,6 +166,8 @@ public class PedidoService
     // Las claves las escribe tienda.js y son tres formas:
     //   p12       una pizza o una focaccia
     //   p12|3,7   la misma, sin los ingredientes 3 y 7
+    //   p12|3,s7  o sin el ingrediente 3 y la salsa 7: la «s» las distingue,
+    //             porque el número de una receta puede ser el de un ingrediente
     //   e5x12     un pack de 12 empanadas del gusto 5
     // Una clave que no sea ninguna de las tres no es un pedido viejo: el
     // navegador poda los viejos antes de mandar. Es alguien escribiendo a mano.
@@ -183,21 +197,26 @@ public class PedidoService
             throw new InvalidOperationException("El pedido trae un renglón que no se entiende.");
         }
 
-        var sin = new List<int>();
+        var sin = new List<string>();
         if (trozos.Length == 2 && trozos[1].Length > 0)
         {
             foreach (var texto in trozos[1].Split(','))
             {
-                if (!int.TryParse(texto, out var idIngrediente) || idIngrediente < 1)
+                // un número, o una «s» y un número: nada más. Parsearlo y
+                // volver a escribirlo lo deja canónico, y «07» o «+7» no pasan
+                // por otro ingrediente
+                var numero = texto.StartsWith('s') ? texto[1..] : texto;
+
+                if (!int.TryParse(numero, out var id) || id < 1 || numero != id.ToString())
                 {
                     throw new InvalidOperationException("El pedido trae un ingrediente que no se entiende.");
                 }
 
                 // repetido es lo mismo que una vez: sacar dos veces la albahaca
                 // no es sacarla más, y la tabla tiene el par como clave
-                if (!sin.Contains(idIngrediente))
+                if (!sin.Contains(texto))
                 {
-                    sin.Add(idIngrediente);
+                    sin.Add(texto);
                 }
             }
         }
@@ -209,7 +228,7 @@ public class PedidoService
         Renglon renglon,
         IReadOnlyDictionary<int, Carta> productos,
         IReadOnlyDictionary<int, decimal> packs,
-        IReadOnlyDictionary<(int, int), string> quitables)
+        IReadOnlyDictionary<(int, string), string> quitables)
     {
         if (!productos.TryGetValue(renglon.IdProducto, out var producto))
         {
@@ -259,19 +278,25 @@ public class PedidoService
             PrecioUnitario = precio
         };
 
-        foreach (var idIngrediente in renglon.Sin)
+        foreach (var marca in renglon.Sin)
         {
             // Si dejó de ser quitable no se guarda el «sin» y listo: el cliente
             // pidió algo sin un ingrediente que hoy no se puede sacar. Cortar
             // acá es lo seguro, porque lo otro es mandarle a la cocina una pizza
             // con algo que la persona dijo que no.
-            if (!quitables.TryGetValue((producto.IdProducto, idIngrediente), out var nombre))
+            if (!quitables.TryGetValue((producto.IdProducto, marca), out var nombre))
             {
                 throw new InvalidOperationException(
                     $"Cambió la receta de {producto.Nombre} mientras armabas el pedido. Volvé a la carta y fijate.");
             }
 
-            item.Quitados.Add(new ItemQuitado { Ingrediente = nombre });
+            // Lo sacado se guarda por el nombre, así que un ingrediente y una
+            // salsa que se llamen igual son un solo «sin»: la tabla tiene el
+            // par item-nombre como clave, y sacar los dos es sacar eso.
+            if (item.Quitados.All(x => x.Ingrediente != nombre))
+            {
+                item.Quitados.Add(new ItemQuitado { Ingrediente = nombre });
+            }
         }
 
         return item;

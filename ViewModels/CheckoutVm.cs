@@ -19,8 +19,10 @@ public class CheckoutVm
     // cuánto sale cada tamaño de pack, por unidades
     public IReadOnlyDictionary<int, decimal> Packs { get; set; } = new Dictionary<int, decimal>();
 
-    // solo los quitables: son los únicos que pueden aparecer en un «sin»
-    public IReadOnlyDictionary<int, string> Ingredientes { get; set; } = new Dictionary<int, string>();
+    // Solo los quitables: son los únicos que pueden aparecer en un «sin». Por la
+    // clave que viaja en el pedido: el número del ingrediente, o «s» y el de la
+    // receta si es una salsa.
+    public IReadOnlyDictionary<string, string> Ingredientes { get; set; } = new Dictionary<string, string>();
 }
 
 public class ProductoDelPedido

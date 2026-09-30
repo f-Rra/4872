@@ -52,12 +52,25 @@
   // La combinacion es parte de lo pedido: dos margaritas con todo y una sin
   // albahaca son dos cosas distintas, con su propio contador. Por eso la clave
   // del renglon lleva pegados los ingredientes sacados.
+  //
+  // Una salsa se saca igual, y lleva una «s» delante: «p12|3,s7». Su numero es
+  // el de una receta y puede repetirse con el de un ingrediente.
+  //
+  // Siempre en el mismo orden -los ingredientes por numero y despues las
+  // salsas-: la misma combinacion tiene que dar la misma clave, o el contador
+  // de una se perderia al tachar en otro orden.
+  function ordenSin(a, b) {
+    var sa = a.charAt(0) === "s", sb = b.charAt(0) === "s";
+    if (sa !== sb) return sa ? 1 : -1;
+    return Number(sa ? a.slice(1) : a) - Number(sb ? b.slice(1) : b);
+  }
+
   function claveRenglon(li) {
     var sin = [];
     li.querySelectorAll(".ing[aria-pressed='false']").forEach(function (b) {
-      sin.push(Number(b.dataset.ing));
+      sin.push(b.dataset.ing);
     });
-    sin.sort(function (a, b) { return a - b; });
+    sin.sort(ordenSin);
     return li.dataset.base + (sin.length ? "|" + sin.join(",") : "");
   }
 

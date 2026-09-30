@@ -290,19 +290,37 @@ public class RecetaService
             }))
             .ToListAsync();
 
+        // Cuántas piezas de cada producto llevan de verdad cada salsa: la pizza
+        // que se pidió sin pesto no se come el pesto, y contársela es hacer
+        // una receta de más. El quitado guarda el nombre, y por ahí se cruza.
+        var conSalsa = deSalsa
+            .Select(x => (x.IdProducto, x.Receta))
+            .Distinct()
+            .ToDictionary(
+                x => x,
+                x => items.Where(i => i.IdProducto == x.IdProducto && !i.Sacados.Contains(x.Receta))
+                    .Sum(i => i.Piezas));
+
         // Agrupado por receta y no por producto: el bollo es uno solo y se amasa
         // para todas las piezas que lo llevan juntas, la salsa se hace en la
         // olla para todas las pizzas que la llevan, y el relleno para todas las
-        // empanadas de su gusto. Tampoco se descuentan: una pizza sin albahaca
-        // se hace con el bollo y la salsa enteros igual.
+        // empanadas de su gusto. Sacarle un ingrediente a una pizza no descuenta
+        // nada de esto: una pizza sin albahaca se hace con el bollo entero igual.
         //
-        // Lo que sí pesa es cuánta salsa lleva cada pizza: a media porción, la
-        // pizza cuenta por media.
-        partes.AddRange(deBase.Concat(deSalsa).Concat(deRelleno)
+        // Lo que sí pesa de una salsa es si la lleva y cuánta: sin ella no cuenta,
+        // y a media porción cuenta por media.
+        partes.AddRange(
+            deBase.Select(x => (x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad, Cuantas: (decimal)piezas[x.IdProducto]))
+            .Concat(deSalsa.Select(x => (x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad,
+                Cuantas: conSalsa[(x.IdProducto, x.Receta)] * x.Porciones)))
+            .Concat(deRelleno.Select(x => (x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad, Cuantas: (decimal)piezas[x.IdProducto])))
             .GroupBy(x => new { x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad })
+            .Select(g => (g.Key, Cuantas: g.Sum(x => x.Cuantas)))
+            // una salsa que se sacó de todos los pedidos no se hace
+            .Where(x => x.Cuantas > 0)
             .Select(g =>
             {
-                var cuantas = g.Sum(x => piezas[x.IdProducto] * x.Porciones);
+                var cuantas = g.Cuantas;
                 var veces = Veces(cuantas, g.Key.Rinde);
 
                 return new ParteDeReceta

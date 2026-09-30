@@ -52,13 +52,13 @@ public class TiendaController : Controller
             .Select(x => new
             {
                 x.Familia,
-                Salsas = x.Salsas.Select(s => new { s.Posicion, s.IdReceta, s.Receta.Nombre }).ToList(),
+                Salsas = x.Salsas.Select(s => new { s.Posicion, s.IdReceta, s.Receta.Nombre, s.Quitable }).ToList(),
                 Ingredientes = x.Receta.Select(r => new
                 {
                     r.Posicion,
                     Item = new IngredienteCarta
                     {
-                        IdIngrediente = r.IdIngrediente,
+                        Clave = r.IdIngrediente.ToString(),
                         Nombre = r.Ingrediente.Nombre,
                         Quitable = r.Quitable
                     }
@@ -78,15 +78,14 @@ public class TiendaController : Controller
         // y no en la consulta porque no son renglones de la receta del producto.
         // Al empatar, la salsa primero.
         //
-        // Por ahora van fijas: sacar una salsa pide que el pedido la entienda,
-        // y eso es lo que sigue.
+        // Se sacan igual que un ingrediente, si él la marcó modificable.
         foreach (var x in renglones)
         {
             x.Renglon.Ingredientes =
             [
                 .. x.Salsas.Select(s => (s.Posicion, Salsa: 0, Id: s.IdReceta,
-                        Item: new IngredienteCarta { Nombre = s.Nombre, Quitable = false }))
-                    .Concat(x.Ingredientes.Select(i => (i.Posicion, Salsa: 1, Id: i.Item.IdIngrediente, i.Item)))
+                        Item: new IngredienteCarta { Clave = "s" + s.IdReceta, Nombre = s.Nombre, Quitable = s.Quitable }))
+                    .Concat(x.Ingredientes.Select(i => (i.Posicion, Salsa: 1, Id: int.Parse(i.Item.Clave), i.Item)))
                     .OrderBy(i => i.Posicion)
                     .ThenBy(i => i.Salsa)
                     .ThenBy(i => i.Id)
@@ -161,7 +160,18 @@ public class TiendaController : Controller
             .Where(x => x.Quitable)
             .Select(x => new { x.IdIngrediente, x.Ingrediente.Nombre })
             .Distinct()
-            .ToDictionaryAsync(x => x.IdIngrediente, x => x.Nombre);
+            .ToDictionaryAsync(x => x.IdIngrediente.ToString(), x => x.Nombre);
+
+        // las salsas que se pueden sacar, con la marca de su clave: el mismo
+        // diccionario traduce las dos cosas
+        foreach (var s in await _contexto.ProductoSalsas
+                     .Where(x => x.Quitable)
+                     .Select(x => new { x.IdReceta, x.Receta.Nombre })
+                     .Distinct()
+                     .ToListAsync())
+        {
+            ingredientes["s" + s.IdReceta] = s.Nombre;
+        }
 
         return View(new CheckoutVm
         {
