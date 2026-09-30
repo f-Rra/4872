@@ -534,7 +534,23 @@
 /* ---------- las recetas ----------
    La base, la salsa y el relleno se leen como una receta aparte y no como
    ingredientes sueltos: el nombre arriba y lo que lleva abajo, abierto */
-.de-receta{display:block;font-size:.95rem;font-weight:700}
+/* el nombre de cada receta de lectura -la base y cada salsa-: versalitas sobre
+   la franja de los titulos de las listas, como Pizzas · 8. Es lo que separa una
+   receta de la que sigue: con el nombre como un renglon mas, dos salsas
+   seguidas se leian como una sola */
+.bloque-receta + .bloque-receta{margin-top:1rem}
+.cab-receta{
+  margin:0;padding:.55rem .6rem;
+  font-size:.66rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  background:color-mix(in srgb, var(--verde) 9%, var(--papel));
+  border-bottom:1px solid rgba(30,82,69,.22);
+}
+.cab-receta .porc{font-weight:600;letter-spacing:.06em;opacity:.6}
+/* la marca de una salsa en la lista de ingredientes, y en el buscador */
+.marca-salsa{
+  margin-left:.45rem;font-size:.6rem;font-weight:800;letter-spacing:.09em;
+  text-transform:uppercase;opacity:.55;
+}
 .receta-reng .va > .lectura{margin-top:.35rem}
 /* lo que le toca a una pieza, en la ficha de la receta: es derivado, asi que
    va sin pastilla, como la base en la ficha del producto */

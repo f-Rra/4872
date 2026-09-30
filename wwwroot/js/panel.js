@@ -25,7 +25,10 @@
   if (!caja || !buscar || !abren.length) return;
 
   var nada = caja.querySelector(".nada");
-  var opciones = [].slice.call(caja.querySelectorAll("[data-elegir]"));
+  // las salsas van en la misma lista, con data-salsa: se filtran igual, pero
+  // elegir una no pide cantidad. Manda el formulario con su propio boton, que
+  // lleva el nombre y la accion de sumar una salsa
+  var opciones = [].slice.call(caja.querySelectorAll("[data-elegir], [data-salsa]"));
   var cuanto = null;
 
   function mostrar(abierto) {
@@ -47,7 +50,7 @@
     var quedan = 0;
 
     opciones.forEach(function (b) {
-      var entra = pelado(b.dataset.elegir).indexOf(texto) >= 0;
+      var entra = pelado(b.dataset.elegir || b.dataset.salsa).indexOf(texto) >= 0;
       b.parentElement.hidden = !entra;
       if (entra) quedan++;
     });
@@ -214,9 +217,9 @@
   chips.forEach(function (c) { c.addEventListener("change", acomodar); });
 })();
 
-// Lo que lleva la salsa o el relleno elegido, abierto. Vienen dibujados todos
-// y escondidos menos el guardado, asi que al tocar otro chip se abre el suyo sin
-// esperar a guardar. «Sin salsa» no abre nada.
+// Lo que lleva el relleno elegido, abierto. Vienen dibujados todos y
+// escondidos menos el guardado, asi que al tocar otro chip se abre el suyo sin
+// esperar a guardar.
 (function () {
   document.querySelectorAll("[data-elige]").forEach(function (bloque) {
     var listas = [].slice.call(bloque.querySelectorAll("[data-lectura]"));

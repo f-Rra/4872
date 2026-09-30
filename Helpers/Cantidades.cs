@@ -62,6 +62,15 @@ public static class Cantidades
         return enGrande ? valor * 1000 : valor;
     }
 
+    // «½ porción», «1 porción», «2 porciones». La mitad va con su fracción y no
+    // con «0,5»: se lee de un vistazo, y es la que más se usa. Singular hasta
+    // uno, porque media porción y una porción son una porción.
+    public static string Porciones(decimal porciones)
+    {
+        var numero = porciones == 0.5m ? "½" : Redondo(porciones, 2);
+        return numero + (porciones <= 1 ? " porción" : " porciones");
+    }
+
     public static string Abreviatura(Medida unidad) => unidad switch
     {
         Medida.Gramo => "g",

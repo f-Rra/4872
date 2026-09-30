@@ -110,8 +110,11 @@ public class RecetaService
     // Cuántas veces hay que hacer una receta para esas piezas. Se redondea para
     // arriba porque media receta no se hace, y es la misma cuenta que usa la
     // lista de compras: si se hace tres veces, se gasta harina para tres.
-    private static int Veces(int piezas, int rinde) =>
-        rinde > 0 ? (int)Math.Ceiling(piezas / (double)rinde) : 0;
+    //
+    // Las piezas son decimales porque una pizza puede llevar media porción de
+    // una salsa: siete pizzas a media porción son tres y media.
+    private static int Veces(decimal piezas, int rinde) =>
+        rinde > 0 ? (int)Math.Ceiling(piezas / rinde) : 0;
 
     // Cuántas recetas de masa hay que hacer. La base se carga entera, con su
     // rinde -1 kg de harina da 6 bollos-, así que el número que sirve en la
@@ -255,6 +258,7 @@ public class RecetaService
                 p.IdProducto,
                 Receta = p.Base.Nombre,
                 p.Base.Rinde,
+                Porciones = 1m,
                 r.IdIngrediente,
                 r.Cantidad
             }))
@@ -267,6 +271,7 @@ public class RecetaService
                 s.IdProducto,
                 Receta = s.Receta.Nombre,
                 s.Receta.Rinde,
+                s.Porciones,
                 r.IdIngrediente,
                 r.Cantidad
             }))
@@ -279,6 +284,7 @@ public class RecetaService
                 p.IdProducto,
                 Receta = p.Relleno.Nombre,
                 p.Relleno.Rinde,
+                Porciones = 1m,
                 r.IdIngrediente,
                 r.Cantidad
             }))
@@ -289,11 +295,14 @@ public class RecetaService
         // olla para todas las pizzas que la llevan, y el relleno para todas las
         // empanadas de su gusto. Tampoco se descuentan: una pizza sin albahaca
         // se hace con el bollo y la salsa enteros igual.
+        //
+        // Lo que sí pesa es cuánta salsa lleva cada pizza: a media porción, la
+        // pizza cuenta por media.
         partes.AddRange(deBase.Concat(deSalsa).Concat(deRelleno)
             .GroupBy(x => new { x.Receta, x.Rinde, x.IdIngrediente, x.Cantidad })
             .Select(g =>
             {
-                var cuantas = g.Sum(x => piezas[x.IdProducto]);
+                var cuantas = g.Sum(x => piezas[x.IdProducto] * x.Porciones);
                 var veces = Veces(cuantas, g.Key.Rinde);
 
                 return new ParteDeReceta
@@ -353,6 +362,7 @@ public class RecetaService
                 {
                     p.Base.Nombre,
                     p.Base.Rinde,
+                    Porciones = 1m,
                     Receta = p.Base.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
@@ -369,6 +379,7 @@ public class RecetaService
                 {
                     s.Receta.Nombre,
                     s.Receta.Rinde,
+                    s.Porciones,
                     Receta = s.Receta.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
@@ -383,6 +394,7 @@ public class RecetaService
                 {
                     p.Relleno.Nombre,
                     p.Relleno.Rinde,
+                    Porciones = 1m,
                     Receta = p.Relleno.Ingredientes.Select(r => new
                     {
                         r.Ingrediente.Nombre,
@@ -439,8 +451,9 @@ public class RecetaService
                 foreach (var r in receta.Receta)
                 {
                     // la receta es entera: lo que entra en una pizza es esa
-                    // cantidad dividida por el rinde
-                    var cuanto = receta.Rinde > 0 ? r.Cantidad / receta.Rinde : 0m;
+                    // cantidad dividida por el rinde, y por las porciones que
+                    // lleva esa pizza de la receta
+                    var cuanto = receta.Rinde > 0 ? r.Cantidad * receta.Porciones / receta.Rinde : 0m;
                     var sale = Cuanto(cuanto, r.Libre, r.CantidadDeCompra, r.PrecioDeCompra);
 
                     if (sale is null)

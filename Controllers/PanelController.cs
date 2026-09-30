@@ -519,35 +519,13 @@ public class PanelController : Controller
                 .MaxAsync(x => (int?)x.Posicion) ?? 0) + 1;
         }
 
-        // La salsa se elige, y es de las pizzas y las focaccias: una empanada
-        // lleva relleno. Que exista y que sea una salsa se mira acá: la clave
-        // foránea solo sabe que es una receta, y un relleno también lo es.
-        int? salsa = null;
-
-        if (ficha.Familia != Familia.Empanada && ficha.IdSalsa is int idSalsa)
+        // Las salsas se cargan en la lista, como los ingredientes, y no
+        // viajan en el alta. Una empanada lleva relleno y no salsa: si era una
+        // pizza con salsas y se muda, se van con la familia.
+        if (ficha.Familia == Familia.Empanada && !nuevo)
         {
-            if (!await _contexto.Recetas.AnyAsync(x => x.IdReceta == idSalsa && x.Tipo == TipoReceta.Salsa))
-            {
-                return await Volver(familia, ficha, nuevo, "Esa salsa ya no está en Recetas: elegí otra.");
-            }
-
-            salsa = idSalsa;
-        }
-
-        // La salsa es un renglón de las salsas del producto: la elegida entra
-        // y las demás salen. Uno nuevo todavía no tiene id, así que entra por
-        // la colección y la clave se la pone EF al guardar.
-        var puestas = nuevo
-            ? []
-            : await _contexto.ProductoSalsas.Where(x => x.IdProducto == producto.IdProducto).ToListAsync();
-
-        _contexto.ProductoSalsas.RemoveRange(puestas.Where(x => x.IdReceta != salsa));
-
-        if (salsa is int laSalsa && puestas.All(x => x.IdReceta != laSalsa))
-        {
-            // antes que los ingredientes, que arrancan en 1: la carta la nombra
-            // primera
-            producto.Salsas.Add(new ProductoSalsa { IdReceta = laSalsa, Posicion = 0 });
+            _contexto.ProductoSalsas.RemoveRange(
+                await _contexto.ProductoSalsas.Where(x => x.IdProducto == producto.IdProducto).ToListAsync());
         }
 
         // El relleno es de las empanadas y es todo lo que llevan, así que una
@@ -594,8 +572,25 @@ public class PanelController : Controller
 
             if (renglon.Cantidad <= 0)
             {
-                return await Volver(familia, ficha, nuevo,
-                    $"La cantidad de {renglon.Nombre.ToLowerInvariant()} tiene que ser mayor que cero.");
+                return await Volver(familia, ficha, nuevo, renglon.EsSalsa
+                    ? $"Las porciones de {renglon.Nombre.ToLowerInvariant()} tienen que ser mayor que cero."
+                    : $"La cantidad de {renglon.Nombre.ToLowerInvariant()} tiene que ser mayor que cero.");
+            }
+
+            // una salsa es un renglón más de la lista: lleva su lugar, y en
+            // lugar de gramos, sus porciones
+            if (renglon.IdSalsa is int idSalsa)
+            {
+                var salsa = await _contexto.ProductoSalsas
+                    .FirstOrDefaultAsync(x => x.IdProducto == ficha.IdProducto && x.IdReceta == idSalsa);
+
+                if (salsa is not null)
+                {
+                    salsa.Porciones = renglon.Cantidad;
+                    salsa.Posicion = i + 1;
+                }
+
+                continue;
             }
 
             var fila = await _contexto.ProductoIngredientes
@@ -650,9 +645,16 @@ public class PanelController : Controller
 
         if (ingrediente is null)
         {
+            // escribir el nombre de una salsa y dar Enter también la suma
+            if (await BuscarSalsa(buscado) is Receta laSalsa)
+            {
+                return await SumarLaSalsa(id, laSalsa, familia);
+            }
+
             return await Volver(familia, id, buscado.Length == 0
                 ? "Escribí el nombre del ingrediente."
-                : $"No hay ningún ingrediente que se llame «{buscado}». Se dan de alta en Ingredientes.");
+                : $"No hay ningún ingrediente ni salsa que se llame «{buscado}». " +
+                  "Los ingredientes se dan de alta en Ingredientes y las salsas, en Recetas.");
         }
 
         // Sin cantidad no es un error: es el paso del medio. El renglon de
@@ -732,6 +734,106 @@ public class PanelController : Controller
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
+    // Sumar una salsa a la pizza. Entra en un solo paso y no en dos como un
+    // ingrediente: no hay cantidad que esperar, porque arranca en una porción
+    // -lo que rinde la receta, repartido- y se cambia después en la lista.
+    // Entra fija y última, como un ingrediente: meterla en el medio correría a
+    // los que ya estaban ordenados.
+    [HttpPost("productos/salsa/sumar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SumarSalsa(int id, string? salsa, string? familia = null)
+    {
+        var receta = await BuscarSalsa((salsa ?? "").Trim());
+
+        if (receta is null)
+        {
+            return await Volver(familia, id, "Esa salsa ya no está en Recetas: elegí otra.");
+        }
+
+        return await SumarLaSalsa(id, receta, familia);
+    }
+
+    // Solo una receta de tipo Salsa: la clave foránea sabe que es una receta, y
+    // un relleno también lo es
+    private async Task<Receta?> BuscarSalsa(string nombre) =>
+        nombre.Length == 0
+            ? null
+            : await _contexto.Recetas
+                .FirstOrDefaultAsync(x => x.Tipo == TipoReceta.Salsa && x.Nombre.ToLower() == nombre.ToLower());
+
+    private async Task<IActionResult> SumarLaSalsa(int id, Receta receta, string? familia)
+    {
+        var producto = await _contexto.Productos.FindAsync(id)
+            ?? throw new InvalidOperationException($"No existe el producto {id}.");
+
+        if (producto.Familia == Familia.Empanada)
+        {
+            return await Volver(familia, id, "Una empanada no lleva salsa: lleva relleno.");
+        }
+
+        if (await _contexto.ProductoSalsas.AnyAsync(x => x.IdProducto == id && x.IdReceta == receta.IdReceta))
+        {
+            return await Volver(familia, id, $"«{receta.Nombre}» ya está en la receta.");
+        }
+
+        // el lugar es uno solo para los ingredientes y las salsas: la carta los
+        // nombra en un mismo renglón
+        var ultimoIngrediente = await _contexto.ProductoIngredientes
+            .Where(x => x.IdProducto == id)
+            .MaxAsync(x => (int?)x.Posicion) ?? 0;
+        var ultimaSalsa = await _contexto.ProductoSalsas
+            .Where(x => x.IdProducto == id)
+            .MaxAsync(x => (int?)x.Posicion) ?? 0;
+
+        _contexto.ProductoSalsas.Add(new ProductoSalsa
+        {
+            IdProducto = id,
+            IdReceta = receta.IdReceta,
+            Posicion = Math.Max(ultimoIngrediente, ultimaSalsa) + 1
+        });
+
+        await _contexto.SaveChangesAsync();
+
+        Avisar("Salsa sumada.");
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    // Si el cliente puede pedir la pizza sin esta salsa. Es del par, como el de
+    // un ingrediente: el pesto se saca de una pizza y de otra no.
+    [HttpPost("productos/salsa/modificable")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ModificableSalsa(int id, int idReceta, string? familia = null)
+    {
+        var fila = await _contexto.ProductoSalsas
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdReceta == idReceta);
+
+        if (fila is not null)
+        {
+            fila.Quitable = !fila.Quitable;
+            await _contexto.SaveChangesAsync();
+            Avisar(fila.Quitable ? "Marcada modificable." : "Marcada fija.");
+        }
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    [HttpPost("productos/salsa/quitar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> QuitarSalsa(int id, int idReceta, string? familia = null)
+    {
+        var fila = await _contexto.ProductoSalsas
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdReceta == idReceta);
+
+        if (fila is not null)
+        {
+            _contexto.ProductoSalsas.Remove(fila);
+            await _contexto.SaveChangesAsync();
+            Avisar("Salsa quitada.");
+        }
+
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
     // Marcar agotado o devolverlo a la carta.
     //
     // No hay boton de borrar: un producto puede estar nombrado en pedidos
@@ -804,7 +906,24 @@ public class PanelController : Controller
         ficha.Packs = vm.Ficha.Packs;
         ficha.Base = vm.Ficha.Base;
         ficha.Salsas = vm.Ficha.Salsas;
+        ficha.SalsasQueFaltan = vm.Ficha.SalsasQueFaltan;
+        ficha.Disponibles = vm.Ficha.Disponibles;
         ficha.Rellenos = vm.Ficha.Rellenos;
+
+        // De la receta viaja lo que se escribe -cuánto y en qué orden-, pero no
+        // la unidad ni si se puede sacar: sin esto, después de un error los
+        // renglones vuelven sin unidad y todos como Fijo.
+        foreach (var renglon in ficha.Receta)
+        {
+            var guardado = vm.Ficha.Receta.FirstOrDefault(x =>
+                x.IdSalsa == renglon.IdSalsa && x.IdIngrediente == renglon.IdIngrediente);
+
+            if (guardado is not null)
+            {
+                renglon.Unidad = guardado.Unidad;
+                renglon.Modificable = guardado.Modificable;
+            }
+        }
         vm.Ficha = ficha;
         vm.EsNuevo = nuevo;
         vm.Error = error;
@@ -826,7 +945,12 @@ public class PanelController : Controller
     // La receta esta cargada entera y aca se divide por el rinde, que es lo que
     // la pone en la misma unidad que el resto de la ficha: todo lo demas de esa
     // pantalla es por pieza.
-    private async Task<List<RecetaPorPieza>> PorPieza(IQueryable<Receta> recetas)
+    //
+    // Las porciones, que es lo que lleva la pieza de esa receta, multiplican: la
+    // salsa que rinde seis pizzas, a media porción, da un doceavo. Sin ellas es
+    // una, como la base y el relleno.
+    private async Task<List<RecetaPorPieza>> PorPieza(
+        IQueryable<Receta> recetas, IReadOnlyDictionary<int, decimal>? porciones = null)
     {
         var lista = await recetas
             .Where(x => x.Rinde > 0)
@@ -845,18 +969,24 @@ public class PanelController : Controller
 
         return
         [
-            .. lista.Select(x => new RecetaPorPieza
+            .. lista.Select(x =>
             {
-                IdReceta = x.IdReceta,
-                Nombre = x.Nombre,
-                Renglones =
-                [
-                    .. x.Renglones.Select(r => new RenglonPorPieza
-                    {
-                        Nombre = r.Nombre,
-                        Cuanto = Cantidades.Bonito(r.Cantidad / x.Rinde, r.Unidad)
-                    })
-                ]
+                var lleva = porciones?.GetValueOrDefault(x.IdReceta, 1m) ?? 1m;
+
+                return new RecetaPorPieza
+                {
+                    IdReceta = x.IdReceta,
+                    Nombre = x.Nombre,
+                    Porciones = lleva,
+                    Renglones =
+                    [
+                        .. x.Renglones.Select(r => new RenglonPorPieza
+                        {
+                            Nombre = r.Nombre,
+                            Cuanto = Cantidades.Bonito(r.Cantidad / x.Rinde * lleva, r.Unidad)
+                        })
+                    ]
+                };
             })
         ];
     }
@@ -909,43 +1039,86 @@ public class PanelController : Controller
 
         // La receta de este producto, en su orden, que es el de la carta; y los
         // que todavía no están, más abajo.
-        var receta = elegido is null
+        var ingredientes = elegido is null
             ? []
             : await _contexto.ProductoIngredientes
                 .Where(x => x.IdProducto == elegido.IdProducto)
-                .OrderBy(x => x.Posicion)
-                .ThenBy(x => x.IdIngrediente)
-                .Select(x => new IngredienteDeLaReceta
+                .Select(x => new
                 {
-                    IdIngrediente = x.IdIngrediente,
-                    Nombre = x.Ingrediente.Nombre,
-                    Cantidad = x.Cantidad,
-                    Unidad = Cantidades.Abreviatura(x.Ingrediente.Unidad),
-                    Modificable = x.Quitable
+                    x.Posicion,
+                    Renglon = new IngredienteDeLaReceta
+                    {
+                        IdIngrediente = x.IdIngrediente,
+                        Nombre = x.Ingrediente.Nombre,
+                        Cantidad = x.Cantidad,
+                        Unidad = Cantidades.Abreviatura(x.Ingrediente.Unidad),
+                        Modificable = x.Quitable
+                    }
                 })
                 .ToListAsync();
 
-        // La masa que amasa, la salsa que lleva y, si es una empanada, su
-        // relleno. Nulos en un alta.
+        // Las salsas van en la misma lista, con el mismo lugar: la carta las
+        // nombra junto con los ingredientes, y se ordenan igual.
+        var conSalsas = elegido is null
+            ? []
+            : await _contexto.ProductoSalsas
+                .Where(x => x.IdProducto == elegido.IdProducto)
+                .Select(x => new
+                {
+                    x.Posicion,
+                    x.Porciones,
+                    Renglon = new IngredienteDeLaReceta
+                    {
+                        IdSalsa = x.IdReceta,
+                        Nombre = x.Receta.Nombre,
+                        Cantidad = x.Porciones,
+                        Unidad = "porc.",
+                        Modificable = x.Quitable
+                    }
+                })
+                .ToListAsync();
+
+        // Al empatar, la salsa primero: es lo que hacía la carta cuando la
+        // salsa era una sola y no tenía lugar.
+        var receta = conSalsas.Select(x => (x.Posicion, Salsa: 0, x.Renglon))
+            .Concat(ingredientes.Select(x => (x.Posicion, Salsa: 1, x.Renglon)))
+            .OrderBy(x => x.Posicion)
+            .ThenBy(x => x.Salsa)
+            .ThenBy(x => x.Renglon.IdSalsa ?? x.Renglon.IdIngrediente)
+            .Select(x => x.Renglon)
+            .ToList();
+
+        // La masa que amasa y, si es una empanada, su relleno. Nulos en un alta.
         var usa = elegido is null
             ? null
             : await _contexto.Productos
                 .Where(x => x.IdProducto == elegido.IdProducto)
-                .Select(x => new
-                {
-                    x.IdBase,
-                    IdSalsa = x.Salsas.OrderBy(s => s.Posicion).Select(s => (int?)s.IdReceta).FirstOrDefault(),
-                    x.IdRelleno
-                })
+                .Select(x => new { x.IdBase, x.IdRelleno })
                 .FirstOrDefaultAsync();
 
         var laBase = usa?.IdBase is int idBase
             ? (await PorPieza(_contexto.Recetas.Where(x => x.IdReceta == idBase))).FirstOrDefault()
             : null;
 
-        // Todas las salsas y no solo la elegida: al tocar otra, la ficha abre lo
-        // que lleva sin esperar a guardar.
-        var salsas = await PorPieza(_contexto.Recetas.Where(x => x.Tipo == TipoReceta.Salsa));
+        // Lo que le toca a una pieza de cada salsa que lleva, ya por las
+        // porciones que lleva; y las que todavía no, solo por el nombre, para
+        // el (+).
+        var salsasPuestas = conSalsas.ToDictionary(x => x.Renglon.IdSalsa!.Value, x => x.Porciones);
+        var idsPuestas = salsasPuestas.Keys.ToList();
+        var salsas = (await PorPieza(
+                _contexto.Recetas.Where(x => x.Tipo == TipoReceta.Salsa && idsPuestas.Contains(x.IdReceta)),
+                salsasPuestas))
+            // en el orden de la lista y no el de Recetas
+            .OrderBy(x => receta.FindIndex(r => r.IdSalsa == x.IdReceta))
+            .ToList();
+        var salsasQueFaltan = elegido is null
+            ? []
+            : await _contexto.Recetas
+                .Where(x => x.Tipo == TipoReceta.Salsa && !idsPuestas.Contains(x.IdReceta))
+                .OrderBy(x => x.Nombre)
+                .Select(x => x.Nombre)
+                .ToListAsync();
+
         var rellenos = await PorPieza(_contexto.Recetas.Where(x => x.Tipo == TipoReceta.Relleno));
 
         // el que se eligio y esta esperando la cantidad, si hay alguno
@@ -961,7 +1134,7 @@ public class PanelController : Controller
                 })
                 .FirstOrDefaultAsync();
 
-        var puestos = receta.Select(x => x.IdIngrediente).ToList();
+        var puestos = receta.Where(x => !x.EsSalsa).Select(x => x.IdIngrediente).ToList();
         var disponibles = elegido is null
             ? []
             : await _contexto.Ingredientes
@@ -989,7 +1162,7 @@ public class PanelController : Controller
             // «de 7 pizzas», y «de 1 focaccia» si es la única
             DeCuantos = $"de {hermanos.Count} {tipo.ToLowerInvariant()}{(hermanos.Count == 1 ? "" : "s")}",
             Ficha = elegido is null
-                ? new FichaProducto { Packs = packs, Salsas = salsas, Rellenos = rellenos }
+                ? new FichaProducto { Packs = packs, Rellenos = rellenos }
                 : new FichaProducto
                 {
                     IdProducto = elegido.IdProducto,
@@ -1000,8 +1173,8 @@ public class PanelController : Controller
                     Packs = packs,
                     Receta = receta,
                     Base = laBase,
-                    IdSalsa = usa?.IdSalsa,
                     Salsas = salsas,
+                    SalsasQueFaltan = salsasQueFaltan,
                     IdRelleno = usa?.IdRelleno,
                     Rellenos = rellenos,
                     Disponibles = [.. disponibles.Select(x => new IngredienteDisponible

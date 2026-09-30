@@ -52,37 +52,45 @@ public class TiendaController : Controller
             .Select(x => new
             {
                 x.Familia,
-                Salsas = x.Salsas.OrderBy(s => s.Posicion).ThenBy(s => s.IdReceta).Select(s => s.Receta.Nombre).ToList(),
+                Salsas = x.Salsas.Select(s => new { s.Posicion, s.IdReceta, s.Receta.Nombre }).ToList(),
+                Ingredientes = x.Receta.Select(r => new
+                {
+                    r.Posicion,
+                    Item = new IngredienteCarta
+                    {
+                        IdIngrediente = r.IdIngrediente,
+                        Nombre = r.Ingrediente.Nombre,
+                        Quitable = r.Quitable
+                    }
+                }).ToList(),
                 Renglon = new RenglonCarta
                 {
                     IdProducto = x.IdProducto,
                     Nombre = x.Nombre,
                     Precio = x.Precio,
-                    Activo = x.Activo,
-                    // en el orden que eligió él en la ficha del producto
-                    Ingredientes = x.Receta
-                        .OrderBy(r => r.Posicion)
-                        .ThenBy(r => r.IdIngrediente)
-                        .Select(r => new IngredienteCarta
-                        {
-                            IdIngrediente = r.IdIngrediente,
-                            Nombre = r.Ingrediente.Nombre,
-                            Quitable = r.Quitable
-                        })
-                        .ToList()
+                    Activo = x.Activo
                 }
             })
             .ToListAsync();
 
-        // Las salsas van primeras y fijas: son recetas, no ingredientes que se
-        // puedan sacar. Se ponen acá y no en la consulta porque no son
-        // renglones de la receta del producto.
-        foreach (var x in renglones.Where(x => x.Salsas.Count > 0))
+        // Las salsas se nombran junto con los ingredientes, cada una donde la
+        // puso él en la ficha: es una sola lista y se ordena junta. Se arma acá
+        // y no en la consulta porque no son renglones de la receta del producto.
+        // Al empatar, la salsa primero.
+        //
+        // Por ahora van fijas: sacar una salsa pide que el pedido la entienda,
+        // y eso es lo que sigue.
+        foreach (var x in renglones)
         {
             x.Renglon.Ingredientes =
             [
-                .. x.Salsas.Select(s => new IngredienteCarta { Nombre = s, Quitable = false }),
-                .. x.Renglon.Ingredientes
+                .. x.Salsas.Select(s => (s.Posicion, Salsa: 0, Id: s.IdReceta,
+                        Item: new IngredienteCarta { Nombre = s.Nombre, Quitable = false }))
+                    .Concat(x.Ingredientes.Select(i => (i.Posicion, Salsa: 1, Id: i.Item.IdIngrediente, i.Item)))
+                    .OrderBy(i => i.Posicion)
+                    .ThenBy(i => i.Salsa)
+                    .ThenBy(i => i.Id)
+                    .Select(i => i.Item)
             ];
         }
 

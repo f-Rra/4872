@@ -1,0 +1,15 @@
+@model f4872.ViewModels.RecetaPorPieza
+@using f4872.Helpers
+@* Una receta de lectura -la base o una salsa- con su nombre arriba y lo que le
+   toca a una pieza abajo. El nombre va en versalitas sobre una franja, como los
+   títulos de las listas: lo que separa una receta de la que sigue. Si la pieza
+   lleva otra cantidad que una porción, lo dice al lado: «½ porción». *@
+<div class="bloque-receta">
+    <p class="cab-receta">
+        @(Model.Nombre)@if (Model.Porciones != 1)
+        {
+            <span class="porc">· @Cantidades.Porciones(Model.Porciones)</span>
+        }
+    </p>
+    <partial name="_PorPieza" model="Model" />
+</div>

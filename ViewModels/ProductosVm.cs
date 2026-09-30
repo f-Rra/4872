@@ -91,14 +91,15 @@ public class FichaProducto
     // todos los que lo amasan— así que se cambia en Recetas.
     public RecetaPorPieza? Base { get; set; }
 
-    // La salsa elegida, o nula si no lleva. A diferencia de la base se elige,
-    // y por eso viaja con la ficha como el precio.
-    public int? IdSalsa { get; set; }
-
-    // Todas las salsas, para elegir, cada una con lo que le toca a una pizza:
-    // la elegida se ve abierta, y al tocar otra se abre la otra sin esperar a
-    // guardar.
+    // Las salsas que lleva, cada una con lo que le toca a una pizza. Como la
+    // base, van de lectura: se cargan enteras en Recetas. Lo que sí se edita
+    // acá -cuántas porciones y si se puede sacar- vive en la lista de arriba,
+    // junto a los ingredientes.
     public IReadOnlyList<RecetaPorPieza> Salsas { get; set; } = [];
+
+    // Las salsas que todavía no lleva, para el (+) de sumar. Por el nombre y
+    // no por un número: en la lista se busca escribiendo, como un ingrediente.
+    public IReadOnlyList<string> SalsasQueFaltan { get; set; } = [];
 
     // El relleno de una empanada, y todos para elegir, igual que la salsa. Es
     // todo lo que lleva la empanada: no tiene ingredientes sueltos.
@@ -123,11 +124,20 @@ public class FichaProducto
 public class IngredienteDeLaReceta
 {
     public int IdIngrediente { get; set; }
+
+    // Una salsa es un renglón más de la lista: se ordena y se marca Fija o
+    // Modificable igual. Con esto puesto el renglón es una salsa, y entonces
+    // `Cantidad` son porciones y no gramos, y IdIngrediente no dice nada.
+    public int? IdSalsa { get; set; }
+
     public string Nombre { get; set; } = "";
     public decimal Cantidad { get; set; }
 
-    // «g», «ml» o «u». Es del ingrediente, no del renglón: no se edita acá
+    // «g», «ml» o «u». Es del ingrediente, no del renglón: no se edita acá. En
+    // una salsa es «porc.»
     public string Unidad { get; set; } = "";
+
+    public bool EsSalsa => IdSalsa is not null;
 
     // si el cliente puede pedir la pizza sin esto. Es del par producto-
     // ingrediente: la muzzarella se saca de una fugazzeta y de una napolitana no
@@ -162,6 +172,11 @@ public class RecetaPorPieza
 {
     public int IdReceta { get; set; }
     public string Nombre { get; set; } = null!;
+
+    // Cuántas porciones lleva la pieza: los renglones ya vienen multiplicados.
+    // Uno en la base y el relleno, que siempre son una.
+    public decimal Porciones { get; set; } = 1;
+
     public IReadOnlyList<RenglonPorPieza> Renglones { get; set; } = [];
 }
 

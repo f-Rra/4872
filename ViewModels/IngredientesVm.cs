@@ -178,7 +178,8 @@ public class ParteDeReceta
     public int? Rinde { get; set; }
 
     // cuántas piezas lo llevan de verdad: las que lo pidieron sin no cuentan
-    public int Piezas { get; set; }
+    // (en una receta pueden ser decimales: a media porción, la pieza cuenta por media)
+    public decimal Piezas { get; set; }
 
     // Cuántas veces hay que hacer la receta para esas piezas, redondeado para
     // arriba. Cero cuando no viene de una receta.
