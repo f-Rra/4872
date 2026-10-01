@@ -19,6 +19,9 @@ public class ProductoSalsaConfiguracion : IEntityTypeConfiguration<ProductoSalsa
         renglon.Property(x => x.Quitable)
             .HasDefaultValue(false);
 
+        renglon.Property(x => x.Visible)
+            .HasDefaultValue(true);
+
         // una salsa con cero porciones no es una salsa de la pizza: o la lleva
         // o no esta
         renglon.ToTable(t => t.HasCheckConstraint(

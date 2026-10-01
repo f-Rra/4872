@@ -644,6 +644,10 @@
      lugar, tenga la receta cuatro ingredientes o doce. */
   .reng.alto.receta-reng > .et{display:flex;align-items:center;height:var(--fila);padding-top:0}
   .tope li{border-bottom:1.4px solid rgba(30,82,69,.35);gap:.55rem}
+  /* El renglon de sumar deja menos aire entre sus piezas que la lista de abajo.
+     Lo que le falta a cada hueco de la derecha va de margen: asi la cantidad del
+     ingrediente elegido cae en la misma columna que las de la lista */
+  .tope .hueco-ojo,.tope .hueco,.tope .hueco-mover,.tope .rx{margin-left:.25rem}
   .mas{
     flex:none;width:1.55rem;height:1.55rem;border-radius:50%;cursor:pointer;
     background:transparent;border:1.4px solid rgba(30,82,69,.5);color:var(--verde);
@@ -758,6 +762,20 @@
   .receta .hueco-mover{flex:none;width:1.1rem}
   .receta li.arrastrando{background:rgba(30,82,69,.1)}
   .receta li.arrastrando .manija{cursor:grabbing}
+
+
+  /* ---------- lo que se ve en la carta ----------
+     Cada ingrediente y cada salsa tiene su ojo: la carta nombra como mucho cuatro.
+     El ojo abierto es el que se ve. Un oculto queda apagado en su lugar, con la
+     pastilla de Fijo o Modificable sin poder tocarse: lo que no se ve no se saca.
+     Las listas de lectura y el renglon de sumar llevan un hueco del ancho del
+     ojo, por lo mismo que con la manija */
+  .ojo[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+  .receta .hueco-ojo{flex:none;width:1.55rem}
+  .receta li.oculto .rn,
+  .receta li.oculto .rcaja{opacity:.42}
+  .receta .saca[disabled]{opacity:.32;cursor:not-allowed}
+  .cuenta-abajo{margin:.5rem 0 0}
 
   /* el titulo de cada rubro, adentro de la grilla: la banda de los grupos de
      Productos en un renglon de la tabla. Queda fijo abajo de los titulos de las
@@ -1607,7 +1625,8 @@
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">' +
           '<path d="M12 5v14M5 12h14"/></svg></button>' +
           '<button class="dice" type="button" data-abrire="1">' + suma + '</button>') +
-      '<span class="hueco"></span>' + (conManija ? '<span class="hueco-mover"></span>' : '') +
+      (conManija ? '<span class="hueco-ojo"></span>' : '') + '<span class="hueco"></span>' +
+      (conManija ? '<span class="hueco-mover"></span>' : '') +
       '<span class="rx"></span></li></ul>' +
       (sumando ? candidatosHTML(yaPuestos, conManija) : '');
   }
@@ -1619,16 +1638,28 @@
   // En el orden de la carta, y se ordena arrastrando de la manija, antes de la
   // \u00d7: as\u00ed los nombres siguen en la columna de la base y las salsas.
   function ingrHTML(lista, prod){
+    var seven = lista.filter(function(g){ return seVe(prod, g); }).length;
     return sumarHTML(lista, true) + '<ul class="receta" data-ordenable="1">' + lista.map(function(g, k){
       // una salsa es un rengl\u00f3n m\u00e1s: lleva porciones y no gramos
       var sal = esSalsa(g), nom = sal ? nomSalsa(g) : g;
       var x = sal ? null : buscaIng(g);
       var c = sal ? porcionesDe(prod, g) : prod ? cuantoLleva(prod, g) : 0;
-      return '<li data-g="' + g + '"><span class="rn">' + nom + (sal ? '<span class="marca-salsa">salsa</span>' : '') + '</span>' +
+      var ve = seVe(prod, g);
+      return '<li data-g="' + g + '"' + (ve ? '' : ' class="oculto"') + '><span class="rn">' + nom + (sal ? '<span class="marca-salsa">salsa</span>' : '') + '</span>' +
         '<span class="rcaja"><input class="rc" value="' + (sal ? String(c).replace(".", ",") : redondo(c)) + '" data-cant="' + g + '">' +
         '<span class="ru">' + (sal ? 'porc.' : x ? x.u : 'g') + '</span></span>' +
+        // el ojo: si la carta lo nombra. Va antes del Fijo o Modificable porque lo
+        // decide: lo que no se ve no se puede sacar, y esa pastilla se apaga
+        '<button class="mas ojo" type="button" data-ver="' + g + '" aria-pressed="' + ve + '" ' +
+          'title="' + (ve ? 'Se ve en la carta: toc\u00e1 para ocultarlo' : 'No se ve en la carta: toc\u00e1 para mostrarlo') + '" ' +
+          'aria-label="' + (ve ? 'Ocultar ' : 'Mostrar ') + nom + ' en la carta">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
+          'stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12ZM12 9.5a2.5 2.5 0 1 0 .01 0"/>' +
+          (ve ? '' : '<path d="M4 4l16 16"/>') + '</svg></button>' +
         '<button class="saca" type="button" data-saca="' + g + '" aria-pressed="' +
-          (prod ? seSaca(prod, g) : true) + '">' +
+          (prod ? seSaca(prod, g) : true) + '"' + (ve ? '' : ' disabled') +
+          (ve ? '' : ' title="Lo que no se ve en la carta no se puede sacar"') + '>' +
           ((prod && !seSaca(prod, g)) ? 'Fijo' : 'Modificable') + '</button>' +
         '<button class="manija" type="button" data-manija="' + g + '" title="Arrastr\u00e1 para cambiarlo de lugar" ' +
           'aria-label="Cambiar de lugar ' + nom + ': arrastr\u00e1, o us\u00e1 las flechas del teclado">' +
@@ -1637,7 +1668,9 @@
           '<circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/>' +
           '<circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg></button>' +
         '<button class="rx" type="button" data-qi="' + k + '" title="Quitar">\u00d7</button></li>';
-    }).join("") + '</ul>';
+    }).join("") + '</ul>' +
+      // cu\u00e1ntos nombra la carta: abajo de la lista, como mucho cuatro
+      (lista.length ? '<p class="nota-f cuenta-abajo">Se ven ' + seven + ' de ' + MAXIMO_CARTA + ' en la carta.</p>' : '');
   }
 
   // solo se puede sumar un ingrediente que ya exista: escribir libre es como
@@ -1719,7 +1752,7 @@
       var x = buscaIng(g);
       return '<li><span class="rn">' + g + '</span>' +
         '<span class="rq">' + bonito(b.r[g] / b.rinde * (porc || 1), x ? x.u : 'g') + '</span>' +
-        '<span class="hueco"></span><span class="hueco-mover"></span><span class="rx"></span></li>';
+        '<span class="hueco-ojo"></span><span class="hueco"></span><span class="hueco-mover"></span><span class="rx"></span></li>';
     }).join("") + '</ul>';
   }
   // El relleno, en chips como el tipo y con lo que lleva abierto abajo. No hay
@@ -2001,6 +2034,26 @@
     });
   })();
   function seSaca(prod, ing){ return !!(QUITABLE[prod] && QUITABLE[prod][ing]); }
+
+  // Lo que la carta nombra de cada producto: como mucho cuatro, contando los
+  // ingredientes y las salsas juntos, que es lo que entra en una l\u00ednea del
+  // tel\u00e9fono. Uno oculto sigue en la receta \u2014cuenta en el costo, la compra y la
+  // producci\u00f3n\u2014, pero el cliente no sabe que est\u00e1: por eso no se puede sacar, y
+  // queda fijo. Arranca a la vista lo primero de la lista, hasta cuatro.
+  var MAXIMO_CARTA = 4;
+  var VISIBLE = {};
+  Object.keys(LLEVA).forEach(function(p){
+    VISIBLE[p] = {};
+    LLEVA[p].forEach(function(g, i){
+      if(i >= MAXIMO_CARTA){ VISIBLE[p][g] = false; QUITABLE[p][g] = false; }
+    });
+  });
+  function seVe(prod, g){ return !(VISIBLE[prod] && VISIBLE[prod][g] === false); }
+  function ponerVisible(prod, g, si){ VISIBLE[prod] = VISIBLE[prod] || {}; VISIBLE[prod][g] = si; }
+  function cuantosSeVen(prod){
+    var lista = prod === null ? BORRADOR.ing : (LLEVA[prod] || []);
+    return lista.filter(function(g){ return seVe(prod, g); }).length;
+  }
 
   // lo que lleva UNA pieza de un producto, de lo que va arriba. Lo de la base,
   // la salsa y el relleno sale de su receta
@@ -2849,6 +2902,20 @@
       '<p>Se probaron flechas en cada rengl\u00f3n, la manija antes del nombre, que se vea solo al pasar el mouse y ' +
       'que cada movida se guardara sola.</p></div>' +
 
+      '<div class="bloque"><h3>Qu\u00e9 se ve en la carta: cuatro como m\u00e1ximo</h3>' +
+      '<p>Una receta lleva lo que hace falta para el costo, y eso es m\u00e1s de lo que entra en el rengl\u00f3n de la carta: ' +
+      'la sal, el aceite, el or\u00e9gano. Cada ingrediente y cada salsa tiene su <b>ojo</b>, antes de <b>Fijo</b> o ' +
+      '<b>Modificable</b>, y la carta nombra <b>cuatro como m\u00e1ximo</b>, contando los dos: es lo que entra en una l\u00ednea ' +
+      'del tel\u00e9fono, y con cinco el rengl\u00f3n se sale. <b>Se ven 3 de 4</b> va abajo de la lista.</p>' +
+      '<p>Uno <b>oculto</b> sigue en la receta &mdash; cuenta en el costo, la compra y la producci\u00f3n &mdash; y queda ' +
+      '<b>apagado en su lugar</b>, con Fijo o Modificable sin poder tocarse: lo que el cliente no ve no lo puede sacar. ' +
+      'Al ocultarlo vuelve a Fijo, y as\u00ed queda si se lo muestra otra vez.</p>' +
+      '<p>Con cuatro a la vista, mostrar otro <b>avisa y no deja</b>: cu\u00e1l ocultar lo decide quien carga la receta. ' +
+      'Lo que se suma entra a la vista si hay lugar, y si no, oculto, y el aviso lo dice.</p>' +
+      '<p>Se probaron los tres estados &mdash; oculto, fijo y modificable &mdash; en un solo control, el ojo como una ' +
+      'pastilla m\u00e1s, apagar los dem\u00e1s al llegar a cuatro, que se oculte solo el \u00faltimo, la cuenta al lado del (+) o ' +
+      'abajo de \u00abIngredientes\u00bb, y juntar los ocultos al final con su franja.</p></div>' +
+
       '<div class="bloque"><h3>La base se pone sola; las salsas se suman y el relleno se elige</h3>' +
       '<p>Abajo de los ingredientes van la <b>base</b> y las <b>salsas</b>, de lectura y abiertas, con lo que le toca a ' +
       'una pieza. Cada receta lleva su <b>nombre en versalitas</b> sobre la franja de los t\u00edtulos: sin eso, dos ' +
@@ -2875,6 +2942,7 @@
         '<div><dt>N\u00famero de la posici\u00f3n</dt><dd>15,68 px / 700</dd></div>' +
         '<div><dt>Lugar en la lista</dt><dd>12,48 px / 800</dd></div>' +
         '<div><dt>Manija de los ingredientes</dt><dd>17,6 px</dd></div>' +
+        '<div><dt>Ojo de cada ingrediente</dt><dd>24,8 px</dd></div>' +
       '</dl>';
     },
 
@@ -3246,6 +3314,28 @@
         pintar();
       });
     });
+    // mostrar u ocultar en la carta. Ocultar lo deja fijo, y as\u00ed queda si se lo
+    // muestra otra vez. Mostrar con cuatro a la vista avisa y no deja: cu\u00e1l
+    // ocultar lo decide quien carga la receta
+    document.querySelectorAll("#marco [data-ver]").forEach(function(b){
+      b.addEventListener("click", function(){
+        sincronizar();
+        var g = b.dataset.ver, fem = esSalsa(g), nom = fem ? nomSalsa(g) : g;
+        if(seVe(prodElegido, g)){
+          ponerVisible(prodElegido, g, false);
+          QUITABLE[prodElegido] = QUITABLE[prodElegido] || {};
+          QUITABLE[prodElegido][g] = false;
+          if(prodElegido !== null) hecho = fem ? "Oculta de la carta." : "Oculto de la carta.";
+        }else if(cuantosSeVen(prodElegido) >= MAXIMO_CARTA){
+          avisoProd = "Se ven como m\u00e1ximo " + MAXIMO_CARTA + " en la carta. Ocult\u00e1 uno antes de mostrar \u00ab" + nom + "\u00bb.";
+          pintar(); avisoProd = null; return;
+        }else{
+          ponerVisible(prodElegido, g, true);
+          if(prodElegido !== null) hecho = "Se ve en la carta.";
+        }
+        pintar();
+      });
+    });
     // la cantidad tambien: es del par producto-ingrediente, y se carga en la
     // receta del producto que la lleva
     document.querySelectorAll("#marco [data-cant]").forEach(function(b){
@@ -3294,6 +3384,9 @@
             Object.keys(CANT).forEach(function(p){
               if(CANT[p][x.n] !== undefined){ CANT[p][nom] = CANT[p][x.n]; delete CANT[p][x.n]; }
             });
+            Object.keys(VISIBLE).forEach(function(p){
+              if(VISIBLE[p][x.n] !== undefined){ VISIBLE[p][nom] = VISIBLE[p][x.n]; delete VISIBLE[p][x.n]; }
+            });
             // en las recetas, en el mismo lugar: el orden es el de la receta
             Object.keys(RECETAS).forEach(function(k){
               var viejo = RECETAS[k].r, r = {};
@@ -3310,6 +3403,7 @@
       b.addEventListener("click", function(){
         prodElegido = null; TIPEADO = null; sumando = false;
         BORRADOR = {f: famProd === "todo" ? "pizza" : famProd, n:"", p:0, ing:[]};
+        delete VISIBLE[null];
         pintar();
         var c = document.getElementById("f-nombre"); if(c) c.focus();
       });
@@ -3352,19 +3446,33 @@
       sincronizar();
       // en una receta entra sin cantidad, igual que en un producto: se escribe
       // despu\u00e9s, en la pastilla
+      // en un producto entra a la vista si la carta todav\u00eda tiene lugar, y si no,
+      // oculto: el que carga los primeros cuatro no tiene que ir ojo por ojo
+      var oculto = false;
       if(seccion === "recetas") recAbierta().r[nombre] = 0;
-      else if(prodElegido === null) BORRADOR.ing.push(nombre);
-      else LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([nombre]);
+      else{
+        oculto = cuantosSeVen(prodElegido) >= MAXIMO_CARTA;
+        if(prodElegido === null) BORRADOR.ing.push(nombre);
+        else LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([nombre]);
+        ponerVisible(prodElegido, nombre, !oculto);
+      }
       // en un borrador no se guarda nada todav\u00eda: se guarda al crearlo
-      if(seccion === "recetas" ? recElegida !== null : prodElegido !== null) hecho = "Ingrediente sumado.";
+      if(seccion === "recetas" ? recElegida !== null : prodElegido !== null)
+        hecho = oculto ? "Ingrediente sumado. No se ve en la carta: ya se ven cuatro." : "Ingrediente sumado.";
       pintar();
       var c = document.getElementById("ing-nuevo"); if(c) c.focus();
     }
     // una salsa entra en un solo paso, fija y \u00faltima, con una porci\u00f3n
     function sumarSalsa(nombre){
       sincronizar();
+      // a la vista si hay lugar, y si no, oculta: igual que un ingrediente
+      var oculta = cuantosSeVen(prodElegido) >= MAXIMO_CARTA;
       if(prodElegido === null) BORRADOR.ing.push(SAL + nombre);
-      else{ LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([SAL + nombre]); hecho = "Salsa sumada."; }
+      else{
+        LLEVA[prodElegido] = (LLEVA[prodElegido] || []).concat([SAL + nombre]);
+        hecho = oculta ? "Salsa sumada. No se ve en la carta: ya se ven cuatro." : "Salsa sumada.";
+      }
+      ponerVisible(prodElegido, SAL + nombre, !oculta);
       pintar();
       var c = document.getElementById("ing-nuevo"); if(c) c.focus();
     }
@@ -3449,6 +3557,7 @@
         }
         PRODUCTOS.push(p);
         LLEVA[v.n] = BORRADOR.f === "emp" ? [] : BORRADOR.ing.slice();
+        if(VISIBLE[null]){ VISIBLE[v.n] = VISIBLE[null]; delete VISIBLE[null]; }
         prodElegido = v.n; TIPEADO = null;
         if(famProd !== "todo" && famProd !== BORRADOR.f) famProd = BORRADOR.f;
         hecho = "Producto creado.";
@@ -3472,6 +3581,7 @@
         }
         if(v.n && v.n !== x.n){
           LLEVA[v.n] = LLEVA[x.n] || []; delete LLEVA[x.n];
+          VISIBLE[v.n] = VISIBLE[x.n] || {}; delete VISIBLE[x.n];
           x.n = v.n; prodElegido = v.n;
         }
         TIPEADO = null; hecho = "Cambios guardados.";
@@ -3644,7 +3754,7 @@
             var i = LLEVA[k].indexOf(SAL + recElegida);
             if(i < 0) return;
             LLEVA[k][i] = SAL + n;
-            [CANT, QUITABLE].forEach(function(m){
+            [CANT, QUITABLE, VISIBLE].forEach(function(m){
               if(m[k] && m[k][SAL + recElegida] !== undefined){ m[k][SAL + n] = m[k][SAL + recElegida]; delete m[k][SAL + recElegida]; }
             });
           });

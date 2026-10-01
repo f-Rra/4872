@@ -18,6 +18,9 @@ public class ProductoIngredienteConfiguracion : IEntityTypeConfiguration<Product
         renglon.Property(x => x.Quitable)
             .HasDefaultValue(false);
 
+        renglon.Property(x => x.Visible)
+            .HasDefaultValue(true);
+
         // un ingrediente con cantidad cero no es un ingrediente de la receta:
         // o lleva algo o no esta
         renglon.ToTable(t => t.HasCheckConstraint(

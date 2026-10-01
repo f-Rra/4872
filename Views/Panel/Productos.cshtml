@@ -294,7 +294,7 @@
                                     </span>
                                 }
 
-                                <span class="hueco"></span><span class="hueco-mover" hidden></span><span class="rx"></span>
+                                <span class="hueco-ojo"></span><span class="hueco"></span><span class="hueco-mover" hidden></span><span class="rx"></span>
                             </li>
                         </ul>
 
@@ -345,7 +345,7 @@
                                    formularios no chocan con los de un ingrediente. *@
                                 var clave = r.EsSalsa ? "s" + r.IdSalsa : r.IdIngrediente.ToString();
 
-                                <li>
+                                <li class="@(r.Visible ? null : "oculto")">
                                     <span class="rn">@(r.Nombre)@if (r.EsSalsa)
                                     {<span class="marca-salsa">salsa</span>}</span>
 
@@ -366,9 +366,27 @@
                                         <span class="ru">@r.Unidad</span>
                                     </span>
 
+                                    @* El ojo: si la carta lo nombra. Va antes del Fijo o
+                                       Modificable porque lo decide: lo que no se ve no se
+                                       puede sacar, y esa pastilla se apaga. *@
+                                    <button class="mas ojo" type="submit" form="ver-@clave"
+                                            aria-pressed="@r.Visible.ToString().ToLowerInvariant()"
+                                            title="@(r.Visible ? "Se ve en la carta: tocá para ocultarlo" : "No se ve en la carta: tocá para mostrarlo")"
+                                            aria-label="@(r.Visible ? "Ocultar" : "Mostrar") @r.Nombre en la carta">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12ZM12 9.5a2.5 2.5 0 1 0 .01 0" />
+                                            @if (!r.Visible)
+                                            {
+                                                <path d="M4 4l16 16" />
+                                            }
+                                        </svg>
+                                    </button>
+
                                     <button class="saca" type="submit" form="modificable-@clave"
                                             aria-pressed="@r.Modificable.ToString().ToLowerInvariant()"
-                                            title="@(r.Modificable ? "El cliente lo puede sacar" : "No se puede sacar")">
+                                            disabled="@(!r.Visible)"
+                                            title="@(!r.Visible ? "Lo que no se ve en la carta no se puede sacar" : r.Modificable ? "El cliente lo puede sacar" : "No se puede sacar")">
                                         @(r.Modificable ? "Modificable" : "Fijo")
                                     </button>
 
@@ -391,6 +409,15 @@
                                 </li>
                             }
                         </ul>
+
+                        @* Cuántos nombra la carta: como mucho cuatro, que es lo que entra en
+                           una línea del teléfono. Los demás están en la receta por el costo. *@
+                        @if (Model.Ficha.Receta.Count > 0)
+                        {
+                            <p class="nota-f cuenta-abajo">
+                                Se ven @Model.Ficha.Receta.Count(x => x.Visible) de @f4872.Models.Producto.MaximoEnLaCarta en la carta.
+                            </p>
+                        }
                     }
                 </span>
             </div>
@@ -482,6 +509,10 @@
                           asp-route-id="@Model.Ficha.IdProducto" asp-route-idReceta="@r.IdSalsa"
                           asp-route-familia="@Model.Familia"></form>
 
+                    <form id="ver-s@(r.IdSalsa)" method="post" asp-action="VisibleSalsa"
+                          asp-route-id="@Model.Ficha.IdProducto" asp-route-idReceta="@r.IdSalsa"
+                          asp-route-familia="@Model.Familia"></form>
+
                     <form id="modificable-s@(r.IdSalsa)" method="post" asp-action="ModificableSalsa"
                           asp-route-id="@Model.Ficha.IdProducto" asp-route-idReceta="@r.IdSalsa"
                           asp-route-familia="@Model.Familia"></form>
@@ -489,6 +520,10 @@
                 else
                 {
                     <form id="quitar-@r.IdIngrediente" method="post" asp-action="QuitarIngrediente"
+                          asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@r.IdIngrediente"
+                          asp-route-familia="@Model.Familia"></form>
+
+                    <form id="ver-@r.IdIngrediente" method="post" asp-action="Visible"
                           asp-route-id="@Model.Ficha.IdProducto" asp-route-idIngrediente="@r.IdIngrediente"
                           asp-route-familia="@Model.Familia"></form>
 

@@ -326,8 +326,11 @@ public static class Sembrador
                 {
                     Ingrediente = ingredientes[r.Ing],
                     Cantidad = r.Cant,
-                    Quitable = !Fijos.Contains(r.Ing),
-                    Posicion = i + 1
+                    Posicion = i + 1,
+                    // la carta nombra hasta cuatro; los demás, solo el costo, y
+                    // lo que no se nombra no se puede sacar
+                    Visible = i < Producto.MaximoEnLaCarta,
+                    Quitable = i < Producto.MaximoEnLaCarta && !Fijos.Contains(r.Ing)
                 })]
             }));
 

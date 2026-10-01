@@ -671,6 +671,11 @@ public class PanelController : Controller
         var fila = await _contexto.ProductoIngredientes
             .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == ingrediente.IdIngrediente);
 
+        // Entra a la vista si la carta todavía tiene lugar, y si no, oculto: la
+        // receta lleva más de lo que entra en una línea, y el que carga los
+        // primeros cuatro no tiene que ir ojo por ojo. Los demás, después.
+        var entraOculto = fila is null && await CuantosSeVen(id) >= Producto.MaximoEnLaCarta;
+
         if (fila is null)
         {
             _contexto.ProductoIngredientes.Add(new ProductoIngrediente
@@ -680,9 +685,8 @@ public class PanelController : Controller
                 Cantidad = cantidad.Value,
                 // entra último: meterlo en el medio correría a los que ya
                 // estaban ordenados
-                Posicion = (await _contexto.ProductoIngredientes
-                    .Where(x => x.IdProducto == id)
-                    .MaxAsync(x => (int?)x.Posicion) ?? 0) + 1
+                Posicion = await LugarSiguiente(id),
+                Visible = !entraOculto
             });
         }
         else
@@ -693,9 +697,69 @@ public class PanelController : Controller
 
         await _contexto.SaveChangesAsync();
 
-        Avisar(fila is null ? "Ingrediente sumado." : "Cantidad guardada.");
+        Avisar(fila is not null ? "Cantidad guardada."
+            : entraOculto ? "Ingrediente sumado. No se ve en la carta: ya se ven cuatro."
+            : "Ingrediente sumado.");
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
+
+    // Cuántos nombra la carta de este producto: ingredientes y salsas juntos,
+    // que es lo que entra en la línea
+    private async Task<int> CuantosSeVen(int idProducto) =>
+        await _contexto.ProductoIngredientes.CountAsync(x => x.IdProducto == idProducto && x.Visible)
+        + await _contexto.ProductoSalsas.CountAsync(x => x.IdProducto == idProducto && x.Visible);
+
+    // El lugar que sigue al último de la receta. Es uno solo para los
+    // ingredientes y las salsas -la carta los nombra en un mismo renglón- y el
+    // que entra va último entre los dos. Contar solo los de su clase lo dejaba
+    // en el medio: un ingrediente sumado después de una salsa salía antes que ella.
+    private async Task<int> LugarSiguiente(int idProducto) =>
+        Math.Max(
+            await _contexto.ProductoIngredientes.Where(x => x.IdProducto == idProducto)
+                .MaxAsync(x => (int?)x.Posicion) ?? 0,
+            await _contexto.ProductoSalsas.Where(x => x.IdProducto == idProducto)
+                .MaxAsync(x => (int?)x.Posicion) ?? 0) + 1;
+
+    // Mostrar u ocultar uno en la carta. Un oculto sigue en la receta -cuenta en
+    // el costo, en la compra y en la producción-, solo deja de nombrarse, y por
+    // eso no puede ser modificable: lo que el cliente no ve no lo puede sacar.
+    //
+    // Mostrar uno con cuatro ya a la vista avisa y no deja. No saca a otro solo:
+    // cuál ocultar lo decide él.
+    [HttpPost("productos/receta/visible")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Visible(int id, int idIngrediente, string? familia = null)
+    {
+        var fila = await _contexto.ProductoIngredientes
+            .Include(x => x.Ingrediente)
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == idIngrediente);
+
+        if (fila is null)
+        {
+            return RedirectToAction(nameof(Productos), new { familia, producto = id });
+        }
+
+        if (!fila.Visible && await CuantosSeVen(id) >= Producto.MaximoEnLaCarta)
+        {
+            return await Volver(familia, id, SinLugarEnLaCarta(fila.Ingrediente.Nombre));
+        }
+
+        fila.Visible = !fila.Visible;
+
+        // al ocultarlo vuelve a fijo, y así queda si se lo muestra de nuevo
+        if (!fila.Visible)
+        {
+            fila.Quitable = false;
+        }
+
+        await _contexto.SaveChangesAsync();
+
+        Avisar(fila.Visible ? "Se ve en la carta." : "Oculto de la carta.");
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    private static string SinLugarEnLaCarta(string nombre) =>
+        $"Se ven como máximo {Producto.MaximoEnLaCarta} en la carta. Ocultá uno antes de mostrar «{nombre}».";
 
     // Si el cliente puede pedir la pizza sin esto. Es del par producto-
     // ingrediente y no del ingrediente: la muzzarella se saca de una fugazzeta
@@ -706,6 +770,11 @@ public class PanelController : Controller
     {
         var fila = await _contexto.ProductoIngredientes
             .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdIngrediente == idIngrediente);
+
+        if (fila is { Visible: false })
+        {
+            return await Volver(familia, id, "Lo que no se ve en la carta no se puede sacar: mostralo primero.");
+        }
 
         if (fila is not null)
         {
@@ -776,25 +845,20 @@ public class PanelController : Controller
             return await Volver(familia, id, $"«{receta.Nombre}» ya está en la receta.");
         }
 
-        // el lugar es uno solo para los ingredientes y las salsas: la carta los
-        // nombra en un mismo renglón
-        var ultimoIngrediente = await _contexto.ProductoIngredientes
-            .Where(x => x.IdProducto == id)
-            .MaxAsync(x => (int?)x.Posicion) ?? 0;
-        var ultimaSalsa = await _contexto.ProductoSalsas
-            .Where(x => x.IdProducto == id)
-            .MaxAsync(x => (int?)x.Posicion) ?? 0;
+        // a la vista si hay lugar, y si no, oculta: igual que un ingrediente
+        var entraOculta = await CuantosSeVen(id) >= Producto.MaximoEnLaCarta;
 
         _contexto.ProductoSalsas.Add(new ProductoSalsa
         {
             IdProducto = id,
             IdReceta = receta.IdReceta,
-            Posicion = Math.Max(ultimoIngrediente, ultimaSalsa) + 1
+            Posicion = await LugarSiguiente(id),
+            Visible = !entraOculta
         });
 
         await _contexto.SaveChangesAsync();
 
-        Avisar("Salsa sumada.");
+        Avisar(entraOculta ? "Salsa sumada. No se ve en la carta: ya se ven cuatro." : "Salsa sumada.");
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
@@ -807,6 +871,11 @@ public class PanelController : Controller
         var fila = await _contexto.ProductoSalsas
             .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdReceta == idReceta);
 
+        if (fila is { Visible: false })
+        {
+            return await Volver(familia, id, "Lo que no se ve en la carta no se puede sacar: mostrala primero.");
+        }
+
         if (fila is not null)
         {
             fila.Quitable = !fila.Quitable;
@@ -814,6 +883,38 @@ public class PanelController : Controller
             Avisar(fila.Quitable ? "Marcada modificable." : "Marcada fija.");
         }
 
+        return RedirectToAction(nameof(Productos), new { familia, producto = id });
+    }
+
+    // Mostrar u ocultar una salsa en la carta: lo mismo que con un ingrediente
+    [HttpPost("productos/salsa/visible")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VisibleSalsa(int id, int idReceta, string? familia = null)
+    {
+        var fila = await _contexto.ProductoSalsas
+            .Include(x => x.Receta)
+            .FirstOrDefaultAsync(x => x.IdProducto == id && x.IdReceta == idReceta);
+
+        if (fila is null)
+        {
+            return RedirectToAction(nameof(Productos), new { familia, producto = id });
+        }
+
+        if (!fila.Visible && await CuantosSeVen(id) >= Producto.MaximoEnLaCarta)
+        {
+            return await Volver(familia, id, SinLugarEnLaCarta(fila.Receta.Nombre));
+        }
+
+        fila.Visible = !fila.Visible;
+
+        if (!fila.Visible)
+        {
+            fila.Quitable = false;
+        }
+
+        await _contexto.SaveChangesAsync();
+
+        Avisar(fila.Visible ? "Se ve en la carta." : "Oculta de la carta.");
         return RedirectToAction(nameof(Productos), new { familia, producto = id });
     }
 
@@ -922,6 +1023,7 @@ public class PanelController : Controller
             {
                 renglon.Unidad = guardado.Unidad;
                 renglon.Modificable = guardado.Modificable;
+                renglon.Visible = guardado.Visible;
             }
         }
         vm.Ficha = ficha;
@@ -1052,7 +1154,8 @@ public class PanelController : Controller
                         Nombre = x.Ingrediente.Nombre,
                         Cantidad = x.Cantidad,
                         Unidad = Cantidades.Abreviatura(x.Ingrediente.Unidad),
-                        Modificable = x.Quitable
+                        Modificable = x.Quitable,
+                        Visible = x.Visible
                     }
                 })
                 .ToListAsync();
@@ -1073,7 +1176,8 @@ public class PanelController : Controller
                         Nombre = x.Receta.Nombre,
                         Cantidad = x.Porciones,
                         Unidad = "porc.",
-                        Modificable = x.Quitable
+                        Modificable = x.Quitable,
+                        Visible = x.Visible
                     }
                 })
                 .ToListAsync();

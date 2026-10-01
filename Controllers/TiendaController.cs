@@ -52,8 +52,11 @@ public class TiendaController : Controller
             .Select(x => new
             {
                 x.Familia,
-                Salsas = x.Salsas.Select(s => new { s.Posicion, s.IdReceta, s.Receta.Nombre, s.Quitable }).ToList(),
-                Ingredientes = x.Receta.Select(r => new
+                // los ocultos no se nombran: siguen en la receta por el costo y la
+                // compra, pero la carta solo dice los que él dejó a la vista
+                Salsas = x.Salsas.Where(s => s.Visible)
+                    .Select(s => new { s.Posicion, s.IdReceta, s.Receta.Nombre, s.Quitable }).ToList(),
+                Ingredientes = x.Receta.Where(r => r.Visible).Select(r => new
                 {
                     r.Posicion,
                     Item = new IngredienteCarta

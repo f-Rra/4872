@@ -139,6 +139,10 @@ public class IngredienteDeLaReceta
 
     public bool EsSalsa => IdSalsa is not null;
 
+    // Si la carta lo nombra. Uno oculto sigue en la receta, pero el cliente no
+    // sabe que está: por eso no se puede sacar. Como mucho cuatro se ven.
+    public bool Visible { get; set; } = true;
+
     // si el cliente puede pedir la pizza sin esto. Es del par producto-
     // ingrediente: la muzzarella se saca de una fugazzeta y de una napolitana no
     public bool Modificable { get; set; }

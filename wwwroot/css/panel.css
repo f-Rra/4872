@@ -487,6 +487,10 @@
    lugar, tenga la receta cuatro ingredientes o doce. */
 .reng.alto.receta-reng > .et{display:flex;align-items:center;height:var(--fila);padding-top:0}
 .tope li{border-bottom:1.4px solid rgba(30,82,69,.35);gap:.55rem}
+/* El renglon de sumar deja menos aire entre sus piezas que la lista de abajo.
+   Lo que le falta a cada hueco de la derecha va de margen: asi la cantidad del
+   ingrediente elegido cae en la misma columna que las de la lista */
+.tope .hueco-ojo,.tope .hueco,.tope .hueco-mover,.tope .rx{margin-left:.25rem}
 .mas{
   flex:none;width:1.55rem;height:1.55rem;border-radius:50%;cursor:pointer;
   background:transparent;border:1.4px solid rgba(30,82,69,.5);color:var(--verde);
@@ -607,6 +611,20 @@
 /* el que se esta arrastrando se marca, para seguirlo con la vista */
 .receta li.arrastrando{background:rgba(30,82,69,.1)}
 .receta li.arrastrando .manija{cursor:grabbing}
+
+
+/* ---------- lo que se ve en la carta ----------
+   Cada ingrediente y cada salsa tiene su ojo: la carta nombra como mucho cuatro.
+   El ojo abierto es el que se ve. Un oculto queda apagado en su lugar, con la
+   pastilla de Fijo o Modificable sin poder tocarse: lo que no se ve no se saca.
+   Las listas de lectura y el renglon de sumar llevan un hueco del ancho del
+   ojo, por lo mismo que con la manija */
+.ojo[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:var(--papel)}
+.receta .hueco-ojo{flex:none;width:1.55rem}
+.receta li.oculto .rn,
+.receta li.oculto .rcaja{opacity:.42}
+.receta .saca[disabled]{opacity:.32;cursor:not-allowed}
+.cuenta-abajo{margin:.5rem 0 0}
 
 
 /* ---------- ingredientes: la grilla ----------

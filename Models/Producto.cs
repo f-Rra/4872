@@ -4,6 +4,11 @@ namespace f4872.Models;
 
 public class Producto
 {
+    // Cuántos ingredientes y salsas nombra la carta en el renglón de una pizza:
+    // los que entran en una línea del teléfono. Es el tope de los que se ven;
+    // la receta puede llevar más, que están para el costo y la compra.
+    public const int MaximoEnLaCarta = 4;
+
     public int IdProducto { get; set; }
 
     [DisplayName("Tipo")]

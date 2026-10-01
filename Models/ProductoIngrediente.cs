@@ -26,4 +26,11 @@ public class ProductoIngrediente
     // última en otra. Sirve solo para ordenar, así que puede tener huecos o
     // repetirse: desempata el IdIngrediente.
     public int Posicion { get; set; }
+
+    // Si la carta lo nombra. Una receta lleva lo que hace falta para el costo,
+    // y eso es más de lo que entra en una línea: lo que no se ve sigue contando
+    // en la compra y la producción, pero el cliente no sabe que está y por eso
+    // no lo puede sacar. Como mucho Producto.MaximoEnLaCarta por producto,
+    // contando las salsas.
+    public bool Visible { get; set; } = true;
 }

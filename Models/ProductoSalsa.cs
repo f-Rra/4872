@@ -27,4 +27,8 @@ public class ProductoSalsa
     // Si el cliente puede pedir la pizza sin esta salsa. Del par, como el de un
     // ingrediente: el pesto se saca de una y de otra no.
     public bool Quitable { get; set; }
+
+    // si la carta la nombra: lo mismo que en un ingrediente, y la cuenta del
+    // máximo es de las dos cosas juntas
+    public bool Visible { get; set; } = true;
 }
