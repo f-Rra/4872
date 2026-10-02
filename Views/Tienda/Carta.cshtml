@@ -64,6 +64,21 @@
             }
         </ol>
     }
+
+    // Lo que una familia dice de sí misma, arriba de su lista. Lleva data-familia
+    // como la lista: tienda.js esconde y muestra todo lo que lo trae.
+    void Ficha(string familia, IReadOnlyList<f4872.ViewModels.DatoFicha> datos, bool oculta)
+    {
+        if (datos.Count > 0)
+        {
+            <dl class="ficha" data-familia="@familia" hidden="@oculta">
+                @foreach (var d in datos)
+                {
+                    <div><dt>@d.Rotulo</dt><dd>@d.Valor</dd></div>
+                }
+            </dl>
+        }
+    }
 }
 
 <div class="tienda dibujando">
@@ -100,6 +115,12 @@
         </nav>
 
         <main class="lista" id="lista">
+
+            @* Lo que cada familia dice de sí misma. Va arriba del cartel y no adentro
+               de su lista: el cartel es uno solo y explica los renglones, así que
+               tiene que quedar pegado a ellos. Las empanadas no llevan. *@
+            @{ Ficha("pizzas", Model.FichaPizzas, false); }
+            @{ Ficha("focaccias", Model.FichaFocaccias, true); }
 
             @* Que los ingredientes se tocan no se descubre solo: la nota del
                diseño decía «probá tocar la muzzarella de la Margarita», y si hay

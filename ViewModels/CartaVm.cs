@@ -40,6 +40,13 @@ public class TamanoPack
     public decimal Precio { get; set; }
 }
 
+// un dato de la ficha de una familia, ya dicho: el rótulo chico y el valor
+public class DatoFicha
+{
+    public string Rotulo { get; set; } = null!;
+    public string Valor { get; set; } = null!;
+}
+
 public class CartaVm
 {
     // Cerrada, la pantalla no muestra la carta, así que las cuatro listas
@@ -50,6 +57,11 @@ public class CartaVm
     // solapas distintas: son dos listas y no una sola con un filtro
     public IReadOnlyList<RenglonCarta> Pizzas { get; set; } = [];
     public IReadOnlyList<RenglonCarta> Focaccias { get; set; } = [];
+
+    // lo que cada familia dice de sí misma, arriba de su lista. Las empanadas no
+    // llevan
+    public IReadOnlyList<DatoFicha> FichaPizzas { get; set; } = [];
+    public IReadOnlyList<DatoFicha> FichaFocaccias { get; set; } = [];
 
     public IReadOnlyList<Gusto> Gustos { get; set; } = [];
     public IReadOnlyList<TamanoPack> Packs { get; set; } = [];

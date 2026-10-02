@@ -163,6 +163,32 @@ public class RecetaService
             : $"{x.Veces} de {Corto(x.Nombre)}"));
     }
 
+    // Cuánto pesa un bollo de la masa de una familia: lo que pesa la receta
+    // entera dividido por lo que rinde. Lo dice la carta de pizzas y focaccias, y
+    // sale de acá y no se guarda: si se cambia la receta, cambia el dato.
+    //
+    // Los gramos y los mililitros se suman como si fueran lo mismo: en una masa
+    // son agua y aceite, y que el aceite pese un poco menos es un gramo por
+    // bollo. Lo que se mide en unidades no se puede sumar, así que queda afuera.
+    //
+    // Nulo cuando no hay masa cargada o no rinde nada: sin ella no hay bollo
+    // que decir.
+    public async Task<decimal?> PesoDelBollo(Familia familia)
+    {
+        var masa = await _contexto.Recetas
+            .Where(x => x.Tipo == TipoReceta.Base && x.Familia == familia && x.Rinde > 0)
+            .Select(x => new
+            {
+                x.Rinde,
+                Peso = x.Ingredientes
+                    .Where(i => i.Ingrediente.Unidad != Medida.Unidad)
+                    .Sum(i => (decimal?)i.Cantidad) ?? 0m
+            })
+            .FirstOrDefaultAsync();
+
+        return masa is { Peso: > 0 } ? masa.Peso / masa.Rinde : null;
+    }
+
     // De donde sale cada parte de lo que hace falta: un renglon por producto que
     // lleva el ingrediente, y uno por base.
     //

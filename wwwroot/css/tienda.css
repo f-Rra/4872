@@ -90,6 +90,34 @@
   to{opacity:1;transform:none}
 }
 
+/* ---------- la ficha de cada familia ----------
+   Lo que la familia dice de sí misma: el rótulo chico arriba y el dato abajo,
+   cada uno en su columna y separados por el mismo trazo vertical que las
+   solapas. Va arriba del cartel de los ingredientes, que así queda pegado a la
+   primera pizza que explica, y se esconde con su familia.
+
+   El dato va en Bowlby, como el precio de la carta, y el rótulo en versalitas
+   chicas. */
+.ficha{
+  flex:none;margin:1.1rem .95rem 0;
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  /* el de cada tipografía: así mide lo mismo en la maqueta y en la tienda */
+  line-height:normal;
+}
+.ficha > div{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  gap:.2rem;padding:.25rem .2rem;min-width:0;
+}
+.ficha > div + div::before{top:.15rem;bottom:.15rem;left:calc(var(--trazo-alto) / -2);opacity:.45}
+.ficha dt{
+  font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  opacity:.7;white-space:nowrap;
+}
+.ficha dd{
+  margin:0;font-family:var(--cara);font-size:.9rem;letter-spacing:-.02em;
+  -webkit-text-stroke:var(--grosor) currentColor;white-space:nowrap;
+}
+
 /* ---------- el renglón de la carta ---------- */
 ol.carta{list-style:none;margin:0;padding:0}
 ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
@@ -468,7 +496,8 @@ ol.gustos li::after{opacity:.35}
 /* las verticales son el mismo trazo girado sobre su eje */
 .recorrido li::before,
 .solapas button + button::after,
-.tam button + button::after{
+.tam button + button::after,
+.ficha > div + div::before{
   content:"";position:absolute;width:var(--trazo-alto);
   background-color:var(--verde);pointer-events:none;
   -webkit-mask:var(--trazo-v) repeat-y center top/100% auto;

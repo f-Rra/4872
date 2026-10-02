@@ -1,4 +1,5 @@
 using f4872.Data;
+using f4872.Helpers;
 using f4872.Models;
 using f4872.Services;
 using f4872.ViewModels;
@@ -11,11 +12,13 @@ public class TiendaController : Controller
 {
     private readonly Contexto _contexto;
     private readonly PedidoService _pedidos;
+    private readonly RecetaService _recetas;
 
-    public TiendaController(Contexto contexto, PedidoService pedidos)
+    public TiendaController(Contexto contexto, PedidoService pedidos, RecetaService recetas)
     {
         _contexto = contexto;
         _pedidos = pedidos;
+        _recetas = recetas;
     }
 
     // el inicio: existe para el que llega de cero, porque el nombre no dice que
@@ -115,9 +118,42 @@ public class TiendaController : Controller
         {
             Pizzas = [.. renglones.Where(x => x.Familia == Familia.Pizza).Select(x => x.Renglon)],
             Focaccias = [.. renglones.Where(x => x.Familia == Familia.Focaccia).Select(x => x.Renglon)],
+            FichaPizzas = await Ficha(Familia.Pizza),
+            FichaFocaccias = await Ficha(Familia.Focaccia),
             Gustos = gustos,
             Packs = packs
         });
+    }
+
+    // Lo que cada familia dice de sí misma arriba de su lista. El peso del bollo
+    // sale de la receta de la masa y va redondeado a 50 g —288 g se dice 300—;
+    // lo demás son datos del negocio que no salen de ningún lado, y por eso están
+    // escritos acá. Las empanadas no llevan.
+    private async Task<IReadOnlyList<DatoFicha>> Ficha(Familia familia)
+    {
+        var datos = new List<DatoFicha>();
+
+        if (await _recetas.PesoDelBollo(familia) is decimal peso)
+        {
+            var redondo = Math.Round(peso / 50, MidpointRounding.AwayFromZero) * 50;
+
+            if (redondo > 0)
+            {
+                datos.Add(new DatoFicha { Rotulo = "Bollo", Valor = Cantidades.Bonito(redondo, Medida.Gramo) });
+            }
+        }
+
+        if (familia == Familia.Pizza)
+        {
+            datos.Add(new DatoFicha { Rotulo = "Diámetro", Valor = "27 cm" });
+            datos.Add(new DatoFicha { Rotulo = "Porciones", Valor = "4" });
+        }
+        else if (familia == Familia.Focaccia)
+        {
+            datos.Add(new DatoFicha { Rotulo = "Tamaño", Valor = "20 × 30 cm" });
+        }
+
+        return datos;
     }
 
     // el resumen del pedido. La pantalla no recibe el pedido: lo lee del

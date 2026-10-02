@@ -240,6 +240,34 @@
     color:var(--piedra);font-size:.86rem;font-weight:600;
   }
 
+  /* ---------- la ficha de cada familia ----------
+     Lo que la familia dice de sí misma: el rótulo chico arriba y el dato abajo,
+     cada uno en su columna y separados por el mismo trazo vertical que las
+     solapas. Va arriba del cartel de los ingredientes, que así queda pegado a la
+     primera pizza que explica, y cambia con la familia.
+
+     El dato va en Bowlby, como el precio de la carta, y el rótulo en versalitas
+     chicas. */
+  .ficha{
+    margin:1.1rem .95rem 0;
+    display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+    /* el de cada tipografía: así mide lo mismo en la maqueta y en la tienda */
+    line-height:normal;
+  }
+  .ficha > div{
+    position:relative;display:flex;flex-direction:column;align-items:center;
+    gap:.2rem;padding:.25rem .2rem;min-width:0;
+  }
+  .ficha > div + div::before{top:.15rem;bottom:.15rem;left:calc(var(--trazo-alto) / -2);opacity:.45}
+  .ficha dt{
+    font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    opacity:.7;white-space:nowrap;
+  }
+  .ficha dd{
+    margin:0;font-family:var(--cara);font-size:.9rem;letter-spacing:-.02em;
+    -webkit-text-stroke:var(--grosor) currentColor;white-space:nowrap;
+  }
+
   /* ---------- los carteles ----------
      Son dos con el mismo dibujo: el de los ingredientes, arriba de la primera
      pizza, y el de los packs, arriba de los tamaños. Van en el flujo y no
@@ -650,7 +678,8 @@
   /* las verticales son el mismo trazo girado sobre su eje */
   .recorrido li::before,
   .solapas button + button::after,
-  .tam button + button::after{
+  .tam button + button::after,
+  .ficha > div + div::before{
     content:"";position:absolute;width:var(--trazo-alto);
     background-color:var(--verde);pointer-events:none;
     -webkit-mask:var(--trazo-v) repeat-y center top/100% auto;
@@ -1345,6 +1374,22 @@
     c.asomo = false;
   }
 
+  // Lo que cada familia dice de s\u00ed misma, arriba de su lista. El bollo sale de
+  // la receta de la masa y va redondeado a 50 g: 288 g se dice 300. Lo dem\u00e1s son
+  // datos del negocio. Las empanadas no llevan.
+  var FICHAS = {
+    pizzas: [["Bollo", "300 g"], ["Di\u00e1metro", "27 cm"], ["Porciones", "4"]],
+    focaccias: [["Bollo", "500 g"], ["Tama\u00f1o", "20 \u00d7 30 cm"]]
+  };
+
+  function fichaHTML(familia){
+    var f = FICHAS[familia];
+    if(!f) return "";
+    return '<dl class="ficha">' + f.map(function(d){
+      return '<div><dt>' + d[0] + '</dt><dd>' + d[1] + '</dd></div>';
+    }).join("") + '</dl>';
+  }
+
   function pintarCarta(){
     var el = document.getElementById("panel");
     document.body.dataset.tienda = tienda;
@@ -1381,7 +1426,7 @@
         '</div>' + lista;
     }else{
       var fuente = solapa === "pizzas" ? PIZZAS : FOCACCIAS;
-      el.innerHTML = cartelHTML("pista") + '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
+      el.innerHTML = fichaHTML(solapa) + cartelHTML("pista") + '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
     }
 
     if(tienda !== "abierta"){
@@ -1653,6 +1698,7 @@
     carta: function(){
       return uso('Las tres familias en solapas. Es donde se arma el pedido.', [
         'Cada rengl\u00f3n es un producto con su precio y lo que lleva.',
+        'Arriba de la lista, cada familia dice c\u00f3mo es: cu\u00e1nto pesa el bollo, el di\u00e1metro y las porciones. Las empanadas no llevan.',
         'Los ingredientes en <b>pastilla punteada</b> se pueden sacar: se tocan y quedan tachados. Los otros no, porque sin eso deja de ser ese producto. Un <b>cartel</b> arriba de la lista lo dice cada vez que se entra, durante 8 segundos.',
         'Las <b>empanadas</b> no se cobran por unidad: se eligen packs de 6 o de 12, de un solo gusto cada uno. Otro cartel, arriba de los tama\u00f1os, lo explica cada vez que se abre la solapa.',
         'Lo <b>agotado</b> se ve pero no se puede sumar.',
@@ -1738,8 +1784,7 @@
       '<div class="bloque"><h3>La cabecera no repite nada</h3>' +
       '<p>Se llega desde el inicio, así que acá no hace falta explicar de nuevo qué es esto. ' +
       'La cabecera lleva <b>solo el logo</b> y las tres solapas: ' +
-      'mide <b>162 px</b> y deja <b>las siete pizzas en la primera pantalla, sin scroll</b>, con 31 px de sobra. ' +
-      'Con la marca escrita medía 129.</p></div>' +
+      'mide <b>212 px</b>, 142 del logo y 70 de las solapas. Cu\u00e1ntas pizzas entran debajo sin scroll lo dice la ficha, m\u00e1s abajo.</p></div>' +
 
       '<div class="bloque"><h3>Cada pizza es un renglón, no un mosaico</h3>' +
       '<p>Nombre, puntos suspensivos, precio y contador arriba; los cuatro ingredientes debajo, centrados, ' +
@@ -1759,6 +1804,17 @@
       '<p>El segmentado fija el tamaño y cada gusto tiene su contador. Si ya tenés packs del otro tamaño, ' +
       'el renglón lo avisa al costado. Una docena de carne, una de jyq, seis de caprese y seis de humita ' +
       'cuestan <b>cinco toques</b>, medido.</p></div>' +
+
+      '<div class="bloque"><h3>Cada familia dice c\u00f3mo es, arriba de su lista</h3>' +
+      '<p>Pizzas y focaccias llevan una <b>ficha</b> con lo que el cliente quiere saber antes de pedir: ' +
+      'el bollo, el di\u00e1metro o el tama\u00f1o, las porciones. Cada dato va en su columna, con el r\u00f3tulo chico arriba y el n\u00famero en Bowlby, ' +
+      'separados por el mismo trazo de las solapas. Las <b>empanadas no llevan</b>.</p>' +
+      '<p>El <b>bollo sale de la receta de la masa</b> y va redondeado a 50 g: 288 g se dice 300 y 483 g, 500. ' +
+      'El resto son datos escritos: la pizza, de 27 cm y 4 porciones; la focaccia, de 20 \u00d7 30 cm. No llevan horno ni fermentaci\u00f3n.</p>' +
+      '<p>Cuesta lugar: <b>62 px</b> arriba de la lista. Sin ficha ni cartel, la \u00faltima pizza asomaba 23 px por debajo de la primera pantalla; ' +
+      'con la ficha son 85, y 149 mientras est\u00e1 el cartel.</p>' +
+      '<p>Se probaron la ficha <b>fija</b> arriba, al <b>pie</b> de la lista y <b>plegable</b>, y los datos en una l\u00ednea, ' +
+      'en columna con puntos y en una pastilla dibujada. Qued\u00f3 arriba de la lista y en fila.</p></div>' +
 
       '<div class="bloque"><h3>Dos carteles que ense\u00f1an, cada vez que se entra</h3>' +
       '<p>Que los ingredientes se tocan no se descubre solo, y que las empanadas se piden por pack tampoco. ' +
@@ -1809,6 +1865,7 @@
         '<div><dt>Engrosado</dt><dd>0,40 px</dd></div>' +
         '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
         '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
+        '<div><dt>Ficha de la familia</dt><dd>44,5 px</dd></div>' +
         '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +
       '</dl>';
     },
