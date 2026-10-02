@@ -48,10 +48,12 @@
   color:var(--piedra);font-size:.86rem;font-weight:600;
 }
 
-/* ---------- el cartel de los ingredientes ----------
-   Arriba de la primera pizza y en el flujo, no encima: taparle el primer
-   renglón con el cartel que explica cómo usarlo sería esconder justo lo que
-   explica. Cuando se va, el hueco se cierra solo y la lista sube.
+/* ---------- los carteles ----------
+   Son dos con el mismo dibujo: el de los ingredientes, arriba de la primera
+   pizza, y el de los packs, arriba de los tamaños. Van en el flujo y no encima:
+   taparle el primer renglón con el cartel que explica cómo usarlo sería
+   esconder justo lo que explica. Cuando se va, el hueco se cierra solo y la
+   lista sube.
 
    El costado es el mismo .95rem que todo lo demás y abajo no lleva nada: el
    primer <li> ya trae su --aire. El cuerpo de la pastilla es el de .frase en el

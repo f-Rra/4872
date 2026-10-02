@@ -240,10 +240,12 @@
     color:var(--piedra);font-size:.86rem;font-weight:600;
   }
 
-  /* ---------- el cartel de los ingredientes ----------
-     Arriba de la primera pizza y en el flujo, no encima: taparle el primer
-     renglón con el cartel que explica cómo usarlo sería esconder justo lo que
-     explica. Cuando se va, el hueco se cierra solo y la lista sube.
+  /* ---------- los carteles ----------
+     Son dos con el mismo dibujo: el de los ingredientes, arriba de la primera
+     pizza, y el de los packs, arriba de los tamaños. Van en el flujo y no
+     encima: taparle el primer renglón con el cartel que explica cómo usarlo
+     sería esconder justo lo que explica. Cuando se va, el hueco se cierra solo
+     y la lista sube.
 
      Arriba son 1,6rem y no los 2rem del segmentado de packs. Medido, 2rem deja
      los dos huecos iguales —24 px contra 24— pero se ven distintos: el de
@@ -1290,34 +1292,37 @@
     if(b) b.addEventListener("click", function(){ ir("carta"); });
   }
 
-  // ---------- el cartel de los ingredientes ----------
+  // ---------- los carteles ----------
+  // Son dos y son el mismo dibujo: el de los ingredientes, arriba de las pizzas
+  // y las focaccias, y el de los packs, arriba de los tama\u00f1os de Empanadas.
+  // Salen cada vez que se entra a la carta, el de los packs adem\u00e1s cada vez que
+  // se abre su solapa, y duran ocho segundos. Se van antes si el cliente hace lo
+  // que explican: tocar un ingrediente o sumar un pack.
   // No se borra de golpe: se apaga y el hueco se cierra, asi la lista sube sola
   // en vez de saltar. Un alto "auto" no transiciona, por eso se fija el que
   // tiene antes de llevarlo a cero.
   // Va DENTRO de la lista y no al lado: la lista tiene barra de scroll, asi que
   // afuera le sobrarian esos 15 px y el cartel no calzaria con los renglones.
-  // En empanadas no hay ingredientes que sacar, y con la tienda cerrada no hay
-  // carta. En la app ademas no vuelve a salir en otra visita: queda guardado al
-  // lado del carrito.
-  var pistaVista = false, pistaAsomo = false, relojPista = 0;
+  // Con la tienda cerrada no hay carta. En la app no se guarda que ya se vieron.
+  var CARTELES = {
+    pista: {texto:"Toc\u00e1 un ingrediente para sacarlo.", visto:false, asomo:false, reloj:0},
+    packs: {texto:"Cada pack trae 6 o 12 empanadas del mismo gusto. Eleg\u00ed el tama\u00f1o y sum\u00e1 los que quieras.", visto:false, asomo:false, reloj:0}
+  };
 
-  function vaLaPista(){
-    return !pistaVista && solapa !== "empanadas" && tienda !== "lleno";
+  // quieto: la carta se repinta cada vez que sumas una pizza, y sin esto el
+  // cartel volveria a entrar de cero en cada toque
+  function cartelHTML(id){
+    var c = CARTELES[id];
+    if(c.visto) return "";
+    return '<div class="hueco-pista' + (c.asomo ? ' quieto' : '') + '" id="' + id + '">' +
+           '<p class="pista">' + c.texto + '</p></div>';
   }
 
-  function pistaHTML(){
-    if(!vaLaPista()) return "";
-    // quieto: la carta se repinta cada vez que sumas una pizza, y sin esto el
-    // cartel volveria a entrar de cero en cada toque
-    return '<div class="hueco-pista' + (pistaAsomo ? ' quieto' : '') + '" id="pista">' +
-           '<p class="pista">Toc\u00e1 un ingrediente para sacarlo.</p></div>';
-  }
-
-  function irsePista(){
-    var p = document.getElementById("pista");
-    if(!p || pistaVista) return;
-    window.clearTimeout(relojPista);
-    pistaVista = true;
+  function irseCartel(id){
+    var c = CARTELES[id], p = document.getElementById(id);
+    if(!p || c.visto) return;
+    window.clearTimeout(c.reloj);
+    c.visto = true;
     p.style.height = p.scrollHeight + "px";
     void p.offsetWidth;
     p.classList.add("ido");
@@ -1325,11 +1330,19 @@
     window.setTimeout(function(){ if(p.parentElement) p.hidden = true; }, 460);
   }
 
-  function asomarPista(){
-    if(!document.getElementById("pista")) return;
-    if(pistaAsomo) return;
-    pistaAsomo = true;
-    relojPista = window.setTimeout(irsePista, 4000);
+  function asomarCartel(id){
+    var c = CARTELES[id];
+    if(!document.getElementById(id) || c.asomo) return;
+    c.asomo = true;
+    c.reloj = window.setTimeout(function(){ irseCartel(id); }, 8000);
+  }
+
+  // para que vuelva a salir: la proxima vez que se pinte asoma de cero
+  function nuevoCartel(id){
+    var c = CARTELES[id];
+    window.clearTimeout(c.reloj);
+    c.visto = false;
+    c.asomo = false;
   }
 
   function pintarCarta(){
@@ -1361,14 +1374,14 @@
 
       // sin lista de «En tu pedido» al pie: el contador de cada gusto ya dice
       // cuantos llevas, y el «otro» avisa los del tamano que no estas mirando
-      el.innerHTML =
+      el.innerHTML = cartelHTML("packs") +
         '<div class="tam">' +
           '<button type="button" data-cupo="6" aria-pressed="' + (cupo === 6) + '">x6 · ' + plata(PACK[6]) + '</button>' +
           '<button type="button" data-cupo="12" aria-pressed="' + (cupo === 12) + '">x12 · ' + plata(PACK[12]) + '</button>' +
         '</div>' + lista;
     }else{
       var fuente = solapa === "pizzas" ? PIZZAS : FOCACCIAS;
-      el.innerHTML = pistaHTML() + '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
+      el.innerHTML = cartelHTML("pista") + '<ol class="carta">' + fuente.map(filaCarta).join("") + '</ol>';
     }
 
     if(tienda !== "abierta"){
@@ -1376,7 +1389,7 @@
     }
     engancharCarta();
     pintarInicio();
-    asomarPista();
+    asomarCartel(solapa === "empanadas" ? "packs" : "pista");
     barra();
   }
 
@@ -1402,6 +1415,8 @@
     if(!nueva) delete carrito[clave];
     else carrito[clave] = {cant:nueva, precio:precioDe(clave)};
     pintarCarta();
+    // ya entendio como se piden: el cartel de los packs no hace falta mas
+    if(d > 0 && esPack(clave)) irseCartel("packs");
 
     var c = document.querySelector('#panel [data-mas="' + clave + '"]');
     latir(c ? c.parentElement.querySelector(".n") : null);
@@ -1413,7 +1428,7 @@
     p.querySelectorAll(".ing:not(.fijo)").forEach(function(c){
       c.addEventListener("click", function(){
         c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
-        irsePista();   // ya entendio: el cartel no hace falta mas
+        irseCartel("pista");   // ya entendio: el cartel no hace falta mas
       });
     });
     p.querySelectorAll("[data-mas]").forEach(function(b){
@@ -1550,10 +1565,21 @@
 
   /* ---------- el recorrido ---------- */
   function ir(p){
+    var venia = paso;
     paso = p;
     ["inicio", "carta", "checkout", "listo"].forEach(function(x){
       document.getElementById("p-" + x).hidden = x !== p;
     });
+    // cada vez que se entra a la carta: abre en pizzas y los carteles vuelven
+    if(p === "carta" && venia !== "carta"){
+      solapa = "pizzas";
+      document.querySelectorAll("#solapas button").forEach(function(o){
+        o.setAttribute("aria-pressed", o.dataset.s === solapa);
+      });
+      nuevoCartel("pista");
+      nuevoCartel("packs");
+      pintarCarta();
+    }
     document.querySelectorAll("#pasos [data-p]").forEach(function(b){
       b.setAttribute("aria-pressed", b.dataset.p === p);
     });
@@ -1572,10 +1598,18 @@
   document.getElementById("confirmar").addEventListener("click", function(){ ir("listo"); });
   document.querySelectorAll("#solapas button").forEach(function(b){
     b.addEventListener("click", function(){
+      var antes = solapa;
       solapa = b.dataset.s;
       document.querySelectorAll("#solapas button").forEach(function(o){
         o.setAttribute("aria-pressed", o.dataset.s === solapa);
       });
+      // tocar la solapa que ya esta abierta no es abrirla: los carteles no vuelven
+      if(solapa !== antes){
+        // en empanadas no hay ingredientes que sacar, asi que ese cartel sobra;
+        // el de los packs sale cada vez que se abre la solapa
+        if(solapa === "empanadas") irseCartel("pista");
+        nuevoCartel("packs");
+      }
       pintarCarta();
       pintarLado();
     });
@@ -1619,8 +1653,8 @@
     carta: function(){
       return uso('Las tres familias en solapas. Es donde se arma el pedido.', [
         'Cada rengl\u00f3n es un producto con su precio y lo que lleva.',
-        'Los ingredientes en <b>pastilla punteada</b> se pueden sacar: se tocan y quedan tachados. Los otros no, porque sin eso deja de ser ese producto.',
-        'Las <b>empanadas</b> no se cobran por unidad: se eligen packs de 6 o de 12, de un solo gusto cada uno.',
+        'Los ingredientes en <b>pastilla punteada</b> se pueden sacar: se tocan y quedan tachados. Los otros no, porque sin eso deja de ser ese producto. Un <b>cartel</b> arriba de la lista lo dice cada vez que se entra, durante 8 segundos.',
+        'Las <b>empanadas</b> no se cobran por unidad: se eligen packs de 6 o de 12, de un solo gusto cada uno. Otro cartel, arriba de los tama\u00f1os, lo explica cada vez que se abre la solapa.',
         'Lo <b>agotado</b> se ve pero no se puede sumar.',
         'Abajo queda fija la cuenta con lo que va del pedido y el bot\u00f3n para seguir.'
       ]);
@@ -1725,6 +1759,18 @@
       '<p>El segmentado fija el tamaño y cada gusto tiene su contador. Si ya tenés packs del otro tamaño, ' +
       'el renglón lo avisa al costado. Una docena de carne, una de jyq, seis de caprese y seis de humita ' +
       'cuestan <b>cinco toques</b>, medido.</p></div>' +
+
+      '<div class="bloque"><h3>Dos carteles que ense\u00f1an, cada vez que se entra</h3>' +
+      '<p>Que los ingredientes se tocan no se descubre solo, y que las empanadas se piden por pack tampoco. ' +
+      'Cada cosa tiene su <b>cartel</b>, una pastilla en el flujo y no encima, para no tapar lo que explica: ' +
+      '\u00abToc\u00e1 un ingrediente para sacarlo\u00bb arriba de las pizzas y las focaccias, y ' +
+      '\u00abCada pack trae 6 o 12 empanadas del mismo gusto. Eleg\u00ed el tama\u00f1o y sum\u00e1 los que quieras\u00bb arriba de los tama\u00f1os.</p>' +
+      '<p>Salen <b>cada vez que se entra</b> a la carta \u2014el de empanadas, cada vez que se abre su solapa\u2014, ' +
+      'duran <b>ocho segundos</b> y se van solos: no responden al toque. Se van antes si el cliente hace lo que explican, ' +
+      'tocar un ingrediente o sumar un pack. Antes sal\u00eda una sola vez por tel\u00e9fono y duraba cuatro segundos.</p>' +
+      '<p>Se probaron 4 y 12 segundos, y sin reloj hasta que se usan; cerrarlos al tocarlos o con una cruz; ' +
+      'no mostrar el de ingredientes con el pedido empezado; el de empanadas una sola vez por entrada, o entre los tama\u00f1os y los gustos; ' +
+      'y otros dos textos, m\u00e1s cortos.</p></div>' +
 
       '<div class="bloque"><h3>El agotado se tacha, no se esconde</h3>' +
       '<p>La Calabresa y las Aceitunas están agotadas: nombre y precio tachados, todo en piedra, ' +

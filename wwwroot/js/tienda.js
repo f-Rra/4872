@@ -25,10 +25,6 @@
   // avisarle nada a nadie. Pero sí tiene que sobrevivir a una recarga o a un
   // «volver atrás», que en un teléfono pasa todo el tiempo.
   var LLAVE = "4872.pedido";
-  // una sola vez por dispositivo: mostrarlo en cada visita cansa a la segunda
-  // semana, y el que ya sabe que los ingredientes se tocan no necesita que se
-  // lo repitan todos los martes
-  var LLAVE_PISTA = "4872.pista";
   var carrito = {};
 
   // localStorage tira excepción en modo privado y con las cookies bloqueadas.
@@ -270,7 +266,11 @@
   lista.addEventListener("click", function (e) {
     var boton = e.target.closest(".contador button");
     if (boton) {
-      mover(boton.closest(".contador").dataset.clave, "menos" in boton.dataset ? -1 : 1);
+      var clave = boton.closest(".contador").dataset.clave;
+      var paso = "menos" in boton.dataset ? -1 : 1;
+      mover(clave, paso);
+      // ya entendió cómo se piden: el cartel de los packs no hace falta más
+      if (paso > 0 && clave.charAt(0) === "e") cartelPacks.irse();
       return;
     }
 
@@ -279,13 +279,16 @@
     var chip = e.target.closest(".ing:not(.fijo)");
     if (!chip || chip.disabled) return;
     chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "true" ? "false" : "true");
-    irsePista();   // ya entendió: el cartel no hace falta más
+    cartelIngredientes.irse();   // ya entendió: el cartel no hace falta más
     pintar();
   });
 
   solapas.addEventListener("click", function (e) {
     var boton = e.target.closest("button[data-solapa]");
     if (!boton) return;
+
+    // tocar la solapa que ya está abierta no es abrirla: los carteles no vuelven
+    var abre = boton.getAttribute("aria-pressed") !== "true";
 
     solapas.querySelectorAll("button").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b === boton));
@@ -295,8 +298,15 @@
       g.hidden = g.dataset.familia !== boton.dataset.solapa;
     });
 
-    // en empanadas no hay ingredientes que sacar, así que el cartel sobra
-    if (boton.dataset.solapa === "empanadas") irsePista();
+    if (abre) {
+      if (boton.dataset.solapa === "empanadas") {
+        // en empanadas no hay ingredientes que sacar, así que ese cartel sobra
+        cartelIngredientes.irse();
+        cartelPacks.asomar();
+      } else {
+        cartelPacks.cerrar();
+      }
+    }
 
     lista.scrollTop = 0;
   });
@@ -314,39 +324,65 @@
     });
   }
 
-  // ---------- el cartel de los ingredientes ----------
+  // ---------- los carteles ----------
+  // Son dos y son el mismo: una pastilla en el flujo, arriba de lo que explica.
+  // El de los ingredientes va arriba de las pizzas y las focaccias; el de los
+  // packs, arriba de los tamaños de Empanadas.
+  //
+  // Salen cada vez que se entra, sin recordar que ya se vieron, y duran ocho
+  // segundos. El que ya sabe cómo se usa los cierra haciendo lo que explican.
+  var DURACION_CARTEL = 8000;
+
   // No se borra de golpe: se apaga y el hueco se cierra, así la lista sube sola
   // en vez de saltar. Un alto "auto" no transiciona, por eso se fija el que
   // tiene antes de llevarlo a cero.
-  var pista = document.getElementById("pista");
-  var relojPista = 0;
+  function crearCartel(id) {
+    var hueco = document.getElementById(id);
+    var reloj = 0;
+    var abierto = false;
 
-  function irsePista() {
-    if (!pista || pista.hidden) return;
-    window.clearTimeout(relojPista);
-    try { localStorage.setItem(LLAVE_PISTA, "1"); } catch (e) { /* sin guardar */ }
+    function irse() {
+      if (!abierto) return;
+      abierto = false;
+      window.clearTimeout(reloj);
 
-    pista.style.height = pista.scrollHeight + "px";
-    void pista.offsetWidth;
-    pista.classList.add("ido");
-    pista.style.height = "0px";
-    window.setTimeout(function () { if (pista) pista.hidden = true; }, 460);
+      hueco.style.height = hueco.scrollHeight + "px";
+      void hueco.offsetWidth;
+      hueco.classList.add("ido");
+      hueco.style.height = "0px";
+      // si volvió a asomar mientras se cerraba, no se lo esconde
+      window.setTimeout(function () { if (!abierto) hueco.hidden = true; }, 460);
+    }
+
+    function asomar() {
+      if (!hueco) return;
+      window.clearTimeout(reloj);
+      hueco.classList.remove("ido");
+      hueco.style.height = "";
+      hueco.hidden = false;
+      abierto = true;
+      reloj = window.setTimeout(irse, DURACION_CARTEL);
+    }
+
+    // Sin animar: la solapa que lo tenía ya no se ve y no hay nada que cerrar
+    // con gracia. Queda listo para asomar de nuevo.
+    function cerrar() {
+      if (!hueco) return;
+      window.clearTimeout(reloj);
+      abierto = false;
+      hueco.hidden = true;
+    }
+
+    return { asomar: asomar, irse: irse, cerrar: cerrar };
   }
 
-  function asomarPista() {
-    if (!pista) return;
-    var visto = true;
-    try { visto = localStorage.getItem(LLAVE_PISTA) === "1"; } catch (e) { /* sin guardar */ }
-    // sin renglones que tocar no hay nada que explicar
-    var hay = lista.querySelector("[data-familia]:not([hidden]) .ing:not(.fijo)");
-    if (visto || !hay) return;
-
-    pista.hidden = false;
-    relojPista = window.setTimeout(irsePista, 4000);
-  }
+  var cartelIngredientes = crearCartel("pista");
+  var cartelPacks = crearCartel("pista-packs");
 
   recuperar();
   recuperarIngredientes();
   pintar();
-  asomarPista();
+
+  // sin renglones que tocar no hay nada que explicar
+  if (lista.querySelector("[data-familia]:not([hidden]) .ing:not(.fijo)")) cartelIngredientes.asomar();
 })();

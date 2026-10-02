@@ -108,7 +108,7 @@
                Va uno solo y afuera de las familias: la carta abre siempre en
                pizzas, así que uno por familia serían dos que nadie ve nunca. Lo
                muestra y lo esconde tienda.js, que además lo saca en empanadas
-               —que no tienen nada que sacar— y no lo repite en otra visita. *@
+               —que no tienen nada que sacar—. Sale cada vez que se entra. *@
             <div class="hueco-pista" id="pista" hidden>
                 <p class="pista">Tocá un ingrediente para sacarlo.</p>
             </div>
@@ -121,6 +121,13 @@
                 }
                 else
                 {
+                    @* Explica cómo se pide, y por eso va arriba del segmentado, que es
+                       lo primero que se toca. Lo muestra tienda.js cada vez que se
+                       abre la solapa. *@
+                    <div class="hueco-pista" id="pista-packs" hidden>
+                        <p class="pista">Cada pack trae 6 o 12 empanadas del mismo gusto. Elegí el tamaño y sumá los que quieras.</p>
+                    </div>
+
                     @* el segmentado fija el tamaño: no hay unidades sueltas ni packs
                        mezclados, así que el precio se elige una vez y vale para todos *@
                     <div class="tam" id="tam">
