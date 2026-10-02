@@ -41,14 +41,15 @@ public class PanelController : Controller
     {
         var marco = await Marco();
         var consolidado = await _recetas.Consolidar();
+        var comprar = await _recetas.FaltaComprar();
 
         return View(new InicioVm
         {
             Abierta = marco.Abierta,
             SinEntregar = marco.SinEntregar,
-            Cifras = await Cifras(),
+            Cifras = await Cifras(consolidado, comprar),
             Hornear = Hornear(consolidado),
-            Comprar = await _recetas.FaltaComprar()
+            Comprar = comprar
         });
     }
 
@@ -70,11 +71,7 @@ public class PanelController : Controller
 
         // la banda es lo unico de la pantalla que mira los pedidos: el resto es
         // por unidad y no cambia de una semana a la otra
-        var pedidas = await _contexto.ItemPedidos
-            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
-            .GroupBy(x => x.IdProducto)
-            .Select(g => new { IdProducto = g.Key, Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)) })
-            .ToDictionaryAsync(x => x.IdProducto, x => x.Piezas);
+        var pedidas = await PiezasPedidas();
 
         var cuesta = lista.Sum(x => x.Costo * pedidas.GetValueOrDefault(x.IdProducto));
         var cobra = lista.Sum(x => x.Venta * pedidas.GetValueOrDefault(x.IdProducto));
@@ -1987,30 +1984,28 @@ public class PanelController : Controller
         ];
     }
 
-    // Las cinco tarjetas del tablero.
+    // Las cinco tarjetas del tablero: las de fabrica de la maqueta. Ella trae un
+    // catalogo de veintiseis cifras y un selector en el titulo de cada tarjeta;
+    // el selector todavia no esta, asi que la fila es fija.
     //
-    // La maqueta trae un catalogo de veintiseis cifras y deja elegir cinco desde
-    // el titulo de cada tarjeta. Estas cinco salen de ese catalogo y son las que
-    // se pueden calcular hoy: las otras tres que trae de fabrica -Falta comprar,
-    // Produccion y Costo- necesitan las recetas y el stock, que son las pantallas
-    // que faltan. Cuando existan, entra el selector y vuelven las de la maqueta.
-    private async Task<IReadOnlyList<Cifra>> Cifras()
+    // Falta comprar y Produccion salen de lo que ya calculo Inicio para sus dos
+    // listas, y Costo de la misma cuenta que la banda de Costos: no hay una
+    // segunda cuenta que pueda discrepar con la pantalla de donde viene cada una.
+    private async Task<IReadOnlyList<Cifra>> Cifras(Consolidado consolidado, ListaDeCompras comprar)
     {
-        // un solo viaje: todo lo que sigue sale de los pedidos sin entregar, y
-        // son pocos por definicion -los entregados no cuentan-
+        // un solo viaje: lo que sigue sale de los pedidos sin entregar, y son
+        // pocos por definicion -los entregados no cuentan-
         var abiertos = await _contexto.Pedidos
             .Where(x => x.Estado == EstadoPedido.Nuevo || x.Estado == EstadoPedido.Preparando)
             .Select(x => new
             {
-                x.IdPedido,
-                x.Telefono,
-                x.FechaPedido,
                 Nuevo = x.Estado == EstadoPedido.Nuevo,
                 Plata = x.Items.Sum(i => i.Cantidad * i.PrecioUnitario)
             })
             .ToListAsync();
 
-        var viejo = abiertos.OrderBy(x => x.FechaPedido).FirstOrDefault();
+        var pedidas = await PiezasPedidas();
+        var costo = (await _recetas.Costos()).Sum(x => x.Costo * pedidas.GetValueOrDefault(x.IdProducto));
 
         return
         [
@@ -2022,25 +2017,21 @@ public class PanelController : Controller
             },
             new Cifra
             {
-                Titulo = "Sin entregar",
-                Valor = abiertos.Count.ToString(),
-                Nota = "abiertos en total"
+                Titulo = "Falta comprar",
+                Valor = comprar.Renglones.Count.ToString(),
+                Nota = comprar.Renglones.Count == 1 ? "ingrediente" : "ingredientes"
             },
             new Cifra
             {
-                Titulo = "El más viejo",
-                Valor = viejo is null ? "—" : $"{Reloj.HorasDesde(viejo.FechaPedido)} h",
-                Nota = viejo is null
-                    ? "no hay pedidos abiertos"
-                    : $"el {viejo.IdPedido:0000}, de las {Reloj.EnBuenosAires(viejo.FechaPedido):HH:mm}"
+                Titulo = "Producción",
+                Valor = $"{consolidado.Bollos} {(consolidado.Bollos == 1 ? "bollo" : "bollos")}",
+                Nota = await _recetas.Amasado(consolidado.Productos)
             },
             new Cifra
             {
-                Titulo = "Clientes",
-                // por telefono y no por nombre: dos Juan son dos personas, y el
-                // mismo telefono pidiendo dos veces es una sola esperando
-                Valor = abiertos.Select(x => x.Telefono).Distinct().Count().ToString(),
-                Nota = "esperando"
+                Titulo = "Costo",
+                Valor = costo.ToString("C"),
+                Nota = "hacer todo lo pedido"
             },
             new Cifra
             {
@@ -2050,6 +2041,16 @@ public class PanelController : Controller
             }
         ];
     }
+
+    // Cuantas piezas hay pedidas de cada producto, sin entregar. Un pack de
+    // empanadas cuenta por sus unidades: lo que se hace y lo que cuesta es cada
+    // empanada, no el pack.
+    private async Task<Dictionary<int, int>> PiezasPedidas() =>
+        await _contexto.ItemPedidos
+            .Where(x => x.Pedido.Estado == EstadoPedido.Nuevo || x.Pedido.Estado == EstadoPedido.Preparando)
+            .GroupBy(x => x.IdProducto)
+            .Select(g => new { IdProducto = g.Key, Piezas = g.Sum(x => x.Cantidad * (x.UnidadesPorPack ?? 1)) })
+            .ToDictionaryAsync(x => x.IdProducto, x => x.Piezas);
 
     // El interruptor. Por POST porque cambia algo, y volviendo a Inicio para que
     // recargar la pagina no lo vuelva a tocar.
