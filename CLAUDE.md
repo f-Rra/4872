@@ -21,6 +21,8 @@ Los dos archivos **se explican solos**: cada pantalla trae al costado por qué q
 
 Las variables del servicio son cuatro —`ConnectionStrings__Postgres`, `Panel__Clave`, `Telegram__Token` y `Telegram__Chat`— y **ninguna vive en el repo**. En la máquina de uno, las mismas van por `dotnet user-secrets`.
 
+**La vista previa del link** —la tarjeta que WhatsApp y Telegram dibujan al compartir 4872.com.ar— sale de las etiquetas `og:` del `<head>` de `Views/Shared/_Tienda.cshtml` y de `wwwroot/img/vista-previa.png`: 1200 × 630, el logo y las tres familias. Pesa 94 KB a propósito, porque WhatsApp suele descartar las imágenes que pasan los ~300 KB. Es una sola para toda la tienda. Las apps guardan la tarjeta y la imagen: si se cambia el dibujo, hay que cambiarle el nombre al archivo, o siguen mostrando el viejo.
+
 ## Stack
 
 .NET 9 · ASP.NET Core MVC · EF Core code-first con Fluent API · PostgreSQL (nativo en la máquina de uno, un servicio en Railway) · **CSS propio, sin frameworks** · Razor + JS vanilla · Railway con `Dockerfile` para el deploy.
