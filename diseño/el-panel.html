@@ -3361,8 +3361,10 @@
     document.querySelectorAll("#marco [data-iguardar]").forEach(function(b){
       b.addEventListener("click", function(){
         var nom = document.getElementById("i-nombre").value.trim();
-        var pre = soloNum(document.getElementById("i-precio").value);
-        var tra = leerMedida(document.getElementById("i-trae").value, uniNueva || (ingElegido !== null && buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g"));
+        // lo que no se compra no trae los dos campos de la compra: se deja lo que tenga
+        var cPre = document.getElementById("i-precio"), cTrae = document.getElementById("i-trae");
+        var pre = cPre ? soloNum(cPre.value) : 0;
+        var tra = cTrae ? leerMedida(cTrae.value, uniNueva || (ingElegido !== null && buscaIng(ingElegido) ? buscaIng(ingElegido).u : "g")) : 0;
         if(!nom){ document.getElementById("i-nombre").focus(); return; }
         // uno nuevo no se crea sin rubro: entrar\u00eda en \u00abSin rubro\u00bb y habr\u00eda que
         // volver a abrirlo. A uno que ya existe se lo deja guardar sin
@@ -3374,7 +3376,8 @@
         }else{
           hecho = "Cambios guardados.";
           var x = buscaIng(ingElegido);
-          x.sale = pre; x.trae = tra;
+          if(cPre) x.sale = pre;
+          if(cTrae) x.trae = tra;
           if(uniNueva) x.u = uniNueva;
           if(rubroNuevo && !x.libre) x.r = rubroNuevo;
           if(nom !== x.n){
