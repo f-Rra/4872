@@ -12,10 +12,14 @@
     @*
         La tarjeta que WhatsApp, Telegram y el resto dibujan cuando alguien comparte el link: imagen,
         título y descripción. Es una sola para toda la tienda y no cambia con la pantalla.
-        La imagen lleva la dirección entera, con https y dominio, porque la baja el servidor de la app
-        que muestra el link y no el navegador de quien lo recibe: con /img/x.png no sabría de dónde.
-        La dirección sale del propio pedido, así que en producción es 4872.com.ar y en la máquina de
-        uno, localhost.
+        La imagen lleva la dirección entera, con https y dominio, porque la baja la app que arma la
+        tarjeta —el teléfono de quien comparte, o el servidor de Telegram— y no un navegador parado
+        en esta página: con /img/x.png no sabría de dónde. La dirección sale del propio pedido, así
+        que en producción es 4872.com.ar y en la máquina de uno, localhost.
+        WhatsApp tiene dos tarjetas: la grande muestra la imagen entera y la chica la recorta al
+        cuadrado del medio, los 630 px centrales de los 1200. Cuál dibuja lo decide la app de quien
+        manda el link y la página no se lo puede pedir, así que el logo y todo lo que importa de la
+        imagen va adentro de ese cuadrado.
         Las apps guardan la tarjeta y la imagen: si se cambia el dibujo, hay que cambiarle el nombre
         al archivo, o siguen mostrando el viejo.
         Los textos van escritos acá y no en una variable: así salen tal cual y no con las tildes
@@ -29,11 +33,11 @@
     <meta property="og:title" content="48·72 · Pizzas, focaccias y empanadas" />
     <meta property="og:description" content="Pedís en la semana, lo recibís el finde." />
     <meta property="og:url" content="@(origen + Context.Request.PathBase + Context.Request.Path)" />
-    <meta property="og:image" content="@(origen + Url.Content("~/img/vista-previa.png"))" />
-    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image" content="@(origen + Url.Content("~/img/vista-previa.jpg"))" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="El logo de 48·72 junto a los dibujos de una pizza, una empanada y una focaccia" />
+    <meta property="og:image:alt" content="El logo de 48·72 y, debajo, los dibujos de una pizza, una empanada y una focaccia" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="~/favicon.ico" asp-append-version="true" />
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" asp-append-version="true" />
