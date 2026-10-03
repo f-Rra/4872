@@ -172,6 +172,10 @@ builder.Services.AddScoped<TelegramService>();
 builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<RecetaService>();
 
+// El aviso de que algo se rompió. Se engancha al manejador de errores de más
+// abajo, que sigue mostrando la pantalla de error de siempre (ver AvisoDeFallas).
+builder.Services.AddExceptionHandler<AvisoDeFallas>();
+
 var app = builder.Build();
 
 // Las dos masas van siempre, tambien en produccion: son la receta del vendedor
