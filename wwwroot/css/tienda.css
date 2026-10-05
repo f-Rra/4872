@@ -119,7 +119,17 @@
 }
 
 /* ---------- el renglón de la carta ---------- */
-ol.carta{list-style:none;margin:0;padding:0}
+/* La raya de arriba. Cada renglón dibuja la suya abajo, así que el primero se
+   quedaba sin ninguna, pegado a la ficha. El borde transparente es el de
+   ol.gustos: ocupa su alto y el trazo se pinta encima. El margen completa el
+   --aire que hay entre el último ingrediente y la raya de cada renglón: la
+   ficha ya trae .25rem abajo y el resto sale de acá. */
+ol.carta{
+  list-style:none;margin:calc(var(--aire) - .25rem) 0 0;padding:0;
+  border-top:1px solid transparent;position:relative;
+}
+/* sin renglones no hay lista: quedaría solo su raya, suelta bajo la ficha */
+ol.carta:not(:has(li)){display:none}
 ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
 
 .renglon{display:flex;align-items:baseline;gap:.55rem}
@@ -464,6 +474,7 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 .portada::after,
 .cierre::after,
 .cta-pie::before,
+ol.carta::before,
 ol.carta li::after,
 ol.gustos::before,
 ol.gustos li::after,
@@ -485,9 +496,11 @@ ol.carta li::after,
 ol.gustos li::after{bottom:calc(var(--trazo-alto) / -2 - 1px)}
 .cta-pie::before,
 .cred + .cred::before{top:calc(var(--trazo-alto) / -2 - 2px)}
+ol.carta::before,
 ol.gustos::before{top:calc(var(--trazo-alto) / -2 - 1px)}
 
 /* las que en la maqueta eran suaves siguen suaves */
+ol.carta::before,
 ol.carta li::after,
 ol.gustos::before,
 ol.gustos li::after{opacity:.35}
@@ -764,6 +777,7 @@ ol.gustos li::after{opacity:.35}
 .dibujando .cred + .cred::before,
 .dibujando .cta-pie::before,
 .dibujando .solapas::after,
+.dibujando ol.carta::before,
 .dibujando ol.carta li::after,
 .dibujando ol.gustos::before,
 .dibujando ol.gustos li::after,

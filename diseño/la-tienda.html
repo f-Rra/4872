@@ -310,7 +310,17 @@
   }
 
   /* ---------- el renglón de la carta ---------- */
-  ol.carta{list-style:none;margin:0;padding:0}
+  /* La raya de arriba. Cada renglón dibuja la suya abajo, así que el primero se
+     quedaba sin ninguna, pegado a la ficha. El borde transparente es el de
+     ol.gustos: ocupa su alto y el trazo se pinta encima. El margen completa el
+     --aire que hay entre el último ingrediente y la raya de cada renglón: la
+     ficha ya trae .25rem abajo y el resto sale de acá. */
+  ol.carta{
+    list-style:none;margin:calc(var(--aire) - .25rem) 0 0;padding:0;
+    border-top:1px solid transparent;position:relative;
+  }
+  /* sin renglones no hay lista: quedaría solo su raya, suelta bajo la ficha */
+  ol.carta:not(:has(li)){display:none}
   ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;position:relative}
 
   .renglon{display:flex;align-items:baseline;gap:.55rem}
@@ -646,6 +656,7 @@
   .portada::after,
   .cierre::after,
   .cta-pie::before,
+  ol.carta::before,
   ol.carta li::after,
   ol.gustos::before,
   ol.gustos li::after,
@@ -667,9 +678,11 @@
   ol.gustos li::after{bottom:calc(var(--trazo-alto) / -2 - 1px)}
   .cta-pie::before,
   .cred + .cred::before{top:calc(var(--trazo-alto) / -2 - 2px)}
+  ol.carta::before,
   ol.gustos::before{top:calc(var(--trazo-alto) / -2 - 1px)}
 
   /* las que en la maqueta eran suaves siguen suaves */
+  ol.carta::before,
   ol.carta li::after,
   ol.gustos::before,
   ol.gustos li::after{opacity:.35}
@@ -951,6 +964,7 @@
   .dibujando .cred + .cred::before,
   .dibujando .cta-pie::before,
   .dibujando .solapas::after,
+  .dibujando ol.carta::before,
   .dibujando ol.carta li::after,
   .dibujando ol.gustos::before,
   .dibujando ol.gustos li::after,
@@ -1133,7 +1147,7 @@
             </div>
             <div class="cred">
               <i class="dib focaccia" aria-hidden="true"></i>
-              <div><b>Alta hidratación</b><span>Focaccias aireadas en distintos sabores.</span></div>
+              <div><b>Alta hidratación</b><span>Focaccias en distintos sabores.</span></div>
             </div>
             <div class="cred">
               <i class="dib empanada" aria-hidden="true"></i>
@@ -1811,8 +1825,11 @@
       'separados por el mismo trazo de las solapas. Las <b>empanadas no llevan</b>.</p>' +
       '<p>El <b>bollo sale de la receta de la masa</b> y va redondeado a 50 g: 288 g se dice 300 y 483 g, 500. ' +
       'El resto son datos escritos: la pizza, de 27 cm y 4 porciones; la focaccia, de 20 \u00d7 30 cm. No llevan horno ni fermentaci\u00f3n.</p>' +
-      '<p>Cuesta lugar: <b>62 px</b> arriba de la lista. Sin ficha ni cartel, la \u00faltima pizza asomaba 23 px por debajo de la primera pantalla; ' +
-      'con la ficha son 85, y 149 mientras est\u00e1 el cartel.</p>' +
+      '<p>Cuesta lugar: <b>62 px</b> la ficha y <b>13 px</b> la raya que la separa del primer rengl\u00f3n, 75 en total. ' +
+      'Sin ficha ni raya ni cartel, la \u00faltima pizza asomaba 23 px por debajo de la primera pantalla; ' +
+      'con la ficha son 85, con la raya 98, y 163 mientras est\u00e1 el cartel.</p>' +
+      '<p>Cada rengl\u00f3n dibuja su raya abajo, as\u00ed que el primero tiene la suya arriba, como la lista de empanadas, ' +
+      'y con el mismo aire que las dem\u00e1s: 1 rem entre el texto de la ficha y la raya, y entre la raya y el nombre.</p>' +
       '<p>Se probaron la ficha <b>fija</b> arriba, al <b>pie</b> de la lista y <b>plegable</b>, y los datos en una l\u00ednea, ' +
       'en columna con puntos y en una pastilla dibujada. Qued\u00f3 arriba de la lista y en fila.</p></div>' +
 
@@ -1866,6 +1883,7 @@
         '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
         '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
         '<div><dt>Ficha de la familia</dt><dd>44,5 px</dd></div>' +
+        '<div><dt>Aire sobre la primera raya</dt><dd>0,75 rem</dd></div>' +
         '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +
       '</dl>';
     },
