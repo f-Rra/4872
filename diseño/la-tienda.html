@@ -27,8 +27,11 @@
     --grosor:.4px;
     --ing-cuerpo:.79rem;
     --aire:1rem;
-    --ancho-c:1.05rem;
-    --alto-c:1.3rem;
+    /* el contador: en la maqueta, que es un teléfono de 390, vale el tope de 1,75 rem por
+       tecla; la app lo hace crecer con la pantalla hasta ahí. El alto sale del ancho, en la
+       proporción del contorno dibujado (52 × 21) */
+    --ancho-c:1.75rem;
+    --alto-c:calc(var(--ancho-c) * 1.27);
     /* medida cerrada del renglón del checkout */
     --item:1.00rem;
     /* el dibujo va una sola vez acá y lo usan las dos pantallas que lo muestran */
@@ -419,6 +422,9 @@
   .contador{
     display:inline-flex;align-items:center;flex:none;position:relative;
     border:1.4px solid transparent;border-radius:999px;overflow:hidden;height:var(--alto-c);
+    /* la caja sigue ocupando en el renglón los 1,3 rem de siempre y lo que se agrandó se
+       sale por arriba y por abajo, sobre el aire del renglón: así la lista no se alarga */
+    margin-block:calc((1.3rem - var(--alto-c)) / 2);
   }
   .contador::before{
     content:"";position:absolute;z-index:1;inset:-1.4px;pointer-events:none;
@@ -430,7 +436,9 @@
   .contador button{
     width:var(--ancho-c);height:100%;border:0;background:transparent;color:var(--verde);
     cursor:pointer;display:grid;place-items:center;
-    font-family:var(--ui);font-weight:800;font-size:.82rem;line-height:1;padding:0;
+    font-family:var(--ui);font-weight:800;font-size:calc(var(--alto-c) * .63);line-height:1;
+    /* el menos y el más caen más abajo que el número: el relleno de abajo los sube a su centro */
+    padding:0 0 calc(var(--alto-c) * .09);
     transition:background .14s ease;
   }
   .contador button:hover:not(:disabled){background:rgba(30,82,69,.13)}
@@ -438,7 +446,7 @@
   .contador button:focus-visible{outline:2px solid var(--verde);outline-offset:-2px}
   .contador .n{
     min-width:var(--ancho-c);text-align:center;font-family:var(--ui);font-weight:800;
-    font-size:.76rem;font-variant-numeric:tabular-nums;line-height:1;
+    font-size:calc(var(--alto-c) * .585);font-variant-numeric:tabular-nums;line-height:1;
   }
   .contador.cero::before{opacity:.45}
   .contador.cero .n{opacity:.35}
@@ -1824,7 +1832,8 @@
       '<div class="bloque"><h3>Cada pizza es un renglón, no un mosaico</h3>' +
       '<p>Nombre, puntos suspensivos, precio y contador arriba; los cuatro ingredientes debajo, centrados, ' +
       'en una sola fila. Los mosaicos con foto entraban de a tres por pantalla; así entran casi las siete.</p>' +
-      '<p>El contador va <b>junto al precio</b> y no al final: quedaba colgado cuando los ingredientes no llenaban el ancho.</p></div>' +
+      '<p>El contador va <b>junto al precio</b> y no al final: quedaba colgado cuando los ingredientes no llenaban el ancho.</p>' +
+      '<p>Mide <b>87 × 36 px</b>, que es lo más grande que deja el renglón. Sobresale 7 px por arriba y por abajo, sobre el aire de la lista, y por eso el renglón no se alarga.</p></div>' +
 
       '<div class="bloque"><h3>Los ingredientes son la descripción</h3>' +
       '<p>Se muestran los cuatro aunque no todos se puedan sacar, porque son lo que describe la pizza. ' +
@@ -1903,6 +1912,7 @@
         '<div><dt>Engrosado</dt><dd>0,40 px</dd></div>' +
         '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
         '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
+        '<div><dt>Contador</dt><dd>87 × 36 px</dd></div>' +
         '<div><dt>Ficha de la familia</dt><dd>39,9 px</dd></div>' +
         '<div><dt>Aire sobre la primera raya</dt><dd>0,75 rem</dd></div>' +
         '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +

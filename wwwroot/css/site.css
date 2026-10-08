@@ -19,9 +19,15 @@
   --hoja-tinta:#26262A;
   --hoja-suave:#5C5C64;
 
-  /* Bowlby es del cliente, Archivo es del vendedor */
+  /* Fraunces es del cliente, Archivo es del vendedor */
   --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
-  --cara:"Bowlby One",Impact,sans-serif;
+  --cara:"Fraunces",Georgia,serif;
+  /* la letra titular como se eligió en el probador: grosor 700, suavidad de las
+     puntas en 70 y 0,015 em de aire entre letras. WONK en 0 apaga las letras
+     inclinadas. Cada regla que usa --cara pide las tres */
+  --cara-peso:700;
+  --cara-suave:"SOFT" 70,"WONK" 0;
+  --cara-aire:.015em;
 
   /* las medidas cerradas del renglón de la carta. Salen medidas de la maqueta:
      0,79 rem es el techo del ingrediente — más grande y los cuatro no entran
@@ -33,9 +39,13 @@
   /* el renglon del resumen del checkout */
   --item:1rem;
 
-  /* el contador: alto y ancho de cada tecla, medidos en la maqueta */
-  --ancho-c:1.05rem;
-  --alto-c:1.3rem;
+  /* el contador: el ancho de cada tecla y el alto de la pastilla. Crece con la pantalla en
+     lo que le sobra al renglón: de 343 a 377 px sube de la medida de antes (1,05 rem) al
+     tope de 1,75 rem, que es lo que le dejan el aire de arriba y el de abajo, y en todo ese
+     tramo al nombre más largo de la carta le quedan 29 px de puntos. El alto sale del
+     ancho, en la proporción del contorno dibujado (52 × 21) */
+  --ancho-c:clamp(1.05rem,calc((100vw - 293px) / 3),1.75rem);
+  --alto-c:calc(var(--ancho-c) * 1.27);
 
   /* el trazo a mano: la línea del logo y de los dibujos, vuelta línea de la
      página. Van como máscara y no como imagen, así que el color lo pone quien
@@ -103,13 +113,16 @@ html{scrollbar-color:var(--verde) var(--papel)}
 
 a{color:var(--verde)}
 
-.cara{font-family:var(--cara)}
+.cara{font-family:var(--cara);font-weight:var(--cara-peso);font-variation-settings:var(--cara-suave);letter-spacing:var(--cara-aire)}
 
 /* La pantalla de error, que no es ni la tienda ni el panel. Va sin diseno
    propio a proposito: se decidio no gastarle una pantalla. Lo unico que hace
    falta es que no parezca de otro sitio. */
 .suelta{max-width:520px;margin:0 auto;padding:3rem 1.2rem;text-align:center}
-.suelta h1{font-family:var(--cara);font-size:1.8rem;letter-spacing:-.03em;margin:0 0 .6rem}
+.suelta h1{
+  font-family:var(--cara);font-weight:var(--cara-peso);font-variation-settings:var(--cara-suave);
+  font-size:1.8rem;letter-spacing:var(--cara-aire);margin:0 0 .6rem;
+}
 .suelta p{margin:0 0 .6rem;font-size:.95rem;font-weight:600;line-height:1.45}
 .suelta code{font-size:.76rem;opacity:.55;word-break:break-all}
 

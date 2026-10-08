@@ -61,7 +61,7 @@
 
    Arriba son 1,6rem y no los 2rem del segmentado de packs. Medido, 2rem deja
    los dos huecos iguales —24 px contra 24— pero se ven distintos: el de arriba
-   linda con una línea fina y el de abajo con la Bowlby maciza, y el mismo
+   linda con una línea fina y el de abajo con la titular maciza, y el mismo
    espacio al lado de algo pesado se lee más chico. Los 6 px de menos son esa
    corrección, no un descuido. */
 /* flex:none no es decorativo: .lista es flex en columna y el overflow:hidden
@@ -96,7 +96,7 @@
    solapas. Va arriba del cartel de los ingredientes, que así queda pegado a la
    primera pizza que explica, y se esconde con su familia.
 
-   El dato va en Bowlby, como el precio de la carta, y el rótulo en versalitas
+   El dato va en la letra titular, como el precio de la carta, y el rótulo en versalitas
    chicas. */
 .ficha{
   flex:none;margin:1.1rem .95rem 0;
@@ -114,7 +114,8 @@
   opacity:.7;white-space:nowrap;
 }
 .ficha dd{
-  margin:0;font-family:var(--cara);font-size:.9rem;letter-spacing:-.02em;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:.9rem;letter-spacing:var(--cara-aire);
   -webkit-text-stroke:var(--grosor) currentColor;white-space:nowrap;
 }
 
@@ -134,15 +135,17 @@ ol.carta li{padding:var(--aire) .95rem;border-bottom:1px solid transparent;posit
 
 .renglon{display:flex;align-items:baseline;gap:.55rem}
 .nombre{
-  font-family:var(--cara);font-size:var(--tit);line-height:1.12;
-  letter-spacing:-.02em;margin:0;-webkit-text-stroke:var(--grosor) currentColor;
+  font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:var(--tit);line-height:1.12;
+  letter-spacing:var(--cara-aire);margin:0;-webkit-text-stroke:var(--grosor) currentColor;
 }
 /* los puntos suspensivos entre el nombre y el precio: se estiran y por eso el
    precio queda siempre pegado al borde, alineado entre renglones */
 .puntos{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.32rem);min-width:1.2rem}
 .plata{
-  margin:0;font-family:var(--cara);font-size:calc(var(--tit) * .92);
-  font-variant-numeric:tabular-nums;white-space:nowrap;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:calc(var(--tit) * .92);
+  letter-spacing:var(--cara-aire);font-variant-numeric:tabular-nums;white-space:nowrap;
   -webkit-text-stroke:var(--grosor) currentColor;
 }
 
@@ -191,7 +194,8 @@ ol.gustos li{
   padding:.72rem .95rem;border-bottom:1px solid transparent;position:relative;
 }
 ol.gustos .nom{
-  flex:1;margin:0;font-family:var(--cara);font-size:1.02rem;letter-spacing:-.02em;
+  flex:1;margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:1.02rem;letter-spacing:var(--cara-aire);
   -webkit-text-stroke:var(--grosor) currentColor;min-width:0;
 }
 ol.gustos li.agotada{color:var(--piedra)}
@@ -218,6 +222,9 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 .contador{
   display:inline-flex;align-items:center;flex:none;position:relative;
   border:1.4px solid transparent;border-radius:999px;overflow:hidden;height:var(--alto-c);
+  /* la caja sigue ocupando en el renglón los 1,3 rem de siempre y lo que se agrandó se
+     sale por arriba y por abajo, sobre el aire del renglón: así la lista no se alarga */
+  margin-block:calc((1.3rem - var(--alto-c)) / 2);
 }
 .contador::before{
   content:"";position:absolute;z-index:1;inset:-1.4px;pointer-events:none;
@@ -229,7 +236,9 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 .contador button{
   width:var(--ancho-c);height:100%;border:0;background:transparent;color:var(--verde);
   cursor:pointer;display:grid;place-items:center;
-  font-family:var(--ui);font-weight:800;font-size:.82rem;line-height:1;padding:0;
+  font-family:var(--ui);font-weight:800;font-size:calc(var(--alto-c) * .63);line-height:1;
+  /* el menos y el más caen más abajo que el número: el relleno de abajo los sube a su centro */
+  padding:0 0 calc(var(--alto-c) * .09);
   transition:background .14s ease;
 }
 .contador button:hover:not(:disabled){background:rgba(30,82,69,.13)}
@@ -237,7 +246,7 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 .contador button:focus-visible{outline:2px solid var(--verde);outline-offset:-2px}
 .contador .n{
   min-width:var(--ancho-c);text-align:center;font-family:var(--ui);font-weight:800;
-  font-size:.76rem;font-variant-numeric:tabular-nums;line-height:1;
+  font-size:calc(var(--alto-c) * .585);font-variant-numeric:tabular-nums;line-height:1;
 }
 .contador.cero::before{opacity:.45}
 .contador.cero .n{opacity:.35}
@@ -301,10 +310,9 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
 /* los 4 px de más arriba son la media banda que se lleva la onda */
 .pedido.visible{height:auto;padding-top:calc(.75rem + 4px);padding-bottom:.75rem}
 .cuenta{flex:none;font-size:.86rem;font-weight:600}
-/* el total en Archivo y no en Bowlby: Bowlby empasta los seis dígitos y no
-   tiene números tabulares, así que el total saltaba de ancho al cambiar */
-/* Archivo y no Bowlby: Bowlby empasta los seis dígitos sobre el verde y no
-   tiene números tabulares, así que el total saltaba de ancho al cambiar */
+/* el total en Archivo y no en la letra titular: Fraunces no tiene números
+   tabulares (el 1 mide 176 y el 8 mide 244 a 100 px), así que el total
+   saltaba de ancho al cambiar */
 .cuenta-total{
   flex:none;font-weight:800;font-size:1.05rem;
   font-variant-numeric:tabular-nums;white-space:nowrap;
@@ -341,10 +349,11 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
   border-bottom:2px solid transparent;position:relative;
 }
 /* sin ancho máximo y con el cuerpo justo para que entre en un renglón:
-   mide 314 px contra 358 disponibles */
+   mide 267 px contra 358 disponibles */
 .promesa{
-  margin:0;font-family:var(--cara);font-size:1.04rem;line-height:1.2;text-align:center;
-  letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:1.04rem;line-height:1.2;text-align:center;
+  letter-spacing:var(--cara-aire);-webkit-text-stroke:.4px currentColor;white-space:nowrap;
 }
 
 /* La franja del cuándo. Mismo fondo dibujado que la nota del WhatsApp en el
@@ -428,7 +437,8 @@ li.agotada .ing.fijo:disabled{color:var(--piedra);pointer-events:none}
    se baja el título 2 px, que es lo único que hace falta */
 .recorrido li.fermenta{padding-bottom:1.745rem}
 .recorrido li.fermenta .que b{
-  font-family:var(--cara);font-size:1rem;letter-spacing:-.02em;
+  font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:1rem;letter-spacing:var(--cara-aire);
   display:block;margin-top:2px;
 }
 .recorrido li.fermenta .n{border:0;background:transparent}
@@ -599,12 +609,15 @@ ol.gustos li::after{opacity:.35}
 .items li:last-child{border-bottom:0}
 .items li:last-child::after{display:none}
 .cant{
-  font-family:var(--cara);font-size:calc(var(--item) * .94);flex:none;
-  min-width:1.15rem;font-variant-numeric:tabular-nums;
+  font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:calc(var(--item) * .94);flex:none;
+  letter-spacing:var(--cara-aire);min-width:1.15rem;font-variant-numeric:tabular-nums;
 }
 .item-nombre{
   margin:0;flex:1;min-width:0;
-  font-family:var(--cara);font-size:var(--item);line-height:1.22;letter-spacing:-.022em;
+  font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:var(--item);line-height:1.22;
+  letter-spacing:var(--cara-aire);
 }
 /* el «sin» va pegado al nombre y no en otro renglón: es parte de qué se pidió,
    no una aclaración al pie */
@@ -628,8 +641,9 @@ ol.gustos li::after{opacity:.35}
   border-image-repeat:stretch;
 }
 .item-plata{
-  margin:0;font-family:var(--cara);font-size:calc(var(--item) * .94);
-  font-variant-numeric:tabular-nums;white-space:nowrap;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:calc(var(--item) * .94);
+  letter-spacing:var(--cara-aire);font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 .vacio-pedido{
   font-family:var(--ui);font-size:.9rem;font-weight:600;opacity:.6;
@@ -641,7 +655,11 @@ ol.gustos li::after{opacity:.35}
   border-top:2px solid transparent;border-bottom:2px solid transparent;
 }
 .total dt{font-size:1.05rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-.total dd{margin:0;font-family:var(--cara);font-size:1.72rem;font-variant-numeric:tabular-nums}
+.total dd{
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:1.72rem;letter-spacing:var(--cara-aire);
+  font-variant-numeric:tabular-nums;
+}
 .total .guia{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.35rem)}
 
 /* las tres líneas del checkout, con el mismo trazo que el resto */
@@ -689,8 +707,9 @@ ol.gustos li::after{opacity:.35}
   gap:1rem;padding:2rem 1.2rem;text-align:center;
 }
 .listo h1{
-  margin:0;font-family:var(--cara);font-size:2.15rem;line-height:1.02;
-  letter-spacing:-.03em;max-width:11ch;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:2.15rem;line-height:1.02;
+  letter-spacing:var(--cara-aire);max-width:11ch;
 }
 /* el número, suelto. Con cifras tabulares para que no baile el día que el
    pedido 1000 tenga una cifra más que el 999 */
@@ -741,8 +760,9 @@ ol.gustos li::after{opacity:.35}
   gap:.9rem;padding:2.5rem 1.4rem;text-align:center;
 }
 .cerrada h1{
-  margin:0;font-family:var(--cara);font-size:2rem;line-height:1.04;
-  letter-spacing:-.03em;max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
+  margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+  font-variation-settings:var(--cara-suave);font-size:2rem;line-height:1.04;
+  letter-spacing:var(--cara-aire);max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
 }
 .cerrada p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
 .cerrada .marca{margin-top:1.2rem;font-size:1.15rem}
