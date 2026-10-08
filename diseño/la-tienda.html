@@ -2,7 +2,7 @@
 <title>La tienda de 48·72</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Bowlby+One&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Fraunces:opsz,wght,SOFT,WONK@9..144,100..900,0..100,0..1&display=swap">
 
 <style>
   :root{
@@ -15,7 +15,13 @@
     --hoja-tinta:#26262A;
     --hoja-suave:#5C5C64;
     --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
-    --cara:"Bowlby One",Impact,sans-serif;
+    --cara:"Fraunces",Georgia,serif;
+    /* la letra titular como se eligió en el probador: grosor 700, suavidad de las
+       puntas en 70 y 0,015 em de aire entre letras. WONK en 0 apaga las letras
+       inclinadas. Cada regla que usa --cara pide las tres */
+    --cara-peso:700;
+    --cara-suave:"SOFT" 70,"WONK" 0;
+    --cara-aire:.015em;
     /* medidas cerradas de la carta */
     --tit:1.10rem;
     --grosor:.4px;
@@ -246,7 +252,7 @@
      solapas. Va arriba del cartel de los ingredientes, que así queda pegado a la
      primera pizza que explica, y cambia con la familia.
 
-     El dato va en Bowlby, como el precio de la carta, y el rótulo en versalitas
+     El dato va en la letra titular, como el precio de la carta, y el rótulo en versalitas
      chicas. */
   .ficha{
     margin:1.1rem .95rem 0;
@@ -264,7 +270,8 @@
     opacity:.7;white-space:nowrap;
   }
   .ficha dd{
-    margin:0;font-family:var(--cara);font-size:.9rem;letter-spacing:-.02em;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:.9rem;letter-spacing:var(--cara-aire);
     -webkit-text-stroke:var(--grosor) currentColor;white-space:nowrap;
   }
 
@@ -277,7 +284,7 @@
 
      Arriba son 1,6rem y no los 2rem del segmentado de packs. Medido, 2rem deja
      los dos huecos iguales —24 px contra 24— pero se ven distintos: el de
-     arriba linda con una línea fina y el de abajo con la Bowlby maciza, y el
+     arriba linda con una línea fina y el de abajo con la titular maciza, y el
      mismo espacio al lado de algo pesado se lee más chico. */
   .hueco-pista{overflow:hidden;flex:none}
   .hueco-pista[hidden]{display:none}
@@ -325,15 +332,17 @@
 
   .renglon{display:flex;align-items:baseline;gap:.55rem}
   .nombre{
-    font-family:var(--cara);font-size:var(--tit);line-height:1.12;
-    letter-spacing:-.02em;margin:0;-webkit-text-stroke:var(--grosor) currentColor;
+    font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:var(--tit);line-height:1.12;
+    letter-spacing:var(--cara-aire);margin:0;-webkit-text-stroke:var(--grosor) currentColor;
   }
   /* los puntos suspensivos entre el nombre y el precio: se estiran y por eso el
      precio queda siempre pegado al borde, alineado entre renglones */
   .puntos{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.32rem);min-width:1.2rem}
   .plata{
-    margin:0;font-family:var(--cara);font-size:calc(var(--tit) * .92);
-    font-variant-numeric:tabular-nums;white-space:nowrap;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:calc(var(--tit) * .92);
+    letter-spacing:var(--cara-aire);font-variant-numeric:tabular-nums;white-space:nowrap;
     -webkit-text-stroke:var(--grosor) currentColor;
   }
 
@@ -382,7 +391,8 @@
     padding:.72rem .95rem;border-bottom:1px solid transparent;position:relative;
   }
   ol.gustos .nom{
-    flex:1;margin:0;font-family:var(--cara);font-size:1.02rem;letter-spacing:-.02em;
+    flex:1;margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:1.02rem;letter-spacing:var(--cara-aire);
     -webkit-text-stroke:var(--grosor) currentColor;min-width:0;
   }
   ol.gustos li.agotada{color:var(--piedra)}
@@ -489,10 +499,9 @@
   /* los 4 px de más arriba son la media banda que se lleva la onda */
   .pedido.visible{height:auto;padding-top:calc(.75rem + 4px);padding-bottom:.75rem}
   .cuenta{flex:none;font-size:.86rem;font-weight:600}
-  /* el total en Archivo y no en Bowlby: Bowlby empasta los seis dígitos y no
-     tiene números tabulares, así que el total saltaba de ancho al cambiar */
-  /* Archivo y no Bowlby: Bowlby empasta los seis dígitos sobre el verde y no
-     tiene números tabulares, así que el total saltaba de ancho al cambiar */
+  /* el total en Archivo y no en la letra titular: Fraunces no tiene números
+     tabulares (el 1 mide 176 y el 8 mide 244 a 100 px), así que el total
+     saltaba de ancho al cambiar */
   .cuenta-total{
     flex:none;font-weight:800;font-size:1.05rem;
     font-variant-numeric:tabular-nums;white-space:nowrap;
@@ -523,10 +532,11 @@
     border-bottom:2px solid transparent;position:relative;
   }
   /* sin ancho máximo y con el cuerpo justo para que entre en un renglón:
-     mide 314 px contra 358 disponibles */
+     mide 267 px contra 358 disponibles */
   .promesa{
-    margin:0;font-family:var(--cara);font-size:1.04rem;line-height:1.2;text-align:center;
-    letter-spacing:-.03em;-webkit-text-stroke:.4px currentColor;white-space:nowrap;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:1.04rem;line-height:1.2;text-align:center;
+    letter-spacing:var(--cara-aire);-webkit-text-stroke:.4px currentColor;white-space:nowrap;
   }
 
   /* La franja del cuándo. Mismo fondo dibujado que la nota del WhatsApp en el
@@ -610,7 +620,8 @@
      se baja el título 2 px, que es lo único que hace falta */
   .recorrido li.fermenta{padding-bottom:1.745rem}
   .recorrido li.fermenta .que b{
-    font-family:var(--cara);font-size:1rem;letter-spacing:-.02em;
+    font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:1rem;letter-spacing:var(--cara-aire);
     display:block;margin-top:2px;
   }
   .recorrido li.fermenta .n{border:0;background:transparent}
@@ -781,12 +792,15 @@
   .items li:last-child{border-bottom:0}
   .items li:last-child::after{display:none}
   .cant{
-    font-family:var(--cara);font-size:calc(var(--item) * .94);flex:none;
-    min-width:1.15rem;font-variant-numeric:tabular-nums;
+    font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:calc(var(--item) * .94);flex:none;
+    letter-spacing:var(--cara-aire);min-width:1.15rem;font-variant-numeric:tabular-nums;
   }
   .item-nombre{
     margin:0;flex:1;min-width:0;
-    font-family:var(--cara);font-size:var(--item);line-height:1.22;letter-spacing:-.022em;
+    font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:var(--item);line-height:1.22;
+    letter-spacing:var(--cara-aire);
   }
   /* el «sin» va pegado al nombre y no en otro renglón: es parte de qué se pidió,
      no una aclaración al pie */
@@ -810,8 +824,9 @@
     border-image-repeat:stretch;
   }
   .item-plata{
-    margin:0;font-family:var(--cara);font-size:calc(var(--item) * .94);
-    font-variant-numeric:tabular-nums;white-space:nowrap;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:calc(var(--item) * .94);
+    letter-spacing:var(--cara-aire);font-variant-numeric:tabular-nums;white-space:nowrap;
   }
   .vacio-pedido{
     font-family:var(--ui);font-size:.9rem;font-weight:600;opacity:.6;
@@ -823,7 +838,11 @@
     border-top:2px solid transparent;border-bottom:2px solid transparent;
   }
   .total dt{font-size:1.05rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-  .total dd{margin:0;font-family:var(--cara);font-size:1.72rem;font-variant-numeric:tabular-nums}
+  .total dd{
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:1.72rem;letter-spacing:var(--cara-aire);
+    font-variant-numeric:tabular-nums;
+  }
   .total .guia{flex:1;border-bottom:2px dotted rgba(30,82,69,.42);transform:translateY(-.35rem)}
 
   /* las tres líneas del checkout, con el mismo trazo que el resto */
@@ -871,8 +890,9 @@
     gap:1rem;padding:2rem 1.2rem;text-align:center;
   }
   .listo h1{
-    margin:0;font-family:var(--cara);font-size:2.15rem;line-height:1.02;
-    letter-spacing:-.03em;max-width:11ch;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:2.15rem;line-height:1.02;
+    letter-spacing:var(--cara-aire);max-width:11ch;
   }
   /* el número, suelto. Con cifras tabulares para que no baile el día que el
      pedido 1000 tenga una cifra más que el 999 */
@@ -929,8 +949,9 @@
     gap:.9rem;padding:2.5rem 1.4rem;text-align:center;
   }
   .cerrada h1{
-    margin:0;font-family:var(--cara);font-size:2rem;line-height:1.04;
-    letter-spacing:-.03em;max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
+    margin:0;font-family:var(--cara);font-weight:var(--cara-peso);
+    font-variation-settings:var(--cara-suave);font-size:2rem;line-height:1.04;
+    letter-spacing:var(--cara-aire);max-width:12ch;-webkit-text-stroke:var(--grosor) currentColor;
   }
   .cerrada p{margin:0;font-size:.98rem;font-weight:600;line-height:1.45;max-width:28ch}
   .cerrada .marca{margin-top:1.2rem;font-size:1.15rem}
@@ -1790,7 +1811,7 @@
         '<div><dt>Alto de la pantalla</dt><dd>784 px de 798</dd></div>' +
         '<div><dt>Entre íconos del recorrido</dt><dd>52 px, parejo</dd></div>' +
         '<div><dt>Reloj contra su título</dt><dd>0 px</dd></div>' +
-        '<div><dt>El título de arriba</dt><dd>314 de 358 px</dd></div>' +
+        '<div><dt>El título de arriba</dt><dd>267 de 358 px</dd></div>' +
       '</dl>';
     },
     carta: function(){
@@ -1821,7 +1842,7 @@
 
       '<div class="bloque"><h3>Cada familia dice c\u00f3mo es, arriba de su lista</h3>' +
       '<p>Pizzas y focaccias llevan una <b>ficha</b> con lo que el cliente quiere saber antes de pedir: ' +
-      'el bollo, el di\u00e1metro o el tama\u00f1o, las porciones. Cada dato va en su columna, con el r\u00f3tulo chico arriba y el n\u00famero en Bowlby, ' +
+      'el bollo, el di\u00e1metro o el tama\u00f1o, las porciones. Cada dato va en su columna, con el r\u00f3tulo chico arriba y el n\u00famero en la letra titular, ' +
       'separados por el mismo trazo de las solapas. Las <b>empanadas no llevan</b>.</p>' +
       '<p>El <b>bollo sale de la receta de la masa</b> y va redondeado a 50 g: 288 g se dice 300 y 483 g, 500. ' +
       'El resto son datos escritos: la pizza, de 27 cm y 4 porciones; la focaccia, de 20 \u00d7 30 cm. No llevan horno ni fermentaci\u00f3n.</p>' +
@@ -1851,7 +1872,7 @@
 
       '<div class="bloque"><h3>La barra aparece al sumar algo</h3>' +
       '<p>Desglosada —«3 pizzas · 2 packs»— con el total debajo en Archivo semi a 1,5 rem. ' +
-      'Bowlby empastaba los seis dígitos y no tiene números tabulares, así que el total saltaba de ancho.</p></div>' +
+      'La letra titular no tiene números tabulares, así que el total saltaba de ancho.</p></div>' +
 
       '<div class="bloque"><h3>Ninguna línea es una línea</h3>' +
       '<p>Las rectas del CSS se vuelven transparentes y encima se pinta un <b>trazo dibujado a mano</b>, ' +
@@ -1882,7 +1903,7 @@
         '<div><dt>Engrosado</dt><dd>0,40 px</dd></div>' +
         '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
         '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
-        '<div><dt>Ficha de la familia</dt><dd>44,5 px</dd></div>' +
+        '<div><dt>Ficha de la familia</dt><dd>39,9 px</dd></div>' +
         '<div><dt>Aire sobre la primera raya</dt><dd>0,75 rem</dd></div>' +
         '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +
       '</dl>';
