@@ -22,15 +22,17 @@
     --cara-peso:700;
     --cara-suave:"SOFT" 70,"WONK" 0;
     --cara-aire:.015em;
-    /* medidas cerradas de la carta */
-    --tit:1.10rem;
+    /* medidas cerradas de la carta. El título (el nombre de la pizza y, con él, el precio) vale
+       acá 1,20 rem, que es un teléfono de 390; la app lo hace crecer con la pantalla desde
+       1,10 rem, hasta los 350 px, hasta este valor, desde los 390 */
+    --tit:1.20rem;
     --grosor:.4px;
     --ing-cuerpo:.79rem;
     --aire:1rem;
-    /* el contador: en la maqueta, que es un teléfono de 390, vale el tope de 1,75 rem por
+    /* el contador: en la maqueta, que es un teléfono de 390, vale el tope de 1,4 rem por
        tecla; la app lo hace crecer con la pantalla hasta ahí. El alto sale del ancho, en la
        proporción del contorno dibujado (52 × 21) */
-    --ancho-c:1.75rem;
+    --ancho-c:1.4rem;
     --alto-c:calc(var(--ancho-c) * 1.27);
     /* medida cerrada del renglón del checkout */
     --item:1.00rem;
@@ -1833,7 +1835,8 @@
       '<p>Nombre, puntos suspensivos, precio y contador arriba; los cuatro ingredientes debajo, centrados, ' +
       'en una sola fila. Los mosaicos con foto entraban de a tres por pantalla; así entran casi las siete.</p>' +
       '<p>El contador va <b>junto al precio</b> y no al final: quedaba colgado cuando los ingredientes no llenaban el ancho.</p>' +
-      '<p>Mide <b>87 × 36 px</b>, que es lo más grande que deja el renglón. Sobresale 7 px por arriba y por abajo, sobre el aire de la lista, y por eso el renglón no se alarga.</p></div>' +
+      '<p>Mide <b>70 × 28 px</b>, a 1,4 rem la tecla. Se agrandó de 53 × 21 hasta lo que deja el renglón, 87 × 36, y quedó demasiado grande: se bajó un poco. Sobresale 4 px por arriba y por abajo, sobre el aire de la lista, y por eso no alarga el renglón.</p>' +
+      '<p>El nombre, y con él el precio, mide <b>1,20 rem</b>, antes 1,10. Lo que el contador devolvió se lo quedó el nombre: «Rúcula y crudo», el más largo, cabe con 4 px de sobra y a 1,23 rem ya se parte.</p></div>' +
 
       '<div class="bloque"><h3>Los ingredientes son la descripción</h3>' +
       '<p>Se muestran los cuatro aunque no todos se puedan sacar, porque son lo que describe la pizza. ' +
@@ -1855,9 +1858,9 @@
       'separados por el mismo trazo de las solapas. Las <b>empanadas no llevan</b>.</p>' +
       '<p>El <b>bollo sale de la receta de la masa</b> y va redondeado a 50 g: 288 g se dice 300 y 483 g, 500. ' +
       'El resto son datos escritos: la pizza, de 27 cm y 4 porciones; la focaccia, de 20 \u00d7 30 cm. No llevan horno ni fermentaci\u00f3n.</p>' +
-      '<p>Cuesta lugar: <b>62 px</b> la ficha y <b>13 px</b> la raya que la separa del primer rengl\u00f3n, 75 en total. ' +
-      'Sin ficha ni raya ni cartel, la \u00faltima pizza asomaba 23 px por debajo de la primera pantalla; ' +
-      'con la ficha son 85, con la raya 98, y 163 mientras est\u00e1 el cartel.</p>' +
+      '<p>Cuesta lugar: <b>58 px</b> la ficha y <b>12 px</b> la raya que la separa del primer rengl\u00f3n, 70 en total. ' +
+      'Sin ficha ni raya ni cartel, la \u00faltima pizza asomaba 38 px por debajo de la primera pantalla; ' +
+      'con la ficha son 96, con la raya 108, y 173 mientras est\u00e1 el cartel.</p>' +
       '<p>Cada rengl\u00f3n dibuja su raya abajo, as\u00ed que el primero tiene la suya arriba, como la lista de empanadas, ' +
       'y con el mismo aire que las dem\u00e1s: 1 rem entre el texto de la ficha y la raya, y entre la raya y el nombre.</p>' +
       '<p>Se probaron la ficha <b>fija</b> arriba, al <b>pie</b> de la lista y <b>plegable</b>, y los datos en una l\u00ednea, ' +
@@ -1908,11 +1911,11 @@
 
       '<dl class="medidas">' +
         '<div><dt>Cabecera</dt><dd>132 px</dd></div>' +
-        '<div><dt>Título</dt><dd>1,10 rem</dd></div>' +
+        '<div><dt>Título</dt><dd>1,20 rem</dd></div>' +
         '<div><dt>Engrosado</dt><dd>0,40 px</dd></div>' +
         '<div><dt>Ingrediente</dt><dd>0,79 rem</dd></div>' +
         '<div><dt>Aire del renglón</dt><dd>1,00 rem</dd></div>' +
-        '<div><dt>Contador</dt><dd>87 × 36 px</dd></div>' +
+        '<div><dt>Contador</dt><dd>70 × 28 px</dd></div>' +
         '<div><dt>Ficha de la familia</dt><dd>39,9 px</dd></div>' +
         '<div><dt>Aire sobre la primera raya</dt><dd>0,75 rem</dd></div>' +
         '<div><dt>Total de la barra</dt><dd>1,50 rem</dd></div>' +

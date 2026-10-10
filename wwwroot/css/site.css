@@ -31,8 +31,12 @@
 
   /* las medidas cerradas del renglón de la carta. Salen medidas de la maqueta:
      0,79 rem es el techo del ingrediente — más grande y los cuatro no entran
-     en una fila */
-  --tit:1.10rem;
+     en una fila.
+     El título (el nombre de la pizza, y con él el precio) crece con la pantalla de 1,10 rem,
+     hasta los 350 px, a 1,20 rem, desde los 390: en un teléfono angosto no hay lugar para el
+     nombre más largo con una letra más grande y se partiría. La maqueta, que es un teléfono
+     de 390, vale el tope */
+  --tit:clamp(1.10rem,calc(1.10rem + (100vw - 350px) * .04),1.20rem);
   --grosor:.4px;
   --ing-cuerpo:.79rem;
   --aire:1rem;
@@ -40,11 +44,13 @@
   --item:1rem;
 
   /* el contador: el ancho de cada tecla y el alto de la pastilla. Crece con la pantalla en
-     lo que le sobra al renglón: de 343 a 377 px sube de la medida de antes (1,05 rem) al
-     tope de 1,75 rem, que es lo que le dejan el aire de arriba y el de abajo, y en todo ese
-     tramo al nombre más largo de la carta le quedan 29 px de puntos. El alto sale del
-     ancho, en la proporción del contorno dibujado (52 × 21) */
-  --ancho-c:clamp(1.05rem,calc((100vw - 293px) / 3),1.75rem);
+     lo que le sobra al renglón, de la medida de antes (1,05 rem) hasta --tecla-max, y en todo
+     ese tramo al nombre más largo de la carta le quedan 29 px de puntos: por eso al ancho de la
+     pantalla se le descuenta lo que el título ya le sacó al renglón por ser más grande
+     (11,5 px por cada px de título que pasa de 1,10 rem). El alto sale del ancho, en la
+     proporción del contorno dibujado (52 × 21) */
+  --tecla-max:1.4rem;
+  --ancho-c:clamp(1.05rem,calc((100vw - 293px - (var(--tit) - 1.10rem) * 11.5) / 3),var(--tecla-max));
   --alto-c:calc(var(--ancho-c) * 1.27);
 
   /* el trazo a mano: la línea del logo y de los dibujos, vuelta línea de la
