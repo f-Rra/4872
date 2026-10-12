@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace f4872.Models;
 
 public class Producto
@@ -11,14 +9,12 @@ public class Producto
 
     public int IdProducto { get; set; }
 
-    [DisplayName("Tipo")]
     public Familia Familia { get; set; }
 
     public string Nombre { get; set; } = null!;
 
     // las empanadas no tienen precio propio: se cobran por pack de 6 o de 12.
     // Va nulo de verdad y no un cero, que seria un precio que no es
-    [DisplayName("Precio")]
     public decimal? Precio { get; set; }
 
     public bool Activo { get; set; } = true;
@@ -47,10 +43,4 @@ public class Producto
     // se llama Receta y no Ingredientes porque cada renglon no es un ingrediente:
     // es un ingrediente con su cantidad y con si se puede sacar
     public ICollection<ProductoIngrediente> Receta { get; set; } = new List<ProductoIngrediente>();
-
-    [DisplayName("Se cobra por pack")]
-    public bool SeCobraPorPack => Familia == Familia.Empanada;
-
-    [DisplayName("Estado")]
-    public string Estado => Activo ? "En la carta" : "Se acabó";
 }

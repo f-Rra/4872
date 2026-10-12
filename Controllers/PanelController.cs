@@ -1270,7 +1270,6 @@ public class PanelController : Controller
                     Nombre = elegido.Nombre,
                     Familia = elegido.Familia,
                     Precio = elegido.Precio,
-                    Activo = elegido.Activo,
                     Packs = packs,
                     Receta = receta,
                     Base = laBase,

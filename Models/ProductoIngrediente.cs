@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace f4872.Models;
 
 public class ProductoIngrediente
@@ -13,12 +11,10 @@ public class ProductoIngrediente
     // la cantidad es del par y no del ingrediente: la fugazzeta lleva 200 g de
     // cebolla y la empanada de carne 15. El mismo ingrediente pesa distinto en
     // cada producto, asi que el numero no puede vivir en el ingrediente
-    [DisplayName("Cantidad")]
     public decimal Cantidad { get; set; }
 
     // el quitable va en el mismo par y por el mismo motivo: la muzzarella se
     // saca de una fugazzeta, y de una napolitana no
-    [DisplayName("Se puede sacar")]
     public bool Quitable { get; set; }
 
     // El lugar en la receta, que es el orden en que la carta lo nombra. Es del

@@ -60,7 +60,6 @@ public class FichaProducto
     public string Nombre { get; set; } = "";
     public Familia Familia { get; set; } = Familia.Pizza;
     public decimal? Precio { get; set; }
-    public bool Activo { get; set; } = true;
 
     // Los precios de pack no son de este producto: son de todos. Viajan en la
     // ficha porque es donde se editan —la de cualquier gusto— y no porque le
@@ -107,13 +106,6 @@ public class FichaProducto
     public IReadOnlyList<RecetaPorPieza> Rellenos { get; set; } = [];
 
     public bool SeCobraPorPack => Familia == Familia.Empanada;
-
-    public string NombreDeFamilia => Familia switch
-    {
-        Familia.Pizza => "Pizza",
-        Familia.Focaccia => "Focaccia",
-        _ => "Empanada"
-    };
 }
 
 // Un renglón de la receta: qué lleva, cuánto y si el cliente lo puede sacar.

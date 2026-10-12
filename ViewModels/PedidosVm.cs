@@ -72,15 +72,6 @@ public class DetallePedido
     // el sábado, y saber que entró «el 8, 23:28» cambia cuánto hace que espera
     public string Cuando => Reloj.EnBuenosAires(FechaPedido).ToString("dd/MM HH:mm");
 
-    // el único camino posible desde donde está. Nulo en entregado y cancelado,
-    // que son finales
-    public EstadoPedido? Siguiente => Estado switch
-    {
-        EstadoPedido.Nuevo => EstadoPedido.Preparando,
-        EstadoPedido.Preparando => EstadoPedido.Entregado,
-        _ => null
-    };
-
     // el botón dice el nombre completo y no una abreviatura: es la acción
     // principal de la pantalla y se lee de lejos
     public string? Accion => Estado switch

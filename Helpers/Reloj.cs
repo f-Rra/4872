@@ -12,11 +12,6 @@ public static class Reloj
     public static DateTime EnBuenosAires(DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Zona);
 
-    // Cuánto hace que entró, en horas enteras. Para el panel no sirve el minuto:
-    // la pregunta es si un pedido lleva dos horas o dos días esperando.
-    public static int HorasDesde(DateTime utc) =>
-        (int)(DateTime.UtcNow - DateTime.SpecifyKind(utc, DateTimeKind.Utc)).TotalHours;
-
     private static TimeZoneInfo Buscar()
     {
         foreach (var nombre in new[] { "America/Argentina/Buenos_Aires", "Argentina Standard Time" })

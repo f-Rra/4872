@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace f4872.Models;
 
 // El estado de la tienda, que es una sola cosa: si toma pedidos o no.
@@ -15,9 +13,5 @@ public class Tienda
     // siempre 1: la restricción de la tabla no deja que haya otra fila
     public int IdTienda { get; set; }
 
-    [DisplayName("Toma pedidos")]
     public bool Abierta { get; set; } = true;
-
-    [DisplayName("Estado")]
-    public string Estado => Abierta ? "Abierta" : "Cerrada";
 }
