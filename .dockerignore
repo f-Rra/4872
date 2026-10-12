@@ -15,11 +15,10 @@ obj/
 diseño/
 *.md
 
-# lo de los editores y lo que quedo tirado en la raiz
+# lo de los editores
 .vs/
 .vscode/
 *.user
-mintty.*
 
 # se leen antes de armar el contexto, no hace falta mandarlos adentro
 Dockerfile
