@@ -42,7 +42,6 @@
 
 .lista{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
 
-/* provisorio: se va en el commit 18, cuando entren las empanadas */
 .vacio{
   margin:auto;padding:2rem 1.5rem;text-align:center;
   color:var(--piedra);font-size:.86rem;font-weight:600;

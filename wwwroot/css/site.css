@@ -12,12 +12,8 @@
   --verde-hondo:#143A31;
   --papel:#F3EDE1;
 
-  /* los grises: piedra para lo apagado, la familia hoja para el panel */
+  /* el gris de lo apagado */
   --piedra:#9A9287;
-  --hoja:#E4E4E6;
-  --hoja-linea:#C6C6CB;
-  --hoja-tinta:#26262A;
-  --hoja-suave:#5C5C64;
 
   /* Fraunces es del cliente, Archivo es del vendedor */
   --ui:"Archivo","Helvetica Neue",Arial,sans-serif;
@@ -118,8 +114,6 @@ html{scrollbar-color:var(--verde) var(--papel)}
 ::-webkit-scrollbar-thumb{background:var(--verde);border:3px solid var(--papel)}
 
 a{color:var(--verde)}
-
-.cara{font-family:var(--cara);font-weight:var(--cara-peso);font-variation-settings:var(--cara-suave);letter-spacing:var(--cara-aire)}
 
 /* La pantalla de error, que no es ni la tienda ni el panel. Va sin diseno
    propio a proposito: se decidio no gastarle una pantalla. Lo unico que hace

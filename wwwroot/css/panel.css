@@ -56,16 +56,13 @@
    primer renglon arranca al aire */
 .lateral nav{display:flex;flex-direction:column;border-top:1px solid rgba(30,82,69,.2)}
 .lateral nav svg{width:17px;height:17px;flex:none}
-.lateral nav a,
-.lateral nav .porVenir{
+.lateral nav a{
   display:flex;align-items:center;gap:.62rem;
   font-weight:700;font-size:.88rem;text-decoration:none;color:var(--verde);
   padding:.68rem .9rem;border-bottom:1px solid rgba(30,82,69,.2);
 }
 .lateral nav a:hover{background:rgba(30,82,69,.08)}
 .lateral nav a[aria-current="page"]{background:var(--verde);color:var(--papel)}
-/* apagada y sin cursor de mano: se ve que va a existir y que hoy no lleva a nada */
-.lateral nav .porVenir{color:var(--piedra);cursor:default}
 .lateral .globo{
   margin-left:auto;font-size:.7rem;font-weight:800;font-variant-numeric:tabular-nums;
   background:var(--verde);color:var(--papel);border-radius:999px;padding:.05rem .42rem;
@@ -326,7 +323,6 @@
   display:inline-block;border:1.2px solid rgba(30,82,69,.45);border-radius:999px;
   padding:.02rem .4rem;margin-right:.3rem;font-weight:700;
 }
-.prod-unidad{flex:none;font-size:.78rem;font-weight:700;opacity:.7;padding-top:.28rem;white-space:nowrap}
 
 
 /* ---------- productos: la lista ---------- */
@@ -417,7 +413,6 @@
 /* la nota es un pie de los precios de pack, asi que va pegada a ellos y no a
    mitad de camino entre los dos bloques */
 .nota-f{margin:.4rem 0 .85rem;font-size:.84rem;font-weight:600;opacity:.75;line-height:1.45}
-.acciones-aparte{margin-top:.6rem}
 .detalle .aviso{margin:0 0 1rem}
 
 
