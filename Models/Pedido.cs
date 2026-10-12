@@ -11,17 +11,9 @@ public class Pedido
     // todo pedido se entrega, no hay retiro, asi que la direccion es obligatoria
     public string Direccion { get; set; } = null!;
 
-    // opcional: la usa una de las dos formas de pedir la direccion que quedan
-    // sin decidir. Va igual para que esa decision no arrastre una migracion
-    public string? Referencia { get; set; }
-
     // se guarda en UTC, que es lo que devuelve now() en Postgres. La conversion
     // a hora de Buenos Aires es para mostrar, y va con la pantalla que la muestre
     public DateTime FechaPedido { get; set; }
-
-    // el dia de entrega, no el momento: la hora se arregla por WhatsApp. Nulo
-    // mientras no se haya coordinado
-    public DateOnly? FechaEntrega { get; set; }
 
     public EstadoPedido Estado { get; set; }
 

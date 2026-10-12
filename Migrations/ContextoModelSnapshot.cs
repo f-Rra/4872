@@ -196,17 +196,10 @@ namespace f4872.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<DateOnly?>("FechaEntrega")
-                        .HasColumnType("date");
-
                     b.Property<DateTime>("FechaPedido")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
-
-                    b.Property<string>("Referencia")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
 
                     b.Property<string>("Telefono")
                         .IsRequired()

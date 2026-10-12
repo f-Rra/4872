@@ -22,9 +22,6 @@ public class PedidoConfiguracion : IEntityTypeConfiguration<Pedido>
             .HasMaxLength(120)
             .IsRequired();
 
-        pedido.Property(x => x.Referencia)
-            .HasMaxLength(120);
-
         // el reloj lo pone Postgres y no la app: asi un pedido insertado a mano
         // tambien queda fechado, y la hora sale del mismo lugar siempre
         pedido.Property(x => x.FechaPedido)
