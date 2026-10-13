@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Net.Sockets;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using f4872.Data;
 using f4872.Helpers;
 using f4872.Services;
@@ -71,6 +73,43 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opciones.ExpireTimeSpan = TimeSpan.FromDays(30);
         opciones.SlidingExpiration = true;
     });
+
+// Con el código público se sabe dónde está la entrada del panel, y lo único que
+// la protege es la clave. El segundo de espera de Entrar frena al que prueba de
+// a miles desde un mismo lugar, pero no al que lanza muchos pedidos a la vez:
+// cada uno espera su segundo en paralelo. Este límite corta por IP antes de que
+// el pedido llegue a comparar la clave.
+//
+// Cinco por minuto alcanza de sobra para una persona que se equivoca de teclas.
+// Cuentan todos los POST a Entrar, también los que aciertan: nadie entra cinco
+// veces por minuto. La ventana es fija y sin cola: el sexto no espera, se rechaza.
+//
+// La IP sale de RemoteIpAddress, que UseForwardedHeaders ya corrigió con la
+// cabecera del proxy. Sin ese middleware adelante todos los visitantes serían la
+// dirección del proxy y compartirían un solo cupo.
+builder.Services.AddRateLimiter(opciones =>
+{
+    opciones.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    opciones.AddPolicy("entrar", contexto => RateLimitPartition.GetFixedWindowLimiter(
+        contexto.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+
+    // Sin esto el 429 llega con la pantalla en blanco. Una línea alcanza: no es
+    // una pantalla del diseño, la ve una sola persona y casi nunca.
+    opciones.OnRejected = async (contexto, corte) =>
+    {
+        contexto.HttpContext.Response.Headers.RetryAfter = "60";
+        contexto.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        await contexto.HttpContext.Response.WriteAsync(
+            "Demasiados intentos de entrada. Esperá un minuto y probá de nuevo.", corte);
+    };
+});
 
 // Los servicios que alquilan una base no dan la cadena en el formato de Npgsql:
 // dan una dirección, postgresql://usuario:clave@maquina:puerto/base. Npgsql no
@@ -213,6 +252,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+// Después de UseRouting porque lee el atributo del endpoint, y antes de la
+// autenticación para rechazar sin gastar nada más en el pedido
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapStaticAssets();

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using f4872.Data;
@@ -2097,8 +2098,11 @@ public class PanelController : Controller
         return View();
     }
 
+    // El límite por IP está definido en Program.cs. Va solo en el POST: mostrar el
+    // formulario no prueba ninguna clave.
     [AllowAnonymous]
     [HttpPost("entrar")]
+    [EnableRateLimiting("entrar")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Entrar(string? clave, string? volverA)
     {
