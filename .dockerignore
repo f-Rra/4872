@@ -23,3 +23,7 @@ diseño/
 # se leen antes de armar el contexto, no hace falta mandarlos adentro
 Dockerfile
 .dockerignore
+
+# los tests y las capturas del README no hacen falta para correr la aplicación
+f4872.Tests/
+docs/

@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>3d26ccc8-832e-4046-9bbb-eb231371e382</UserSecretsId>
+    <!-- El proyecto vive en la raíz del repo: sin esto compilaría los tests como parte de la aplicación -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);f4872.Tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
