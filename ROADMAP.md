@@ -284,7 +284,7 @@ Fueron cinco commits, no uno. Se sumaron el puerto que manda el servicio, las ca
 
 Va al final porque recién ahí se sabe qué se hizo de verdad. Qué es, cómo se levanta, capturas.
 
-Las capturas quedaron afuera: las únicas que se podían sacar hoy muestran la carta inventada, y esa no es la tienda. Van cuando entre la carta de verdad.
+Las capturas entraron después, sacadas de una copia local con datos inventados y dicho en el propio README: la tienda de verdad no tiene carta cargada todavía.
 
 ---
 
@@ -301,6 +301,8 @@ Los commits que no salieron de ningún renglón, por temas:
 **Costos mes por mes.** Los renglones 47 y 48 calculan lo que cuesta un producto, pero no había dónde mirar un mes cerrado contra lo que se cobró.
 
 **Seis commits de tienda después del panel.** Tres credenciales más y el renglón del cuándo, el aviso de cerrada en el inicio, el botón que no se vacía mientras manda el pedido, el cartel que explica que los ingredientes se sacan, el acuse de recibo del contador y el total, y el trazo con el que entra cada pantalla.
+
+**Tests y CI.** El plan decía «sin tests». Después del README se sumaron los de `PedidoService` y los de los cálculos de `RecetaService` —lo que hornear, lo que comprar y el margen de cada producto—, y un workflow de GitHub Actions que los corre en cada push.
 
 ---
 

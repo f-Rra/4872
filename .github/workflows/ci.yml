@@ -1,0 +1,42 @@
+name: CI
+
+# Se corre en cada push a main y en cada pull request: compila la solución y corre todos
+# los tests. Si algo falla, el commit queda marcado con una cruz roja en GitHub.
+#
+# Es aparte del deploy: Railway publica cada push a main por su cuenta, así que esto no frena
+# nada, avisa. Para que sí frene, hay que activar en Railway «Wait for CI».
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Si llega un push nuevo mientras el anterior sigue corriendo, se cancela el viejo
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Compilar y correr los tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Bajar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restaurar los paquetes
+        run: dotnet restore f4872.sln
+
+      - name: Compilar
+        run: dotnet build f4872.sln --no-restore --configuration Release
+
+      - name: Correr los tests
+        run: dotnet test f4872.sln --no-build --configuration Release --verbosity normal

@@ -1,5 +1,6 @@
 # 48·72
 
+[![CI](https://github.com/f-Rra/4872/actions/workflows/ci.yml/badge.svg)](https://github.com/f-Rra/4872/actions/workflows/ci.yml)
 ![.NET 9](https://img.shields.io/badge/.NET-9.0-blue)
 ![ASP.NET Core MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC-512BD4)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-EF%20Core-336791)
@@ -102,6 +103,21 @@ Las claves no están en el repositorio. El servicio necesita cuatro variables de
 | `Panel__Clave` | La clave del panel. Sin ella, el panel queda **cerrado**, no abierto |
 | `Telegram__Token` y `Telegram__Chat` | El bot que avisa de los pedidos y las fallas (opcionales) |
 
+## Tests
+
+```bash
+dotnet test
+```
+
+138 tests de xUnit sobre lo que decide plata y trabajo, que son los dos servicios con reglas de negocio:
+
+- **`PedidoService.Confirmar`**: las reglas que apagan el botón de la tienda se repiten en el servidor, porque la pantalla se puede saltear. Datos del cliente, tienda cerrada, producto agotado, packs de empanadas, ingredientes que se pueden sacar y el aviso por Telegram, que si falla no pierde el pedido.
+- **`RecetaService`**: lo que hay que hornear, lo que falta comprar y cuánto deja cada producto. Los resultados de los tests están calculados a mano sobre una cocina chica de números redondos ([`Cocina.cs`](f4872.Tests/Cocina.cs)), no copiados de lo que devolvió el código.
+
+Para saber que los tests sirven y no solo que pasan, se rompió el servicio a propósito de unas cuarenta maneras —redondear para abajo, contar los pedidos cancelados, tomar el mes en UTC— y cada rotura tiene que hacer fallar alguno.
+
+El [CI](.github/workflows/ci.yml) compila y corre todo en cada push y en cada pull request.
+
 ## Estructura
 
 ```
@@ -112,11 +128,13 @@ Models/        las entidades: Producto, Ingrediente, Receta, Pedido...
 Views/         Razor: Tienda/ y Panel/
 wwwroot/       el CSS y el JavaScript propios, y las ilustraciones
 diseño/        las maquetas HTML, que son la especificación
+f4872.Tests/   los tests de xUnit
 ```
 
 ## Qué falta
 
-- **Tests automáticos.** Hoy no tiene: lo que se verificó, se verificó a mano contra los números del negocio. Los primeros candidatos son los cálculos de costos y de stock.
+- **Tests contra PostgreSQL de verdad.** Los de hoy usan la base en memoria de EF Core: prueban las reglas, pero no que las consultas se traduzcan a SQL de Postgres ni que las restricciones de la base se cumplan. El paso que sigue es correrlos contra un Postgres real en un contenedor.
+- **Tests de los controladores y de la entrada del panel** (la clave, el límite de intentos).
 
 ## Más
 
