@@ -1,7 +1,5 @@
 # Decisiones técnicas
 
-El [README](../README.md) resume cada decisión en una viñeta; acá está el porqué.
-
 ## El diseño va antes que el código
 
 Las pantallas se maquetaron y se midieron antes de escribir la primera vista. Las maquetas están en [`diseño/`](../diseño/) y son la especificación: se pueden abrir en el navegador, y ante una duda de diseño se miran primero.
@@ -44,7 +42,17 @@ Para saber que los tests sirven y no solo que pasan, se rompió el servicio a pr
 
 El [CI](../.github/workflows/ci.yml) compila y corre todo en cada push y en cada pull request.
 
-**Lo que falta:**
+## Estructura del proyecto
 
-- Tests contra un **PostgreSQL real**. Los de hoy usan la base en memoria de EF Core: prueban las reglas, pero no que las consultas se traduzcan a SQL de Postgres ni que las restricciones de la base se cumplan.
-- Tests de los controladores y de la entrada del panel (la clave, el límite de intentos).
+```
+Controllers/   Tienda, Panel y Home (el error)
+Services/      PedidoService, RecetaService, TelegramService, AvisoDeFallas
+Data/          el contexto, la configuración Fluent API y el sembrador
+Models/        las entidades: Producto, Ingrediente, Receta, Pedido...
+Views/         Razor: Tienda/ y Panel/
+wwwroot/       el CSS y el JavaScript propios
+diseño/        las maquetas HTML, que son la especificación
+f4872.Tests/   los tests de xUnit
+```
+
+El plan de trabajo, commit por commit, está en [`ROADMAP.md`](ROADMAP.md).

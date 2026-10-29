@@ -8,9 +8,15 @@
 
 Tienda web y panel de vendedor para una pizzería napoletana de una sola sucursal.
 
-El cliente arma su pedido desde el teléfono, sin cuenta ni contraseña, y el vendedor recibe un aviso por Telegram y trabaja el fin de semana desde el panel: qué hornear, qué comprar y cuánto deja cada producto.
+**Sitio web:** [4872.com.ar](https://4872.com.ar) (la tienda). El panel es privado y se ve en las capturas, que son de una copia local con datos inventados.
 
-**Publicado en [4872.com.ar](https://4872.com.ar).** Las capturas son de una copia local con **datos inventados**: la carta, los precios y los pedidos no son los del negocio.
+## Funcionalidades
+
+- **Pedido en un minuto desde el teléfono**, sin cuenta ni contraseña. Se pueden sacar ingredientes («una margarita sin albahaca») y las empanadas se piden por pack.
+- **Carta que se actualiza sola**: lo agotado se calcula a partir del stock de ingredientes, sin que nadie lo marque.
+- **Aviso de cada pedido por Telegram** al vendedor.
+- **Plan de producción del fin de semana**: el panel suma todos los pedidos y calcula cuántas recetas de masa amasar y qué falta comprar.
+- **Costos y márgenes** de cada producto y de cada mes, marcando lo que rinde poco.
 
 ## Capturas
 
@@ -28,42 +34,90 @@ El cliente arma su pedido desde el teléfono, sin cuenta ni contraseña, y el ve
 | <img src="docs/capturas/panel-1-inicio.png" width="200"> | <img src="docs/capturas/panel-2-pedidos.png" width="200"> | <img src="docs/capturas/panel-3-produccion.png" width="200"> | <img src="docs/capturas/panel-7-costos.png" width="200"> |
 | Qué hornear y qué comprar | Pedidos, con WhatsApp al cliente | Producción: todo sumado para amasar una vez | Costos y márgenes por producto y por mes |
 
+## Stack
+
+.NET 9 · ASP.NET Core MVC · EF Core (Fluent API) · PostgreSQL · Razor y JavaScript sin librerías · CSS propio · Docker · Railway · Cloudflare.
+
+## Modelo de datos
+
+```mermaid
+erDiagram
+    PEDIDO ||--|{ ITEM_PEDIDO : contiene
+    ITEM_PEDIDO ||--o{ ITEM_QUITADO : "sin ingrediente"
+    PRODUCTO ||--o{ ITEM_PEDIDO : "se pide en"
+    PRODUCTO ||--o{ PRODUCTO_INGREDIENTE : lleva
+    PRODUCTO ||--o{ PRODUCTO_SALSA : lleva
+    INGREDIENTE ||--o{ PRODUCTO_INGREDIENTE : "se usa en"
+    INGREDIENTE ||--o{ RECETA_INGREDIENTE : "se usa en"
+    RECETA ||--|{ RECETA_INGREDIENTE : "se hace con"
+    RECETA ||--o{ PRODUCTO_SALSA : "es salsa de"
+    RECETA |o--o{ PRODUCTO : "es la base de"
+    RECETA |o--o{ PRODUCTO : "es el relleno de"
+
+    PEDIDO {
+        string Cliente
+        datetime FechaPedido
+        enum Estado "Nuevo, Preparando, Entregado, Cancelado"
+    }
+    ITEM_PEDIDO {
+        int Cantidad
+        int UnidadesPorPack "solo empanadas"
+        decimal PrecioUnitario "el de ese día"
+    }
+    PRODUCTO {
+        enum Familia "Pizza, Focaccia, Empanada"
+        string Nombre
+        decimal Precio
+    }
+    INGREDIENTE {
+        string Nombre
+        decimal Stock
+        decimal PrecioDeCompra
+    }
+    RECETA {
+        enum Tipo "Base, Salsa, Relleno"
+        int Rinde "cuántas piezas salen"
+    }
+    PACK {
+        int Unidades
+        decimal Precio
+    }
+    TIENDA {
+        bool Abierta
+    }
+```
+
+La cantidad de cada ingrediente es del par producto-ingrediente, y las recetas (bases, salsas y rellenos) se cargan enteras con su rinde.
+
+## Arquitectura
+
+```mermaid
+flowchart LR
+    Cliente["Cliente (teléfono)"] --> CF[Cloudflare]
+    Vendedor["Vendedor (panel)"] --> CF
+    CF --> Ctrl
+    subgraph Railway["Railway · contenedor Docker"]
+        Ctrl["Controladores<br/>Tienda · Panel"] --> Serv["Servicios<br/>PedidoService · RecetaService"]
+    end
+    Serv --> DB[("PostgreSQL")]
+    Serv --> Tg["Telegram<br/>(pedidos y fallas)"]
+```
+
 ## Decisiones técnicas
 
 - **El diseño va antes que el código.** Las pantallas se maquetaron y se midieron primero; las maquetas de [`diseño/`](diseño/) son la especificación.
-- **Un modelo que respeta la cocina.** La cantidad es del par producto-ingrediente, y las recetas se cargan enteras con su rinde: el sistema divide, no la persona.
 - **Sin ASP.NET Identity.** Una clave comparada en tiempo fijo, límite de 5 intentos por minuto por IP, antiforgery en el panel y las llaves de la cookie guardadas en la base.
-- **Avisos por Telegram** de pedidos y de fallas (sin datos del cliente). Si Telegram falla, el pedido se guarda igual.
-- **Despliegue.** `Dockerfile` en dos etapas, Railway con deploy en cada push a `main` y las migraciones al arrancar.
+- **Recetas enteras con su rinde.** El sistema divide, no la persona: 1 kg de harina da 6 bollos.
+- **Avisos por Telegram** de pedidos y de fallas, sin datos del cliente. Si Telegram falla, el pedido se guarda igual.
+- **Despliegue continuo.** `Dockerfile` en dos etapas, Railway con deploy en cada push a `main` y las migraciones al arrancar.
 
 El porqué de cada una está en [`docs/decisiones-tecnicas.md`](docs/decisiones-tecnicas.md).
 
-## Stack
+## Tests y CI
 
-.NET 9 · ASP.NET Core MVC · EF Core (Fluent API) · PostgreSQL · Razor y JavaScript sin librerías · CSS propio · Docker · Railway.
+138 tests de xUnit sobre `PedidoService` (las reglas del checkout) y `RecetaService` (qué hornear, qué comprar y cuánto deja cada producto), con el resultado esperado calculado a mano. El CI los corre en cada push.
 
-## Estructura
+## Autor
 
-```
-Controllers/   Tienda, Panel y Home (el error)
-Services/      PedidoService, RecetaService, TelegramService, AvisoDeFallas
-Data/          el contexto, la configuración Fluent API y el sembrador
-Models/        las entidades: Producto, Ingrediente, Receta, Pedido...
-Views/         Razor: Tienda/ y Panel/
-wwwroot/       el CSS y el JavaScript propios
-diseño/        las maquetas HTML, que son la especificación
-f4872.Tests/   los tests de xUnit
-```
-
-## Tests
-
-138 tests de xUnit sobre `PedidoService` (las reglas del checkout) y `RecetaService` (qué hornear, qué comprar y cuánto deja cada producto), con el resultado esperado calculado a mano. El [CI](.github/workflows/ci.yml) los corre en cada push. Falta probar contra un PostgreSQL real, porque la base en memoria no prueba el SQL que se genera.
-
-## Más
-
-[Decisiones técnicas](docs/decisiones-tecnicas.md) · [Roadmap](docs/ROADMAP.md) · [`CLAUDE.md`](CLAUDE.md)
-
-**Facundo Herrera**
-- Estudiante de la Tecnicatura Universitaria en Programación, UTN FRGP
-- GitHub: [@f-Rra](https://github.com/f-Rra)
-- Email: facundo.rra@gmail.com
+- Estudiante de la Tecnicatura Universitaria en Programación - UTN FRGP
+- Email: [facundo.rra@gmail.com](mailto:facundo.rra@gmail.com)
